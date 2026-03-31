@@ -137,17 +137,15 @@ export function calcYield(d: Property): YieldResult {
 }
 
 export function discount(d: Property): number {
-  // Compare against new-build adjusted market (resale + 30% premium)
+  // Compare against resale market price (mm2)
   if (!d.mm2 || !d.pm2) return 0;
-  const nbMarket = d.mm2 * 1.30;
-  return (nbMarket - d.pm2) / nbMarket * 100;
+  return (d.mm2 - d.pm2) / d.mm2 * 100;
 }
 
 export function discountEuros(d: Property): number {
-  // How much cheaper/expensive vs expected new-build market price in total €
+  // Difference in total € vs resale market
   if (!d.mm2 || !d.bm) return 0;
-  const nbMarketTotal = d.mm2 * 1.30 * d.bm;
-  return Math.round(nbMarketTotal - d.pf);
+  return Math.round((d.mm2 * d.bm) - d.pf);
 }
 
 export function monthsToCompletion(c: string): number {
