@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Property, SortKey, SortDir } from '@/lib/types';
 import { loadProperties } from '@/lib/data';
-import { formatPrice, scoreClass, scoreColor, regionLabel, discount, calcYield } from '@/lib/scoring';
+import { formatPrice, scoreClass, scoreColor, regionLabel, discount, discountEuros, calcYield } from '@/lib/scoring';
 
 type QuickFilter = '' | 'budget' | 'mid' | 'premium' | 'beach' | 'golf' | 'cashflow' | 'favs';
 
@@ -245,15 +245,24 @@ export default function Explorer() {
                         <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs text-gray-400">{d.pm2 ? `€${d.pm2}` : '-'}</td>
                         <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs text-gray-400">€{d.mm2}</td>
                         <td className="px-3 py-2.5 border-b border-[#1a1a22]">
-                          {dc >= 0 ? (
-                            <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${dc >= 20 ? 'bg-emerald-500/15 text-emerald-400' : dc >= 10 ? 'bg-emerald-500/10 text-emerald-300' : 'bg-emerald-500/5 text-emerald-200'}`}>
-                              -{dc.toFixed(0)}%
-                            </span>
-                          ) : (
-                            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/15 text-red-400">
-                              +{Math.abs(dc).toFixed(0)}%
-                            </span>
-                          )}
+                          {(() => {
+                            const de = discountEuros(d);
+                            return dc >= 0 ? (
+                              <div>
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${dc >= 15 ? 'bg-emerald-500/15 text-emerald-400' : dc >= 5 ? 'bg-emerald-500/10 text-emerald-300' : 'bg-emerald-500/5 text-emerald-200'}`}>
+                                  -{dc.toFixed(0)}%
+                                </span>
+                                {de > 0 && <div className="text-[9px] text-emerald-500/70 mt-0.5">-€{(de/1000).toFixed(0)}k</div>}
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/15 text-red-400">
+                                  +{Math.abs(dc).toFixed(0)}%
+                                </span>
+                                {de < 0 && <div className="text-[9px] text-red-500/70 mt-0.5">+€{(Math.abs(de)/1000).toFixed(0)}k</div>}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs">{d.bm}m²</td>
                         <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs text-gray-400">{d.pl ? `${d.pl}m²` : '-'}</td>

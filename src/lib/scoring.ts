@@ -39,6 +39,33 @@ const rentalData = [
   {k:"Los Alcázares",a:60,v:90,wk:16,src:"AirDNA"},
   {k:"Alicante",a:85,v:120,wk:21,src:"AirDNA"},
   {k:"Cabo Peñas",a:85,v:120,wk:21,src:"Orihuela proxy"},
+  // Additional towns from XML feed
+  {k:"Pilar de La Horadada",a:90,v:135,wk:21,src:"Airbnb/Booking"},
+  {k:"Pilar de la Horadada",a:90,v:135,wk:21,src:"Airbnb/Booking"},
+  {k:"Benijofar",a:55,v:85,wk:17,src:"Estimated proxy"},
+  {k:"Rojales",a:55,v:85,wk:17,src:"Estimated proxy"},
+  {k:"San Fulgencio",a:50,v:80,wk:16,src:"Estimated proxy"},
+  {k:"Dolores",a:45,v:70,wk:15,src:"Estimated proxy"},
+  {k:"Polop",a:60,v:100,wk:17,src:"Airbnb"},
+  {k:"San Pedro del Pinatar",a:65,v:100,wk:18,src:"Booking/Airbnb"},
+  {k:"San Javier",a:60,v:95,wk:17,src:"Booking"},
+  {k:"Los Alcazares",a:60,v:90,wk:16,src:"AirDNA"},
+  {k:"Aguilas",a:65,v:100,wk:17,src:"Booking"},
+  {k:"Cartagena",a:60,v:90,wk:16,src:"Booking"},
+  {k:"Pinoso",a:35,v:55,wk:12,src:"Estimated inland"},
+  {k:"Hondón",a:35,v:55,wk:12,src:"Estimated inland"},
+  {k:"Villajoyosa",a:95,v:155,wk:22,src:"AirDNA"},
+  {k:"Relleu",a:50,v:80,wk:14,src:"Estimated inland"},
+  {k:"Monforte",a:40,v:60,wk:13,src:"Estimated inland"},
+  {k:"La Manga del Mar Menor",a:80,v:120,wk:18,src:"Booking"},
+  {k:"Baños y Mendigo",a:50,v:80,wk:14,src:"Booking"},
+  {k:"Daya Nueva",a:50,v:75,wk:16,src:"Estimated proxy"},
+  {k:"El Campello",a:90,v:140,wk:21,src:"AirDNA"},
+  {k:"Benissa",a:100,v:200,wk:19,src:"Airbnb"},
+  {k:"Moraira",a:120,v:250,wk:20,src:"AirDNA"},
+  {k:"Jávea",a:110,v:200,wk:21,src:"AirDNA"},
+  {k:"Denia",a:100,v:170,wk:21,src:"AirDNA"},
+  {k:"El Verger",a:80,v:130,wk:19,src:"Estimated proxy"},
 ];
 
 // Market growth rates by area
@@ -53,18 +80,22 @@ const growthRates = [
 
 export function calcScore(d: Property): number {
   let s = 0;
+  // Price vs market comparison
+  // mm2 = resale market price. New builds are typically 20-40% above resale.
+  // So we compare against new-build adjusted market: mm2 * 1.30 (30% premium = normal)
+  // A property AT the 30% premium is "fair value" for new build
   if (d.mm2 > 0 && d.pm2 && d.pm2 > 0) {
-    const df = (d.mm2 - d.pm2) / d.mm2;
-    if (df >= 0.25) s += 40;
-    else if (df >= 0.20) s += 36;
-    else if (df >= 0.15) s += 32;
-    else if (df >= 0.10) s += 26;
-    else if (df >= 0.05) s += 20;
-    else if (df >= 0) s += 12;
-    else if (df >= -0.1) s += 5;
-    else if (df >= -0.15) s += 0;
-    else if (df >= -0.25) s -= 5;
-    else s -= 10;
+    const newBuildMarket = d.mm2 * 1.30; // Expected new-build price
+    const df = (newBuildMarket - d.pm2) / newBuildMarket; // positive = below new-build market
+    if (df >= 0.25) s += 40;      // 25%+ below new-build market = exceptional
+    else if (df >= 0.15) s += 34;
+    else if (df >= 0.10) s += 28;
+    else if (df >= 0.05) s += 22;
+    else if (df >= 0) s += 16;     // At expected new-build price = fair
+    else if (df >= -0.10) s += 10; // Up to 10% above = still ok
+    else if (df >= -0.20) s += 5;  // 10-20% above = expensive
+    else if (df >= -0.30) s += 0;  // 20-30% above = overpriced
+    else s -= 5;                   // 30%+ above = avoid
   }
   if (d.s === 'off-plan') { s += 14; if (d.c?.includes('2027')) s += 4; if (d.c?.includes('2028')) s += 6; }
   else if (d.s === 'under-construction') s += 8;
@@ -106,7 +137,17 @@ export function calcYield(d: Property): YieldResult {
 }
 
 export function discount(d: Property): number {
-  return d.mm2 && d.pm2 ? (d.mm2 - d.pm2) / d.mm2 * 100 : 0;
+  // Compare against new-build adjusted market (resale + 30% premium)
+  if (!d.mm2 || !d.pm2) return 0;
+  const nbMarket = d.mm2 * 1.30;
+  return (nbMarket - d.pm2) / nbMarket * 100;
+}
+
+export function discountEuros(d: Property): number {
+  // How much cheaper/expensive vs expected new-build market price in total €
+  if (!d.mm2 || !d.bm) return 0;
+  const nbMarketTotal = d.mm2 * 1.30 * d.bm;
+  return Math.round(nbMarketTotal - d.pf);
 }
 
 export function monthsToCompletion(c: string): number {
