@@ -437,6 +437,7 @@ function StatBox({ label, value }: { label: string; value: string }) {
 
 function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; onToggle: () => void }) {
   const [downPct, setDownPct] = useState(30);
+  const [interestPct, setInterestPct] = useState(3.75);
   if (!d._yield) return null;
 
   const net = Math.round(d._yield.annual * 0.75);
@@ -445,7 +446,7 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
   const totalCost = d.pf + buyFee;
   const downPayment = Math.round(totalCost * (downPct / 100));
   const loanAmt = totalCost - downPayment;
-  const rate = 0.0375 / 12;
+  const rate = (interestPct / 100) / 12;
   const n = 25 * 12;
   const mortgageMo = loanAmt > 0 ? Math.round(loanAmt * rate * Math.pow(1 + rate, n) / (Math.pow(1 + rate, n) - 1)) : 0;
   const annualCashflow = net - mortgageMo * 12;
@@ -517,10 +518,10 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
         <div className="border-t border-[#2a2a30] p-4 bg-[#0d0d14]" onClick={e => e.stopPropagation()}>
           <div className="flex justify-between items-center mb-3">
             <div className="text-xs font-semibold text-amber-400">Investment Calculator</div>
-            <div className="text-[10px] text-gray-500">3.75% eff. interest · 25yr term</div>
+            <div className="text-[10px] text-gray-500">25yr term</div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <div className="flex justify-between text-[10px] text-gray-400 mb-1">
               <span>Down Payment</span>
               <span className="text-amber-400 font-bold">{downPct}%</span>
@@ -528,6 +529,17 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
             <input
               type="range" min={10} max={100} step={5} value={downPct}
               onChange={e => setDownPct(Number(e.target.value))}
+              className="w-full accent-amber-500 h-1.5 rounded cursor-pointer"
+            />
+          </div>
+          <div className="mb-3">
+            <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+              <span>Interest Rate</span>
+              <span className="text-amber-400 font-bold">{interestPct.toFixed(2)}%</span>
+            </div>
+            <input
+              type="range" min={1} max={8} step={0.25} value={interestPct}
+              onChange={e => setInterestPct(Number(e.target.value))}
               className="w-full accent-amber-500 h-1.5 rounded cursor-pointer"
             />
           </div>
