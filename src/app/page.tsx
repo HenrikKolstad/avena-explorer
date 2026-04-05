@@ -188,7 +188,7 @@ export default function Explorer() {
       <div className="flex gap-0 px-8 bg-[#111118] border-b border-[#2a2a30]">
         {([['deals','Deal Rankings'],['yield','Rental Yield'],['market','Market Overview'],['about','Scoring Method']] as [typeof tab, string][]).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`px-5 py-2.5 text-xs font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-amber-400 border-amber-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>
+            className={`px-5 py-2.5 text-xs font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-amber-400 border-amber-400' : 'text-amber-700 border-transparent hover:text-amber-500'}`}>
             {label}
           </button>
         ))}
