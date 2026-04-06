@@ -191,10 +191,16 @@ export default function Explorer() {
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setShowAuthModal(true)}
-                  className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-                  Sign in / Subscribe
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setShowAuthModal(true)}
+                    className="text-[11px] border border-amber-600 text-amber-400 hover:bg-amber-600/10 font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                    Sign in
+                  </button>
+                  <button onClick={() => setShowPaywall(true)}
+                    className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                    Subscribe
+                  </button>
+                </div>
               )
             )}
           </div>
