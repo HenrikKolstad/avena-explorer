@@ -652,11 +652,12 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
             <div className="text-amber-300 font-semibold text-sm leading-tight">{d.p}</div>
             <div className="text-[10px] text-gray-500 mt-0.5">Via Xavia Estate — {d.l}</div>
             {d.u && (
-              <a href={d.u} target="_blank" rel="noopener noreferrer"
-                onClick={e => e.stopPropagation()}
-                className="text-[10px] text-amber-500 hover:text-amber-300 underline mt-0.5 block">
-                View property ↗
-              </a>
+              <span className="mt-0.5 block" onClick={e => e.stopPropagation()}>
+                <a href={d.u} target="_blank" rel="noopener noreferrer"
+                  className="text-[10px] text-amber-500 hover:text-amber-300 underline inline">
+                  View property ↗
+                </a>
+              </span>
             )}
           </div>
           <div className="text-right">
