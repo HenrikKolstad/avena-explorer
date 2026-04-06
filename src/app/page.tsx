@@ -822,41 +822,221 @@ function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; i
 
 function MarketTab({ properties }: { properties: Property[] }) {
   const regions = ['cb-south', 'cb-north', 'costa-calida'];
+
   const regionData = regions.map(r => {
     const props = properties.filter(p => p.r === r);
+    const withM2 = props.filter(p => p.pm2 && p.pm2 > 0);
     const avgPrice = props.length ? Math.round(props.reduce((a, b) => a + b.pf, 0) / props.length) : 0;
-    const avgM2 = props.length ? Math.round(props.reduce((a, b) => a + (b.pm2 || 0), 0) / props.length) : 0;
-    return { region: r, count: props.length, avgPrice, avgM2 };
+    const avgM2 = withM2.length ? Math.round(withM2.reduce((a, b) => a + (b.pm2 || 0), 0) / withM2.length) : 0;
+    const minPrice = props.length ? Math.min(...props.map(p => p.pf)) : 0;
+    const maxPrice2 = props.length ? Math.max(...props.map(p => p.pf)) : 0;
+    const offPlan = props.filter(p => p.s === 'off-plan').length;
+    const ready = props.filter(p => p.s === 'ready').length;
+    const building = props.filter(p => p.s === 'under-construction').length;
+    return { region: r, count: props.length, avgPrice, avgM2, minPrice, maxPrice: maxPrice2, offPlan, ready, building };
   });
-  const maxPrice = Math.max(...regionData.map(r => r.avgPrice));
+
+  const maxAvgPrice = Math.max(...regionData.map(r => r.avgPrice));
+  const maxAvgM2 = Math.max(...regionData.map(r => r.avgM2));
+  const maxCount = Math.max(...regionData.map(r => r.count));
+
+  // Type breakdown
+  const types = ['Villa', 'Apartment', 'Townhouse', 'Bungalow'];
+  const typeData = types.map(t => ({ type: t, count: properties.filter(p => p.t === t).length }))
+    .filter(t => t.count > 0).sort((a, b) => b.count - a.count);
+  const maxTypeCount = Math.max(...typeData.map(t => t.count));
+
+  // Status breakdown
+  const totalOffPlan = properties.filter(p => p.s === 'off-plan').length;
+  const totalReady = properties.filter(p => p.s === 'ready').length;
+  const totalBuilding = properties.filter(p => p.s === 'under-construction').length;
+
+  // Price bands
+  const bands = [
+    { label: '< €150k', min: 0, max: 150000 },
+    { label: '€150–250k', min: 150000, max: 250000 },
+    { label: '€250–400k', min: 250000, max: 400000 },
+    { label: '€400–600k', min: 400000, max: 600000 },
+    { label: '€600k–1M', min: 600000, max: 1000000 },
+    { label: '> €1M', min: 1000000, max: Infinity },
+  ];
+  const bandData = bands.map(b => ({ ...b, count: properties.filter(p => p.pf >= b.min && p.pf < b.max).length }));
+  const maxBandCount = Math.max(...bandData.map(b => b.count));
+
+  // Top towns
+  const townMap: Record<string, { count: number; avgPrice: number; avgM2: number; total: number }> = {};
+  properties.forEach(p => {
+    const town = p.l || 'Unknown';
+    if (!townMap[town]) townMap[town] = { count: 0, avgPrice: 0, avgM2: 0, total: 0 };
+    townMap[town].count++;
+    townMap[town].total += p.pf;
+    townMap[town].avgM2 += p.pm2 || 0;
+  });
+  const topTowns = Object.entries(townMap)
+    .map(([town, d]) => ({ town, count: d.count, avgPrice: Math.round(d.total / d.count), avgM2: Math.round(d.avgM2 / d.count) }))
+    .sort((a, b) => b.count - a.count).slice(0, 12);
+
+  // Overall stats
+  const allWithM2 = properties.filter(p => p.pm2 && p.pm2 > 0);
+  const overallAvgM2 = allWithM2.length ? Math.round(allWithM2.reduce((a, b) => a + (b.pm2 || 0), 0) / allWithM2.length) : 0;
+  const overallAvgPrice = properties.length ? Math.round(properties.reduce((a, b) => a + b.pf, 0) / properties.length) : 0;
+  const medianPrice = properties.length ? [...properties].sort((a, b) => a.pf - b.pf)[Math.floor(properties.length / 2)].pf : 0;
 
   return (
-    <div className="p-8">
-      <h2 className="font-serif text-xl text-amber-400 mb-4">Market Overview</h2>
+    <div className="p-6 space-y-4">
+      <h2 className="font-serif text-xl text-amber-400">Market Overview</h2>
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Total Listings', value: properties.length.toLocaleString() },
+          { label: 'Avg Price', value: formatPrice(overallAvgPrice) },
+          { label: 'Median Price', value: formatPrice(medianPrice) },
+          { label: 'Avg €/m²', value: `€${overallAvgM2.toLocaleString()}` },
+        ].map(s => (
+          <div key={s.label} className="bg-[#111118] border border-[#2a2a30] rounded-lg p-4 text-center">
+            <div className="text-xl font-bold font-serif text-amber-400">{s.value}</div>
+            <div className="text-[9px] uppercase tracking-widest text-gray-500 mt-1">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Avg price by region */}
         <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
-          <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-3">Average Price by Region</h3>
+          <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">Avg Price by Region</h3>
           {regionData.map(r => (
-            <div key={r.region} className="flex items-center gap-3 mb-2">
-              <span className="w-24 text-right text-xs">{regionLabel(r.region)}</span>
-              <div className="flex-1 h-6 bg-[#1e1e28] rounded overflow-hidden">
-                <div className="h-full bg-amber-500/60 rounded" style={{ width: `${maxPrice ? (r.avgPrice / maxPrice) * 100 : 0}%` }} />
+            <div key={r.region} className="mb-3">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-300">{regionLabel(r.region)}</span>
+                <span className="text-amber-400 font-semibold">{formatPrice(r.avgPrice)}</span>
               </div>
-              <span className="text-xs text-gray-400 w-24">{formatPrice(r.avgPrice)}</span>
+              <div className="h-5 bg-[#1e1e28] rounded overflow-hidden">
+                <div className="h-full bg-amber-500/50 rounded transition-all" style={{ width: `${maxAvgPrice ? (r.avgPrice / maxAvgPrice) * 100 : 0}%` }} />
+              </div>
+              <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
+                <span>Min {formatPrice(r.minPrice)}</span>
+                <span>Max {formatPrice(r.maxPrice)}</span>
+              </div>
             </div>
           ))}
         </div>
+
+        {/* Avg €/m² by region */}
         <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
-          <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-3">Properties by Region</h3>
+          <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">Avg €/m² by Region</h3>
           {regionData.map(r => (
-            <div key={r.region} className="flex items-center gap-3 mb-2">
-              <span className="w-24 text-right text-xs">{regionLabel(r.region)}</span>
-              <div className="flex-1 h-6 bg-[#1e1e28] rounded overflow-hidden">
-                <div className="h-full bg-blue-500/60 rounded" style={{ width: `${properties.length ? (r.count / properties.length) * 100 : 0}%` }} />
+            <div key={r.region} className="mb-3">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-300">{regionLabel(r.region)}</span>
+                <span className="text-emerald-400 font-semibold">€{r.avgM2.toLocaleString()}/m²</span>
               </div>
-              <span className="text-xs text-gray-400 w-16">{r.count}</span>
+              <div className="h-5 bg-[#1e1e28] rounded overflow-hidden">
+                <div className="h-full bg-emerald-500/50 rounded transition-all" style={{ width: `${maxAvgM2 ? (r.avgM2 / maxAvgM2) * 100 : 0}%` }} />
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* Properties by region */}
+        <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
+          <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">Listings by Region</h3>
+          {regionData.map(r => (
+            <div key={r.region} className="mb-3">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-300">{regionLabel(r.region)}</span>
+                <span className="text-blue-400 font-semibold">{r.count} props</span>
+              </div>
+              <div className="h-5 bg-[#1e1e28] rounded overflow-hidden">
+                <div className="h-full bg-blue-500/50 rounded" style={{ width: `${maxCount ? (r.count / maxCount) * 100 : 0}%` }} />
+              </div>
+              <div className="flex gap-3 text-[10px] text-gray-600 mt-0.5">
+                <span className="text-emerald-600">{r.offPlan} off-plan</span>
+                <span className="text-blue-600">{r.building} building</span>
+                <span className="text-gray-500">{r.ready} ready</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Property type breakdown */}
+        <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
+          <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">By Property Type</h3>
+          {typeData.map(t => (
+            <div key={t.type} className="mb-3">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-300">{t.type}</span>
+                <span className="text-purple-400 font-semibold">{t.count} · {Math.round(t.count / properties.length * 100)}%</span>
+              </div>
+              <div className="h-5 bg-[#1e1e28] rounded overflow-hidden">
+                <div className="h-full bg-purple-500/50 rounded" style={{ width: `${maxTypeCount ? (t.count / maxTypeCount) * 100 : 0}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Price distribution */}
+      <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
+        <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">Price Distribution</h3>
+        <div className="flex items-end gap-2 h-24">
+          {bandData.map(b => (
+            <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
+              <span className="text-[9px] text-amber-400 font-semibold">{b.count}</span>
+              <div className="w-full bg-amber-500/50 rounded-t" style={{ height: `${maxBandCount ? (b.count / maxBandCount) * 72 : 0}px` }} />
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2 mt-1">
+          {bandData.map(b => (
+            <div key={b.label} className="flex-1 text-center text-[8px] text-gray-600 leading-tight">{b.label}</div>
+          ))}
+        </div>
+      </div>
+
+      {/* Status breakdown */}
+      <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
+        <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">By Status</h3>
+        <div className="flex gap-4">
+          {[
+            { label: 'Off-Plan', count: totalOffPlan, color: 'bg-emerald-500' },
+            { label: 'Under Construction', count: totalBuilding, color: 'bg-amber-500' },
+            { label: 'Key Ready', count: totalReady, color: 'bg-blue-500' },
+          ].map(s => (
+            <div key={s.label} className="flex-1 text-center">
+              <div className={`h-2 rounded-full ${s.color} mb-2`} style={{ opacity: 0.7 }} />
+              <div className="text-lg font-bold font-serif text-white">{s.count}</div>
+              <div className="text-[9px] uppercase tracking-wide text-gray-500">{s.label}</div>
+              <div className="text-[10px] text-gray-600">{Math.round(s.count / properties.length * 100)}%</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top towns table */}
+      <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
+        <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">Top Towns</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-[9px] uppercase tracking-widest text-gray-600 border-b border-[#2a2a30]">
+                <th className="text-left pb-2">Town</th>
+                <th className="text-right pb-2">Listings</th>
+                <th className="text-right pb-2">Avg Price</th>
+                <th className="text-right pb-2">Avg €/m²</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topTowns.map(t => (
+                <tr key={t.town} className="border-b border-[#1e1e28] hover:bg-[#18181f]">
+                  <td className="py-2 text-gray-300">{t.town}</td>
+                  <td className="py-2 text-right text-blue-400">{t.count}</td>
+                  <td className="py-2 text-right text-amber-400">{formatPrice(t.avgPrice)}</td>
+                  <td className="py-2 text-right text-emerald-400">€{t.avgM2.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
