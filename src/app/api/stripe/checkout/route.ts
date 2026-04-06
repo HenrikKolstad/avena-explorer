@@ -1,81 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
 
-// Increase timeout + disable retries to prevent Vercel serverless timeouts
-function getStripe() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-03-31.basil',
-    maxNetworkRetries: 0,
-    timeout: 8000,
-  });
-}
-
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-// Tell Vercel to allow up to 30s for this route
 export const maxDuration = 30;
+
+async function stripePost(path: string, body: Record<string, string>) {
+  const params = new URLSearchParams(body).toString();
+  const res = await fetch(`https://api.stripe.com/v1${path}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params,
+  });
+  return res.json();
+}
+
+async function stripeGet(path: string) {
+  const res = await fetch(`https://api.stripe.com/v1${path}`, {
+    headers: { 'Authorization': `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+  });
+  return res.json();
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const stripe = getStripe();
-
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://avena-estate.com';
+    const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!;
 
-    // Try to get existing Stripe customer, skip Supabase lookup if it fails
-    let customerId: string | undefined;
-    try {
-      const supabase = getSupabase();
-      const { data: sub } = await supabase
-        .from('subscriptions')
-        .select('stripe_customer_id')
-        .eq('email', email)
-        .single();
-      if (sub?.stripe_customer_id) customerId = sub.stripe_customer_id;
-    } catch {
-      // Supabase lookup failed — continue without customer ID
+    // Search for existing customer
+    const search = await stripeGet(`/customers/search?query=email:'${encodeURIComponent(email)}'&limit=1`);
+    let customerId: string | undefined = search?.data?.[0]?.id;
+
+    if (!customerId) {
+      const customer = await stripePost('/customers', { email });
+      customerId = customer.id;
     }
 
     if (!customerId) {
-      // Search Stripe for existing customer first
-      const existing = await stripe.customers.list({ email, limit: 1 });
-      if (existing.data.length > 0) {
-        customerId = existing.data[0].id;
-      } else {
-        const customer = await stripe.customers.create({ email });
-        customerId = customer.id;
-      }
+      return NextResponse.json({ error: 'Failed to create customer' }, { status: 500 });
     }
 
-    // Create Stripe Checkout session
-    const session = await stripe.checkout.sessions.create({
+    // Create checkout session
+    const session = await stripePost('/checkout/sessions', {
       customer: customerId,
-      payment_method_types: ['card'],
       mode: 'subscription',
-      line_items: [{
-        price: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!,
-        quantity: 1,
-      }],
+      'payment_method_types[]': 'card',
+      'line_items[0][price]': priceId,
+      'line_items[0][quantity]': '1',
       success_url: `${appUrl}/?subscribed=true`,
       cancel_url: `${appUrl}/?cancelled=true`,
-      subscription_data: {
-        metadata: { email },
-      },
-      metadata: { email },
-      allow_promotion_codes: true,
+      'subscription_data[metadata][email]': email,
+      'metadata[email]': email,
+      allow_promotion_codes: 'true',
     });
+
+    if (session.error) {
+      console.error('Stripe session error:', session.error);
+      return NextResponse.json({ error: session.error.message }, { status: 500 });
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (err: unknown) {
-    console.error('Stripe checkout error:', err);
+    console.error('Checkout error:', err);
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
