@@ -387,23 +387,6 @@ async function main() {
         return false;
       }
 
-      // Only include towns/areas that Xavia Estate actually advertises
-      const town = (p.address?.town || '').toLowerCase();
-      const locDetail = (p.location_detail_1 || '').toLowerCase();
-      const combined_loc = town + ' ' + locDetail;
-
-      // Towns Xavia does NOT cover (verified against xaviaestate.com active listings Mar 2026)
-      const excludedTowns = [
-        'pinoso', 'aspe', 'catral', 'cox', 'monforte del cid', 'la romana',
-        'penaguila', 'jacarilla', 'benejúzar', 'el rafol d\'almunia',
-        'rafal', 'cabo de palos', 'baños y mendigo',
-        'aguilas', 'el verger', 'els poblets',
-      ];
-      if (excludedTowns.some(t => town.includes(t))) {
-        console.log('  EXCLUDED (town not on Xavia):', town, '-', title.substring(0, 40));
-        return false;
-      }
-
       return true;
     })
     .map(parseProperty)

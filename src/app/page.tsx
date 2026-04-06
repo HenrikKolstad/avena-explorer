@@ -4,10 +4,16 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Property, SortKey, SortDir } from '@/lib/types';
 import { loadProperties } from '@/lib/data';
 import { formatPrice, scoreClass, scoreColor, regionLabel, discount, discountEuros, calcYield } from '@/lib/scoring';
+import { useAuth } from '@/context/AuthContext';
 
 type QuickFilter = '' | 'budget' | 'mid' | 'premium' | 'beach' | 'golf' | 'cashflow' | 'favs';
 
+// Free tier limits
+const FREE_DEALS_LIMIT = 5;
+const FREE_YIELD_LIMIT = 3;
+
 export default function Explorer() {
+  const { user, isPaid, loading: authLoading, signInWithEmail, signOut, startCheckout } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>('score');
@@ -21,11 +27,21 @@ export default function Explorer() {
   const [favs, setFavs] = useState<string[]>([]);
   const [tab, setTab] = useState<'deals' | 'yield' | 'market' | 'about' | 'legal'>('deals');
   const [imgIdx, setImgIdx] = useState(0);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authSent, setAuthSent] = useState(false);
+  const [authLoading2, setAuthLoading2] = useState(false);
 
   useEffect(() => {
     loadProperties().then(d => { setProperties(d); setLoading(false); });
     const saved = localStorage.getItem('avena_favs');
     if (saved) setFavs(JSON.parse(saved));
+    // Handle Stripe redirect
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('subscribed') === 'true') {
+      window.history.replaceState({}, '', '/');
+    }
   }, []);
 
   const toggleFav = useCallback((ref: string) => {
@@ -138,7 +154,7 @@ export default function Explorer() {
           <p className="text-[10px] tracking-[4px] uppercase text-amber-500 mt-0.5">Estate</p>
           <p className="text-[10px] text-gray-500 italic mt-1">In partnership with <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors">Xavia Estate</a></p>
         </div>
-        <div className="flex gap-6">
+        <div className="flex gap-6 items-center">
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-400 font-serif">{stats.count}</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Properties</div>
@@ -150,6 +166,31 @@ export default function Explorer() {
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-400 font-serif">{stats.bestScore}</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Best Score</div>
+          </div>
+          {/* Auth button */}
+          <div className="ml-4">
+            {!authLoading && (
+              user ? (
+                <div className="flex items-center gap-3">
+                  {isPaid ? (
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded-full font-semibold">PRO</span>
+                  ) : (
+                    <button onClick={() => setShowPaywall(true)}
+                      className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors">
+                      Upgrade →
+                    </button>
+                  )}
+                  <button onClick={signOut} className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors">
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setShowAuthModal(true)}
+                  className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors">
+                  Sign in / Subscribe
+                </button>
+              )
+            )}
           </div>
         </div>
       </header>
@@ -215,9 +256,10 @@ export default function Explorer() {
                     const dc = discount(d);
                     const rank = i + 1;
                     const isTop3 = rank <= 3;
+                    const isLocked = !isPaid && rank > FREE_DEALS_LIMIT;
                     return (
-                      <tr key={d.ref || d.p + i} onClick={() => setPreview(i)}
-                        className={`transition-colors cursor-pointer hover:bg-[#1c1c26] ${preview === i ? 'bg-amber-500/10 border-l-[3px] border-l-amber-500' : isTop3 ? 'bg-amber-500/[0.03]' : ''}`}>
+                      <tr key={d.ref || d.p + i} onClick={() => isLocked ? setShowPaywall(true) : setPreview(i)}
+                        className={`transition-colors cursor-pointer hover:bg-[#1c1c26] ${isLocked ? 'opacity-40 blur-[2px] select-none' : ''} ${preview === i ? 'bg-amber-500/10 border-l-[3px] border-l-amber-500' : isTop3 ? 'bg-amber-500/[0.03]' : ''}`}>
                         <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs">
                           {isTop3 ? (
                             <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center font-extrabold text-[11px] ${rank === 1 ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/40' : rank === 2 ? 'bg-gray-400 text-black' : 'bg-amber-700 text-white'}`}>{rank}</span>
@@ -276,12 +318,29 @@ export default function Explorer() {
                       </tr>
                     );
                   })}
+                  {/* Paywall CTA row after free limit */}
+                  {!isPaid && filtered.length > FREE_DEALS_LIMIT && (
+                    <tr>
+                      <td colSpan={15} className="px-6 py-5 text-center border-b border-[#1a1a22]">
+                        <div className="bg-gradient-to-r from-amber-900/20 via-amber-800/20 to-amber-900/20 border border-amber-600/40 rounded-xl p-5 max-w-xl mx-auto">
+                          <div className="text-amber-400 font-bold text-sm mb-1">
+                            🔒 {filtered.length - FREE_DEALS_LIMIT} more deals locked
+                          </div>
+                          <div className="text-gray-400 text-xs mb-3">Subscribe to unlock all {filtered.length} properties, full calculators, and rental yield data</div>
+                          <button onClick={() => user ? setShowPaywall(true) : setShowAuthModal(true)}
+                            className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition-colors">
+                            Subscribe — €49/month
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           )}
 
-          {tab === 'yield' && <YieldTab properties={filtered} />}
+          {tab === 'yield' && <YieldTab properties={filtered} isPaid={isPaid} onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} />}
           {tab === 'market' && <MarketTab properties={filtered} />}
           {tab === 'about' && <AboutTab />}
           {tab === 'legal' && <LegalTab />}
@@ -409,6 +468,80 @@ export default function Explorer() {
           </div>
         )}
       </div>
+
+      {/* AUTH MODAL */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowAuthModal(false)}>
+          <div className="bg-[#111118] border border-[#2a2a30] rounded-2xl p-8 w-full max-w-sm mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">×</button>
+            <div className="text-center mb-6">
+              <div className="font-serif text-2xl text-amber-400 mb-1">Sign in to Avena Estate</div>
+              <p className="text-gray-400 text-sm">We&apos;ll email you a magic link — no password needed.</p>
+            </div>
+            {authSent ? (
+              <div className="text-center py-4">
+                <div className="text-4xl mb-3">📬</div>
+                <div className="text-amber-400 font-semibold mb-2">Check your inbox</div>
+                <p className="text-gray-400 text-sm">Magic link sent to <span className="text-white">{authEmail}</span>. Click it to sign in.</p>
+              </div>
+            ) : (
+              <form onSubmit={async e => {
+                e.preventDefault();
+                setAuthLoading2(true);
+                const { error } = await signInWithEmail(authEmail);
+                setAuthLoading2(false);
+                if (error) alert('Error: ' + error);
+                else setAuthSent(true);
+              }}>
+                <input
+                  type="email"
+                  required
+                  placeholder="your@email.com"
+                  value={authEmail}
+                  onChange={e => setAuthEmail(e.target.value)}
+                  className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-amber-500 mb-4"
+                />
+                <button type="submit" disabled={authLoading2}
+                  className="w-full bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold py-3 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm disabled:opacity-50">
+                  {authLoading2 ? 'Sending…' : 'Send Magic Link →'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* PAYWALL MODAL */}
+      {showPaywall && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
+          <div className="bg-[#111118] border border-amber-500/30 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowPaywall(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">×</button>
+            <div className="text-center mb-6">
+              <div className="font-serif text-2xl text-amber-400 mb-1">Avena Estate PRO</div>
+              <div className="text-4xl font-bold text-white mb-1">€49<span className="text-lg text-gray-400 font-normal">/month</span></div>
+              <p className="text-gray-400 text-sm">Full access to all deals and rental yield data</p>
+            </div>
+            <ul className="space-y-2 mb-6">
+              {[
+                ['✓', 'All 1,000+ properties unlocked'],
+                ['✓', 'Full rental yield analysis for every property'],
+                ['✓', 'Cash-on-cash return & mortgage calculator'],
+                ['✓', 'Daily updates — new listings every morning'],
+                ['✓', 'Cancel anytime'],
+              ].map(([icon, text]) => (
+                <li key={text} className="flex items-center gap-2 text-sm text-gray-300">
+                  <span className="text-emerald-400 font-bold">{icon}</span> {text}
+                </li>
+              ))}
+            </ul>
+            <button onClick={startCheckout}
+              className="w-full bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold py-3.5 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm tracking-wide">
+              Subscribe — €49/month →
+            </button>
+            <p className="text-center text-gray-600 text-[10px] mt-3">Secured by Stripe · Cancel anytime in account settings</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -584,7 +717,7 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
   );
 }
 
-function YieldTab({ properties }: { properties: Property[] }) {
+function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; isPaid: boolean; onUpgrade: () => void }) {
   const [sortMode, setSortMode] = useState<'yield' | 'income' | 'price'>('yield');
   const [expandedRef, setExpandedRef] = useState<string | null>(null);
 
@@ -646,7 +779,7 @@ function YieldTab({ properties }: { properties: Property[] }) {
 
       <h2 className="font-serif text-xl text-amber-400 mb-4">Estimated Rental Yield</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sorted.slice(0, 30).map((d, i) => (
+        {sorted.slice(0, isPaid ? 30 : FREE_YIELD_LIMIT).map((d, i) => (
           <YieldCard
             key={d.ref || i}
             d={d}
@@ -654,7 +787,35 @@ function YieldTab({ properties }: { properties: Property[] }) {
             onToggle={() => setExpandedRef(expandedRef === (d.ref || String(i)) ? null : (d.ref || String(i)))}
           />
         ))}
+        {/* Blurred preview cards for free users */}
+        {!isPaid && sorted.length > FREE_YIELD_LIMIT && sorted.slice(FREE_YIELD_LIMIT, FREE_YIELD_LIMIT + 3).map((d, i) => (
+          <div key={`locked-${i}`} className="relative overflow-hidden rounded-lg cursor-pointer" onClick={onUpgrade}>
+            <div className="opacity-30 blur-[3px] pointer-events-none select-none">
+              <YieldCard d={d} expanded={false} onToggle={() => {}} />
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[1px]">
+              <div className="text-2xl mb-1">🔒</div>
+              <div className="text-xs text-amber-400 font-semibold">PRO Only</div>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* Paywall CTA */}
+      {!isPaid && sorted.length > FREE_YIELD_LIMIT && (
+        <div className="mt-6 p-6 bg-[#111118] border border-amber-500/30 rounded-xl text-center">
+          <div className="text-amber-400 font-serif text-lg mb-1">
+            🔒 {sorted.length - FREE_YIELD_LIMIT} more yield analyses locked
+          </div>
+          <p className="text-gray-400 text-sm mb-4">
+            Subscribe to see full rental yield data, cash-on-cash returns, and investment calculator for all {sorted.length} properties.
+          </p>
+          <button onClick={onUpgrade}
+            className="bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold px-8 py-3 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm tracking-wide">
+            Subscribe — €49/month
+          </button>
+        </div>
+      )}
     </div>
   );
 }
