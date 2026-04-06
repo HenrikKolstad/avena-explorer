@@ -148,23 +148,23 @@ export default function Explorer() {
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
       {/* TOP BAR */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-[#12121c] via-[#1a1520] to-[#12121c] border-b-2 border-amber-700/40 px-8 py-5 flex items-center justify-between flex-wrap gap-4 shadow-xl">
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-[#12121c] via-[#1a1520] to-[#12121c] border-b-2 border-amber-700/40 px-4 md:px-8 py-3 md:py-5 flex items-center justify-between flex-wrap gap-3 shadow-xl">
         <div>
-          <h1 className="text-3xl font-bold font-serif tracking-widest bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent">AVENA</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-serif tracking-widest bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent">AVENA</h1>
           <p className="text-[10px] tracking-[4px] uppercase text-amber-500 mt-0.5">Estate</p>
           <p className="text-[10px] text-gray-500 italic mt-1">In partnership with <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors">Xavia Estate</a></p>
         </div>
-        <div className="flex gap-6 items-center">
+        <div className="flex gap-3 md:gap-6 items-center">
           <div className="text-center">
-            <div className="text-2xl font-bold text-amber-400 font-serif">{stats.count}</div>
+            <div className="text-xl md:text-2xl font-bold text-amber-400 font-serif">{stats.count}</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Properties</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-amber-400 font-serif">{stats.avgDisc}%</div>
+            <div className="text-xl md:text-2xl font-bold text-amber-400 font-serif">{stats.avgDisc}%</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Avg Discount</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-amber-400 font-serif">{stats.bestScore}</div>
+            <div className="text-xl md:text-2xl font-bold text-amber-400 font-serif">{stats.bestScore}</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Best Score</div>
           </div>
           {/* Auth button */}
@@ -186,7 +186,7 @@ export default function Explorer() {
                 </div>
               ) : (
                 <button onClick={() => setShowAuthModal(true)}
-                  className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors">
+                  className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
                   Sign in / Subscribe
                 </button>
               )
@@ -196,7 +196,7 @@ export default function Explorer() {
       </header>
 
       {/* FILTER BAR */}
-      <div className="bg-[#111118] border-b border-[#2a2a30] px-8 py-3 flex gap-3 flex-wrap items-end">
+      <div className="bg-[#111118] border-b border-[#2a2a30] px-4 md:px-8 py-3 flex gap-3 overflow-x-auto items-end scrollbar-none">
         <FilterSelect label="Region" value={filters.region} onChange={v => setFilters(f => ({...f, region: v}))}
           options={[['all','All Regions'],['cb-south','CB South'],['cb-north','CB North'],['costa-calida','C. Cálida']]} />
         <FilterSelect label="Type" value={filters.type} onChange={v => setFilters(f => ({...f, type: v}))}
@@ -216,20 +216,20 @@ export default function Explorer() {
       </div>
 
       {/* QUICK FILTERS */}
-      <div className="bg-[#111118] border-b border-[#2a2a30] px-8 py-2 flex gap-2 flex-wrap">
+      <div className="bg-[#111118] border-b border-[#2a2a30] px-4 md:px-8 py-2 flex gap-2 overflow-x-auto scrollbar-none">
         {([['budget','Budget <€200k'],['mid','Mid €200-400k'],['premium','Premium €400k+'],['beach','Beach <2km'],['golf','Golf Resort'],['cashflow','Cash-Flow +'],['favs','Favorites']] as [QuickFilter, string][]).map(([key, label]) => (
           <button key={key} onClick={() => { setQuickFilter(q => q === key ? '' : key); }}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${quickFilter === key ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-transparent border-[#2a2a30] text-gray-500 hover:text-gray-300'}`}>
+            className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${quickFilter === key ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-transparent border-[#2a2a30] text-gray-500 hover:text-gray-300'}`}>
             {label}
           </button>
         ))}
       </div>
 
       {/* TABS */}
-      <div className="flex gap-0 px-8 bg-[#111118] border-b border-[#2a2a30]">
+      <div className="flex gap-0 px-4 md:px-8 bg-[#111118] border-b border-[#2a2a30] overflow-x-auto scrollbar-none">
         {([['deals','Deal Rankings'],['yield','Rental Yield'],['market','Market Overview'],['about','Scoring Method'],['legal','Legal & Security']] as [typeof tab, string][]).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`px-5 py-2.5 text-xs font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-amber-400 border-amber-400' : 'text-amber-700 border-transparent hover:text-amber-500'}`}>
+            className={`flex-shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-amber-400 border-amber-400' : 'text-amber-700 border-transparent hover:text-amber-500'}`}>
             {label}
           </button>
         ))}
@@ -237,9 +237,57 @@ export default function Explorer() {
 
       {/* CONTENT */}
       <div className="flex">
-        <div className={`flex-1 transition-all ${preview !== null ? 'mr-[480px]' : ''}`}>
+        <div className={`flex-1 transition-all ${preview !== null ? 'md:mr-[480px]' : ''}`}>
           {tab === 'deals' && (
-            <div className="overflow-x-auto px-4 pb-6">
+            <>
+            {/* MOBILE CARD LIST */}
+            <div className="md:hidden px-3 pb-6 space-y-2 pt-2">
+              {filtered.map((d, i) => {
+                const dc = discount(d);
+                const rank = i + 1;
+                const isLocked = !isPaid && rank > FREE_DEALS_LIMIT;
+                return (
+                  <div key={d.ref || d.p + i}
+                    onClick={() => isLocked ? setShowPaywall(true) : setPreview(i)}
+                    className={`bg-[#111118] border rounded-xl p-4 cursor-pointer transition-all active:scale-[0.99] ${isLocked ? 'opacity-40 blur-[2px] select-none' : 'border-[#2a2a30] hover:border-amber-500/40'} ${preview === i ? 'border-amber-500' : ''}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1 pr-3">
+                        <div className="text-amber-300 font-semibold text-sm leading-tight">{d.p}</div>
+                        <div className="text-gray-500 text-[11px] mt-0.5">{d.l}</div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <span className={`text-xl font-extrabold font-serif ${scoreClass(d._sc || 0)}`}>{d._sc}</span>
+                        <div className="text-[9px] text-gray-600 uppercase tracking-wide">score</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-white font-bold text-sm">{formatPrice(d.pf)}</span>
+                      {d.pm2 ? <span className="text-gray-500 text-xs">€{d.pm2}/m²</span> : null}
+                      {dc >= 0 ? (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${dc >= 15 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-500/10 text-emerald-300'}`}>-{dc.toFixed(0)}%</span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">+{Math.abs(dc).toFixed(0)}%</span>
+                      )}
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${d.s === 'off-plan' ? 'bg-emerald-500/12 text-emerald-400' : d.s === 'under-construction' ? 'bg-amber-500/12 text-amber-400' : 'bg-blue-500/12 text-blue-400'}`}>
+                        {d.s === 'off-plan' ? 'Off-Plan' : d.s === 'under-construction' ? 'Building' : 'Ready'}
+                      </span>
+                      <span className="text-gray-600 text-[10px]">{d.bd}bd · {d.bm}m²{d.bk !== null ? ` · ${d.bk}km beach` : ''}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              {!isPaid && filtered.length > FREE_DEALS_LIMIT && (
+                <div className="bg-amber-900/20 border border-amber-600/40 rounded-xl p-5 text-center">
+                  <div className="text-amber-400 font-bold text-sm mb-1">🔒 {filtered.length - FREE_DEALS_LIMIT} more deals locked</div>
+                  <div className="text-gray-400 text-xs mb-3">Subscribe to unlock all {filtered.length} properties</div>
+                  <button onClick={() => user ? setShowPaywall(true) : setShowAuthModal(true)}
+                    className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm">
+                    Subscribe — €49/month
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="hidden md:block overflow-x-auto px-4 pb-6">
               <table className="w-full border-collapse min-w-[1100px]">
                 <thead>
                   <tr>
@@ -338,6 +386,7 @@ export default function Explorer() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
 
           {tab === 'yield' && <YieldTab properties={filtered} isPaid={isPaid} onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} />}
@@ -348,7 +397,10 @@ export default function Explorer() {
 
         {/* PREVIEW PANEL */}
         {previewProp && (
-          <div className="fixed top-0 right-0 w-[480px] h-screen bg-[#111118] border-l border-amber-500/25 z-[300] overflow-y-auto shadow-2xl animate-slide-in">
+          <>
+          <div className="md:hidden fixed inset-0 bg-black/60 z-[299]" onClick={() => setPreview(null)} />
+          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-0 md:left-auto md:right-0 w-full md:w-[480px] h-[90vh] md:h-screen bg-[#111118] border-t md:border-t-0 md:border-l border-amber-500/25 z-[300] overflow-y-auto shadow-2xl rounded-t-2xl md:rounded-none animate-slide-in">
+            <div className="md:hidden w-12 h-1 bg-gray-700 rounded-full mx-auto mt-3 mb-1" />
             <button onClick={() => setPreview(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full border border-[#2a2a30] text-gray-400 hover:text-amber-400 hover:border-amber-400 flex items-center justify-center z-10 bg-black/50">×</button>
             {/* IMAGE GALLERY */}
             {previewProp.imgs && previewProp.imgs.length > 0 ? (
@@ -466,6 +518,7 @@ export default function Explorer() {
               </a>
             </div>
           </div>
+          </>
         )}
       </div>
 
