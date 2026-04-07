@@ -561,7 +561,7 @@ export default function Explorer() {
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${d.s === 'off-plan' ? 'bg-emerald-500/12 text-emerald-400' : d.s === 'under-construction' ? 'bg-amber-500/12 text-amber-400' : 'bg-blue-500/12 text-blue-400'}`}>
                         {d.s === 'off-plan' ? t.off_plan_tag : d.s === 'under-construction' ? t.under_construction_tag : t.ready_tag}
                       </span>
-                      {d.c && <span className="text-[10px] text-amber-500/70">~{d.c}</span>}
+                      {d.c && d.s !== 'ready' && (d._mths ?? 0) > 0 && <span className="text-[10px] text-amber-500/70">~{d.c}</span>}
                       <span className="text-gray-600 text-[10px]">{d.bd}bd · {d.bm}m²{d.bk !== null ? ` · ${d.bk}km 🏖` : ''}</span>
                       <button
                         onClick={e => { e.stopPropagation(); if (!isLocked) togglePortfolio(d.ref || d.p); }}
@@ -661,7 +661,7 @@ export default function Explorer() {
                             {d.s === 'off-plan' ? t.status_offplan : d.s === 'under-construction' ? t.status_construction : t.status_ready}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 border-b border-[#141420] text-[10px] text-amber-500/70 whitespace-nowrap">{d.c ? `~${d.c}` : '-'}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-[10px] text-amber-500/70 whitespace-nowrap">{d.c && d.s !== 'ready' && (d._mths ?? 0) > 0 ? `~${d.c}` : '-'}</td>
                         <td className="px-3 py-2.5 border-b border-[#141420]" onClick={e => e.stopPropagation()}>
                           <button
                             onClick={() => !isLocked && togglePortfolio(d.ref || d.p)}
