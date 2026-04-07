@@ -224,7 +224,7 @@ const townMarket = {
   'Mazarrón':                { Apartment: 2000, Villa: 1800 },
   'Puerto de Mazarron':      { Apartment: 3100, Villa: 3100 }, // NB market-adjusted (coastal)
   'La Manga del Mar Menor':  { Apartment: 2880, Villa: 2600 }, // SpainHouses €2875
-  'La Manga Club':           { Apartment: 4500, Villa: 5000 }, // Luxury 5-star golf resort — premium micro-market
+  'La Manga Club':           { Apartment: 3500, Villa: 4000 }, // Luxury golf resort — resale market (resort asking prices were inflated)
   'Santa Rosalia':           { Apartment: 3800, Villa: 4500 }, // Lake & Life resort
   'Santa Rosalia Lake':      { Apartment: 3800, Villa: 4500 },
   'Altaona Golf':            { Apartment: 3200, Villa: 3800 }, // Golf resort
