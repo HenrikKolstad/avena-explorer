@@ -146,7 +146,8 @@ const marketPrices = {
 // Source: SpainHouses.net averages (Mar 2026) cross-referenced with Idealista
 const townMarket = {
   // COSTA BLANCA SOUTH
-  'Torrevieja':              { Apartment: 3400, Villa: 3100 }, // Raised for sea-front NB premium (avg incl. inland was €3098)
+  'Torrevieja':              { Apartment: 2900, Villa: 2700 }, // Resale-adj. (SpainHouses €3098 incl. NB; pure resale lower)
+  'Los Balcones':            { Apartment: 2200, Villa: 2000 }, // Inland resort under Torrevieja municipality, budget bungalow area
   'Pilar de La Horadada':    { Apartment: 2800, Villa: 2600 }, // Resale-only adj. (SpainHouses €3863 includes NB premiums)
   'Pilar de la Horadada':    { Apartment: 2800, Villa: 2600 },
   'Orihuela Costa':          { Apartment: 3450, Villa: 3200 }, // SpainHouses Orihuela €3452
@@ -195,7 +196,7 @@ const townMarket = {
   'Jávea Xàbia':             { Apartment: 4400, Villa: 4000 }, // SpainHouses Jávea €4407
   'Javea':                   { Apartment: 4400, Villa: 4000 },
   'Denia':                   { Apartment: 3800, Villa: 3500 }, // SpainHouses Dénia €3800
-  'Finestrat':               { Apartment: 3840, Villa: 3500 }, // SpainHouses €3838
+  'Finestrat':               { Apartment: 3200, Villa: 2900 }, // Resale-adj. (SpainHouses €3838 skewed by NB; Benidorm-adjacent but lower)
   'Villajoyosa':             { Apartment: 4640, Villa: 4200 }, // SpainHouses €4636
   'El Campello':             { Apartment: 4830, Villa: 4400 }, // SpainHouses €4825
   'Benissa':                 { Apartment: 4450, Villa: 4000 }, // SpainHouses €4445
@@ -219,7 +220,7 @@ const townMarket = {
   'San Javier':              { Apartment: 2900, Villa: 2700 }, // Resale-adj. (SpainHouses €3639 inflated by NB)
   'Cartagena':               { Apartment: 3090, Villa: 2800 }, // SpainHouses €3093
   'Torre Pacheco':           { Apartment: 2200, Villa: 2200 }, // Inland Murcia town (La Manga Club is separate micro-market)
-  'Aguilas':                 { Apartment: 3520, Villa: 3200 }, // SpainHouses €3517
+  'Aguilas':                 { Apartment: 2800, Villa: 2600 }, // Resale-adj. (SpainHouses €3517 inflated by NB activity)
   'Mazarrón':                { Apartment: 2000, Villa: 1800 },
   'Puerto de Mazarron':      { Apartment: 3100, Villa: 3100 }, // NB market-adjusted (coastal)
   'La Manga del Mar Menor':  { Apartment: 2880, Villa: 2600 }, // SpainHouses €2875
