@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Property, SortKey, SortDir } from '@/lib/types';
 import { loadProperties } from '@/lib/data';
-import { formatPrice, scoreClass, scoreColor, regionLabel, discount, discountEuros, cappedDiscountEuros, calcYield } from '@/lib/scoring';
+import { formatPrice, scoreClass, scoreColor, regionLabel, discount, displayDiscount, discountEuros, cappedDiscountEuros, calcYield, DISCOUNT_PCT_CAP } from '@/lib/scoring';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
@@ -173,7 +173,7 @@ export default function Explorer() {
         case 'price': va = a.pf; vb = b.pf; break;
         case 'priceM2': va = a.pm2 || 0; vb = b.pm2 || 0; break;
         case 'marketM2': va = a.mm2; vb = b.mm2; break;
-        case 'discount': va = discount(a); vb = discount(b); break;
+        case 'discount': va = displayDiscount(a); vb = displayDiscount(b); break;
         case 'built': va = a.bm || 0; vb = b.bm || 0; break;
         case 'plot': va = a.pl || 0; vb = b.pl || 0; break;
         case 'beds': va = a.bd || 0; vb = b.bd || 0; break;
@@ -195,7 +195,7 @@ export default function Explorer() {
 
   const stats = useMemo(() => {
     if (!filtered.length) return { count: 0, avgDisc: 0, bestScore: 0 };
-    const discs = filtered.map(d => discount(d)).filter(x => x > 0);
+    const discs = filtered.map(d => displayDiscount(d)).filter(x => x > 0);
     return {
       count: filtered.length,
       avgDisc: discs.length ? Math.round(discs.reduce((a, b) => a + b, 0) / discs.length) : 0,
@@ -235,7 +235,7 @@ export default function Explorer() {
     const rows = filtered.map(d => [
       d.p, d.d, d.l, regionLabel(d.r), d.t,
       d.pf, d.pm2 || '', d.mm2,
-      discount(d).toFixed(1),
+      displayDiscount(d).toFixed(1),
       d._sc || '',
       d.bm || '', d.pl || '', d.bd || '',
       d.bk !== null ? d.bk : '',
@@ -520,7 +520,7 @@ export default function Explorer() {
             {/* MOBILE CARD LIST */}
             <div className="md:hidden px-3 pb-6 space-y-2 pt-2">
               {filtered.map((d, i) => {
-                const dc = discount(d);
+                const dc = displayDiscount(d);
                 const rank = i + 1;
                 const isLocked = !isPaid && rank > FREE_DEALS_LIMIT;
                 return (
@@ -597,7 +597,7 @@ export default function Explorer() {
                 </thead>
                 <tbody>
                   {filtered.map((d, i) => {
-                    const dc = discount(d);
+                    const dc = displayDiscount(d);
                     const rank = i + 1;
                     const isTop3 = rank <= 3;
                     const isLocked = !isPaid && rank > FREE_DEALS_LIMIT;

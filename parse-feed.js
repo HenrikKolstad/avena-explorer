@@ -487,6 +487,64 @@ async function main() {
 
   console.log(`${unique.length} unique properties after dedup`);
 
+  // ─── SELF-BENCHMARK: use feed's own median pm2 per town+type ──────────────
+  // "The feed IS the market" — if Calpe apts average €X/m² in our data, that IS the benchmark.
+  // This replaces external/manual benchmarks with data-derived ones for any town with ≥5 props.
+  // For small towns, the original areaNBBenchmarks value from parseProperty() is kept.
+  const isVilType = t => ['Villa','Townhouse','Bungalow'].includes(t);
+  const getMedian = arr => { const s = [...arr].sort((a,b)=>a-b); return s[Math.floor(s.length/2)]; };
+
+  // Group pm2 by town + segment
+  const townPm2 = {};
+  unique.forEach(p => {
+    if (!p.pm2 || p.pm2 <= 0) return;
+    const town = (p.l || '').split(',')[0].trim();
+    const seg  = isVilType(p.t) ? 'vil' : 'apt';
+    const key  = `${town}::${seg}`;
+    if (!townPm2[key]) townPm2[key] = [];
+    townPm2[key].push(p.pm2);
+  });
+
+  // Group pm2 by region + segment for regional fallback
+  const regionPm2 = {};
+  unique.forEach(p => {
+    if (!p.pm2 || p.pm2 <= 0) return;
+    const seg = isVilType(p.t) ? 'vil' : 'apt';
+    const key = `${p.r}::${seg}`;
+    if (!regionPm2[key]) regionPm2[key] = [];
+    regionPm2[key].push(p.pm2);
+  });
+
+  // Apply self-benchmark where we have enough data (≥5 same-type properties in the town)
+  let selfBenchCount = 0;
+  unique.forEach(p => {
+    const town = (p.l || '').split(',')[0].trim();
+    const seg  = isVilType(p.t) ? 'vil' : 'apt';
+    const key  = `${town}::${seg}`;
+    const arr  = townPm2[key] || [];
+    if (arr.length >= 5) {
+      p.mm2 = getMedian(arr);
+      selfBenchCount++;
+    } else {
+      // Try regional median as fallback for small towns
+      const rKey = `${p.r}::${seg}`;
+      const rArr = regionPm2[rKey] || [];
+      if (rArr.length >= 10) p.mm2 = getMedian(rArr);
+      // else: keep mm2 from areaNBBenchmarks (parseProperty computed it)
+    }
+  });
+  console.log(`Self-benchmarked: ${selfBenchCount}/${unique.length} properties use feed-derived median mm2`);
+
+  // Log median benchmarks for key towns
+  const keyTowns = ['Torrevieja','Calpe','Finestrat','Los Alcazares','Orihuela Costa','Pilar de La Horadada','Torre Pacheco'];
+  console.log('\nFeed-derived benchmarks (median pm2):');
+  keyTowns.forEach(t => {
+    const a = townPm2[`${t}::apt`]; const v = townPm2[`${t}::vil`];
+    console.log(`  ${t.padEnd(22)} apt:${a?getMedian(a):'–'} (n=${a?a.length:0})  vil:${v?getMedian(v):'–'} (n=${v?v.length:0})`);
+  });
+  console.log();
+  // ─────────────────────────────────────────────────────────────────────────────
+
   // Stats
   const regions = {};
   const types = {};
