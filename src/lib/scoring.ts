@@ -80,37 +80,69 @@ const growthRates = [
 
 export function calcScore(d: Property): number {
   let s = 0;
-  // Price vs market comparison
-  // mm2 = resale market price. New builds are typically 20-40% above resale.
-  // So we compare against new-build adjusted market: mm2 * 1.30 (30% premium = normal)
-  // A property AT the 30% premium is "fair value" for new build
+
+  // 1. DISCOUNT vs NB market (40 points max)
+  // mm2 is now the NB benchmark directly
   if (d.mm2 > 0 && d.pm2 && d.pm2 > 0) {
-    const newBuildMarket = d.mm2 * 1.30; // Expected new-build price
-    const df = (newBuildMarket - d.pm2) / newBuildMarket; // positive = below new-build market
-    if (df >= 0.25) s += 40;      // 25%+ below new-build market = exceptional
-    else if (df >= 0.15) s += 34;
-    else if (df >= 0.10) s += 28;
-    else if (df >= 0.05) s += 22;
-    else if (df >= 0) s += 16;     // At expected new-build price = fair
-    else if (df >= -0.10) s += 10; // Up to 10% above = still ok
-    else if (df >= -0.20) s += 5;  // 10-20% above = expensive
-    else if (df >= -0.30) s += 0;  // 20-30% above = overpriced
-    else s -= 5;                   // 30%+ above = avoid
+    const df = (d.mm2 - d.pm2) / d.mm2; // positive = below NB market
+    if (df >= 0.25) s += 40;
+    else if (df >= 0.20) s += 35;
+    else if (df >= 0.15) s += 30;
+    else if (df >= 0.10) s += 25;
+    else if (df >= 0.05) s += 20;
+    else if (df >= 0.0)  s += 15;  // at market = still good
+    else if (df >= -0.10) s += 8;  // up to 10% above = ok
+    else if (df >= -0.20) s += 3;  // 10-20% above = expensive
+    else s += 0;                    // 20%+ above = overpriced
   }
-  if (d.s === 'off-plan') { s += 14; if (d.c?.includes('2027')) s += 4; if (d.c?.includes('2028')) s += 6; }
-  else if (d.s === 'under-construction') s += 8;
-  else s += 2;
+
+  // 2. RENTAL YIELD potential (25 points max) — via bm and location proxy
   if (d.pl && d.pl > 0) {
     const pp = d.pf / d.pl;
-    if (pp < 600) s += 15; else if (pp < 800) s += 12; else if (pp < 1000) s += 9; else if (pp < 1500) s += 6; else s += 3;
+    if (pp < 500) s += 25; else if (pp < 700) s += 20; else if (pp < 1000) s += 15; else if (pp < 1500) s += 10; else s += 5;
   } else if (d.bm && d.pf) {
-    const rt = d.bm / (d.pf / 100000);
-    if (rt > 50) s += 13; else if (rt > 40) s += 10; else if (rt > 30) s += 7; else s += 4;
+    const rt = d.bm / (d.pf / 100000); // built m² per €100k
+    if (rt > 55) s += 22; else if (rt > 40) s += 18; else if (rt > 28) s += 14; else if (rt > 18) s += 10; else s += 6;
   }
+
+  // 3. BEACH DISTANCE (15 points max)
   if (d.bk !== null) {
-    if (d.bk <= 0.5) s += 15; else if (d.bk <= 2) s += 12; else if (d.bk <= 5) s += 9; else if (d.bk <= 10) s += 6; else s += 3;
+    if (d.bk <= 0.5) s += 15;
+    else if (d.bk <= 1) s += 12;
+    else if (d.bk <= 2) s += 9;
+    else if (d.bk <= 5) s += 6;
+    else s += 3;
+  } else {
+    s += 3; // unknown
   }
-  if (d.dy >= 50) s += 10; else if (d.dy >= 30) s += 8; else if (d.dy >= 15) s += 6; else if (d.dy >= 8) s += 4; else s += 2;
+
+  // 4. BUILD STATUS (10 points max)
+  // Key-ready = bird in hand, off-plan = wait + risk
+  if (d.s === 'ready') s += 10;
+  else if (d.s === 'under-construction') s += 7;
+  else if (d.s === 'off-plan') {
+    s += 5;
+    if (d.c?.includes('2025') || d.c?.includes('2026')) s += 3; // near-term
+    else if (d.c?.includes('2027')) s += 2;
+  }
+
+  // 5. PLOT/BUILT RATIO for villas (10 points max) — larger plot = bonus
+  if (d.t === 'Villa' || d.t === 'Townhouse') {
+    if (d.pl && d.bm) {
+      const ratio = d.pl / d.bm;
+      if (ratio >= 5) s += 10;
+      else if (ratio >= 3) s += 8;
+      else if (ratio >= 2) s += 6;
+      else if (ratio >= 1) s += 4;
+      else s += 2;
+    } else if (d.pl && d.pl > 300) {
+      s += 5;
+    }
+  } else {
+    // For apartments: developer track record proxy via dy
+    if (d.dy >= 20) s += 8; else if (d.dy >= 10) s += 6; else if (d.dy >= 5) s += 4; else s += 3;
+  }
+
   return Math.min(100, Math.round(s));
 }
 
@@ -136,21 +168,14 @@ export function calcYield(d: Property): YieldResult {
   return { gross: +(annual / avgP * 100).toFixed(1), annual: Math.round(annual), rate: Math.round(rate), weeks: baseWk, src };
 }
 
-// New builds trade at ~30% premium over resale — use that as the benchmark.
-// Comparing raw pm2 vs resale mm2 makes every new build look overpriced.
-// Instead: compare vs new-build market price (resale × 1.30).
-const NB_PREMIUM = 1.30;
-
 export function discount(d: Property): number {
   if (!d.mm2 || !d.pm2) return 0;
-  const nbMarket = d.mm2 * NB_PREMIUM;
-  return (nbMarket - d.pm2) / nbMarket * 100;
+  return (d.mm2 - d.pm2) / d.mm2 * 100;
 }
 
 export function discountEuros(d: Property): number {
   if (!d.mm2 || !d.bm) return 0;
-  const nbMarket = d.mm2 * NB_PREMIUM;
-  return Math.round((nbMarket * d.bm) - d.pf);
+  return Math.round((d.mm2 * d.bm) - d.pf);
 }
 
 export function monthsToCompletion(c: string): number {

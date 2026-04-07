@@ -126,121 +126,180 @@ function mapType(type) {
   return 'Apartment'; // apartment, ground floor apartment
 }
 
-// RESALE market prices (€/m²) — these are what investors compare new-build against
-// Sources: SpainHouses.net (Mar 2026), Idealista (Jan 2026), Investropa, 5RealEstate
-// These represent the RESALE/secondary market, NOT new-build prices
-// New builds typically trade at 20-40% premium over resale
-
-// Regional defaults (resale averages, all property types combined)
-const marketPrices = {
-  'cb-south': { Apartment: 3100, Villa: 2800, Townhouse: 2900, Bungalow: 2800, Penthouse: 3500, Studio: 3200 },
-  'cb-north': { Apartment: 4200, Villa: 3800, Townhouse: 3600, Bungalow: 3800, Penthouse: 4800, Studio: 4200 },
-  'costa-calida': { Apartment: 2800, Villa: 2400, Townhouse: 2600, Bungalow: 2500, Penthouse: 3200, Studio: 2800 },
-  'costa-almeria': { Apartment: 2200, Villa: 2000, Townhouse: 2100, Bungalow: 2000, Penthouse: 2600, Studio: 2200 },
-  'costa-valencia': { Apartment: 2800, Villa: 2500, Townhouse: 2600, Bungalow: 2500, Penthouse: 3200, Studio: 2800 },
-};
-
-// Town-specific resale market prices (€/m²)
-// Apartment = flats, penthouses, bungalows, studios
-// Villa = villas, townhouses, semi-detached
-// Source: SpainHouses.net averages (Mar 2026) cross-referenced with Idealista
-const townMarket = {
-  // COSTA BLANCA SOUTH
-  'Torrevieja':              { Apartment: 2900, Villa: 2700 }, // Resale-adj. (SpainHouses €3098 incl. NB; pure resale lower)
-  'Los Balcones':            { Apartment: 2200, Villa: 2000 }, // Inland resort under Torrevieja municipality, budget bungalow area
-  'Pilar de La Horadada':    { Apartment: 2800, Villa: 2600 }, // Resale-only adj. (SpainHouses €3863 includes NB premiums)
-  'Pilar de la Horadada':    { Apartment: 2800, Villa: 2600 },
-  'Orihuela Costa':          { Apartment: 3450, Villa: 3200 }, // SpainHouses Orihuela €3452
-  'Orihuela':                { Apartment: 3450, Villa: 3200 },
-  'Santa Pola':              { Apartment: 3270, Villa: 3000 }, // SpainHouses €3267
-  'Guardamar del Segura':    { Apartment: 3290, Villa: 3000 }, // SpainHouses €3289
-  'Guardamar':               { Apartment: 3290, Villa: 3000 },
-  'Algorfa':                 { Apartment: 2800, Villa: 2600 }, // La Finca Golf — large villas price non-linearly; conservative resale base
-  'La Finca Golf':           { Apartment: 2800, Villa: 2600 },
-  'La Finca Golf Resort':    { Apartment: 2800, Villa: 2600 },
-  'San Miguel de Salinas':   { Apartment: 2600, Villa: 2600 }, // NB market-adjusted
-  'Rojales':                 { Apartment: 3100, Villa: 3100 }, // NB market-adjusted
-  'Ciudad Quesada':          { Apartment: 3200, Villa: 3200 }, // Expat/golf community NB market
-  'Golf La Marquesa':        { Apartment: 3200, Villa: 3800 }, // Golf resort premium
-  'Las Filipinas':           { Apartment: 2900, Villa: 3200 }, // Golf/resort area
-  'Alenda Golf':             { Apartment: 3000, Villa: 3500 }, // Golf premium
-  'Las Colinas Golf':        { Apartment: 4500, Villa: 5500 }, // Luxury golf — one of Spain's best courses
-  'Las Colinas':             { Apartment: 4500, Villa: 5500 },
-  'Campoamor':               { Apartment: 3800, Villa: 4500 }, // Premium golf coast
-  'Campoamor Golf':          { Apartment: 3800, Villa: 4500 },
-  'La Zenia':                { Apartment: 3500, Villa: 4000 }, // Popular coast/golf
-  'Cabo Roig':               { Apartment: 3600, Villa: 4200 }, // Premium coastal
-  'Benijofar':               { Apartment: 3300, Villa: 3300 }, // NB market-adjusted (international buyers)
-  'San Fulgencio':           { Apartment: 2900, Villa: 2900 }, // NB market-adjusted
-  'La Marina':               { Apartment: 3000, Villa: 3000 }, // NB market-adjusted
-  'Dolores':                 { Apartment: 2600, Villa: 2600 }, // NB market-adjusted
-  'Cox':                     { Apartment: 2350, Villa: 2350 }, // NB market-adjusted
-  'Benejúzar':               { Apartment: 1900, Villa: 1900 }, // Small inland Orihuela town
-  'Benejuzar':               { Apartment: 1900, Villa: 1900 },
-  'Catral':                  { Apartment: 2100, Villa: 1900 },
-  'Bigastro':                { Apartment: 2200, Villa: 2000 },
-  'Jacarilla':               { Apartment: 2100, Villa: 1900 },
-  'Daya Nueva':              { Apartment: 2750, Villa: 2750 }, // NB market-adjusted
-  'Los Montesinos':          { Apartment: 3200, Villa: 3200 }, // NB market-adjusted
-  'Pinoso':                  { Apartment: 1900, Villa: 1900 }, // NB market-adjusted
-  'Hondón de las Nieves':    { Apartment: 2200, Villa: 2200 }, // Eco/lifestyle NB premium
-  'Aspe':                    { Apartment: 1950, Villa: 1950 }, // NB market-adjusted
-  'Monforte del Cid':        { Apartment: 3050, Villa: 3050 }, // NB market-adjusted (luxury eco)
-  'La Romana':               { Apartment: 2200, Villa: 2200 }, // NB market-adjusted
-  'Alicante':                { Apartment: 3380, Villa: 3100 }, // SpainHouses €3383
-  'Elche':                   { Apartment: 2760, Villa: 2500 },
+// New-build benchmark prices €/m² — these are what new builds in each area actually sell for
+// Calibrated to p40 of actual feed data (40th percentile), so ~40% of listings are below benchmark
+// Apartments/Penthouses/Studios/Bungalows vs Villas/Townhouses
+const areaNBBenchmarks = {
   // COSTA BLANCA NORTH
-  'Calpe':                   { Apartment: 3500, Villa: 3500 }, // Resale-adj. standard market (SpainHouses €4145 skewed by luxury sea-view)
-  'Benidorm':                { Apartment: 4480, Villa: 3400 }, // SpainHouses €4475 (apt-heavy; villa resale market is thinner)
-  'Altea':                   { Apartment: 4130, Villa: 3800 }, // SpainHouses €4130
-  'Jávea Xàbia':             { Apartment: 4400, Villa: 4000 }, // SpainHouses Jávea €4407
-  'Javea':                   { Apartment: 4400, Villa: 4000 },
-  'Denia':                   { Apartment: 3800, Villa: 3500 }, // SpainHouses Dénia €3800
-  'Finestrat':               { Apartment: 3200, Villa: 2900 }, // Resale-adj. (SpainHouses €3838 skewed by NB; Benidorm-adjacent but lower)
-  'Villajoyosa':             { Apartment: 4640, Villa: 4200 }, // SpainHouses €4636
-  'El Campello':             { Apartment: 4830, Villa: 4400 }, // SpainHouses €4825
-  'Benissa':                 { Apartment: 4450, Villa: 4000 }, // SpainHouses €4445
-  'Moraira':                 { Apartment: 4640, Villa: 4200 }, // SpainHouses Moraira €4638
-  'Moraira_Teulada':         { Apartment: 4640, Villa: 4200 },
-  'Teulada':                 { Apartment: 3890, Villa: 3500 }, // SpainHouses €3889
-  'Benitachell':             { Apartment: 3570, Villa: 3200 }, // SpainHouses €3571
-  'Alfas del Pi':            { Apartment: 4040, Villa: 3700 }, // SpainHouses €4042
-  'El Verger':               { Apartment: 3820, Villa: 3500 },
-  'Els Poblets':             { Apartment: 3820, Villa: 3500 },
-  'Polop':                   { Apartment: 3400, Villa: 3400 }, // CB North inland, new-build premium market
-  'la Nucia':                { Apartment: 3500, Villa: 3500 }, // CB North, strong NB market
-  'Relleu':                  { Apartment: 2200, Villa: 2000 }, // Rural inland
-  'El Rafol D\'almunia':     { Apartment: 2200, Villa: 2000 }, // Rural CB North inland village
-  'Ráfol de Almunia':        { Apartment: 2200, Villa: 2000 }, // Alt spelling
-  'Penaguila':               { Apartment: 2150, Villa: 2150 }, // NB market-adjusted
-  'Mutxamel':                { Apartment: 3200, Villa: 2900 },
+  'Javea Xabia':          { apt: 5400, vil: 8500 },
+  'Jávea Xàbia':          { apt: 5400, vil: 8500 },
+  'Javea':                { apt: 5400, vil: 8500 },
+  'Moraira':              { apt: 5500, vil: 8000 },
+  'Moraira_Teulada':      { apt: 5500, vil: 8000 },
+  'Teulada':              { apt: 4800, vil: 5500 },
+  'Cumbre del Sol':       { apt: 4800, vil: 5000 },
+  'Benitachell':          { apt: 4800, vil: 4500 },
+  'Altea':                { apt: 5000, vil: 5200 },
+  'Calpe':                { apt: 6500, vil: 9900 },
+  'Benissa':              { apt: 5000, vil: 9800 },
+  'Denia':                { apt: 5200, vil: 4500 },
+  'Deniа':                { apt: 5200, vil: 4500 },
+  'El Verger':            { apt: 5600, vil: 5000 },
+  'Els Poblets':          { apt: 5600, vil: 5500 },
+  'Benidorm':             { apt: 5000, vil: 4000 },
+  'Finestrat':            { apt: 5500, vil: 5000 },
+  'Sierra Cortina':       { apt: 5500, vil: 5000 },
+  'Villajoyosa':          { apt: 6000, vil: 4000 },
+  'Allonbay':             { apt: 5000, vil: 3500 },
+  'El Campello':          { apt: 8100, vil: 5500 },
+  'Alfas del Pi':         { apt: 5000, vil: 4500 },
+  'Alfaz del Pi':         { apt: 5000, vil: 4500 },
+  'Albir':                { apt: 5000, vil: 4500 },
+  'Polop':                { apt: 4500, vil: 5600 },
+  'la Nucia':             { apt: 5600, vil: 4300 },
+  'La Nucia':             { apt: 5600, vil: 4300 },
+  'Relleu':               { apt: 3000, vil: 3000 },
+  'Penaguila':            { apt: 2800, vil: 3100 },
+  'Mutxamel':             { apt: 3900, vil: 2700 },
+  'San Juan Alicante':    { apt: 4500, vil: 3500 },
+  'Alicante':             { apt: 4700, vil: 3500 },
+  // COSTA BLANCA SOUTH
+  'Orihuela Costa':       { apt: 5100, vil: 5200 },
+  'Orihuela':             { apt: 4200, vil: 4400 },
+  'Punta Prima':          { apt: 5000, vil: 4500 },
+  'Cabo Roig':            { apt: 5000, vil: 5000 },
+  'La Zenia':             { apt: 4800, vil: 4500 },
+  'Playa Flamenca':       { apt: 4800, vil: 4500 },
+  'Lomas de Campoamor':   { apt: 4500, vil: 4000 },
+  'Campoamor':            { apt: 4500, vil: 4000 },
+  'Campoamor Golf':       { apt: 4500, vil: 4000 },
+  'Villamartin':          { apt: 4000, vil: 3800 },
+  'Villamartín':          { apt: 4000, vil: 3800 },
+  'Vistabella Golf':      { apt: 4000, vil: 3800 },
+  'Las Filipinas':        { apt: 4000, vil: 3800 },
+  'Los Balcones':         { apt: 3800, vil: 3500 },
+  'Los Altos':            { apt: 3800, vil: 3500 },
+  'Torrevieja':           { apt: 4600, vil: 5900 },
+  'Guardamar del Segura': { apt: 4100, vil: 3800 },
+  'Guardamar':            { apt: 4100, vil: 3800 },
+  'El Raso':              { apt: 3800, vil: 3500 },
+  'Santa Pola':           { apt: 3600, vil: 3500 },
+  'Gran Alacant':         { apt: 4200, vil: 5900 },
+  'La Marina':            { apt: 3500, vil: 5100 },
+  'Mil Palmeras':         { apt: 3500, vil: 3500 },
+  'Pilar de La Horadada': { apt: 4500, vil: 4300 },
+  'Pilar de la Horadada': { apt: 4500, vil: 4300 },
+  'Torre de la Horadada': { apt: 4500, vil: 4300 },
+  'Las Colinas Golf':     { apt: 5500, vil: 6000 },
+  'Las Colinas':          { apt: 5500, vil: 6000 },
+  'La Finca Golf':        { apt: 3500, vil: 5000 },
+  'La Finca Golf Resort': { apt: 3500, vil: 5000 },
+  'Algorfa':              { apt: 3400, vil: 4900 },
+  'Lo Romero Golf':       { apt: 3500, vil: 3500 },
+  'Alenda Golf':          { apt: 4000, vil: 4000 },
+  'Golf La Marquesa':     { apt: 3800, vil: 3500 },
+  'Ciudad Quesada':       { apt: 4500, vil: 5100 },
+  'Rojales':              { apt: 3900, vil: 5100 },
+  'Benijofar':            { apt: 4700, vil: 4900 },
+  'San Fulgencio':        { apt: 3700, vil: 4600 },
+  'Daya Nueva':           { apt: 3200, vil: 4000 },
+  'Daya Vieja':           { apt: 3000, vil: 3500 },
+  'San Miguel de Salinas':{ apt: 3300, vil: 5300 },
+  'Los Montesinos':       { apt: 3500, vil: 4200 },
+  'Bigastro':             { apt: 2500, vil: 2500 },
+  'Almoradí':             { apt: 3000, vil: 3500 },
+  'Almoradi':             { apt: 3000, vil: 3500 },
+  'Dolores':              { apt: 3700, vil: 3300 },
+  'Catral':               { apt: 2700, vil: 2800 },
+  'Jacarilla':            { apt: 2300, vil: 2500 },
+  'Cox':                  { apt: 3500, vil: 2800 },
+  'Hondón de las Nieves': { apt: 2900, vil: 3500 },
+  'Hondon de las Nieves': { apt: 2900, vil: 3500 },
+  'Hondón de los Frailes':{ apt: 2500, vil: 3000 },
+  'Pinoso':               { apt: 2500, vil: 2800 },
+  'Aspe':                 { apt: 2500, vil: 2900 },
+  'Monforte del Cid':     { apt: 2750, vil: 4800 },
+  'La Romana':            { apt: 2500, vil: 3300 },
+  'Benejúzar':            { apt: 2700, vil: 2700 },
+  'Benejuzar':            { apt: 2700, vil: 2700 },
+  'Formentera del Segura':{ apt: 2800, vil: 3000 },
+  'Elche':                { apt: 3500, vil: 3000 },
   // COSTA CALIDA
-  'Los Alcazares':           { Apartment: 3000, Villa: 2800 }, // Resale-adj. (SpainHouses €3714 inflated by NB)
-  'San Pedro del Pinatar':   { Apartment: 2800, Villa: 2600 }, // Resale-adj. (SpainHouses €3392 inflated by NB)
-  'San Javier':              { Apartment: 2900, Villa: 2700 }, // Resale-adj. (SpainHouses €3639 inflated by NB)
-  'Cartagena':               { Apartment: 3090, Villa: 2800 }, // SpainHouses €3093
-  'Torre Pacheco':           { Apartment: 2200, Villa: 2200 }, // Inland Murcia town (La Manga Club is separate micro-market)
-  'Aguilas':                 { Apartment: 2800, Villa: 2600 }, // Resale-adj. (SpainHouses €3517 inflated by NB activity)
-  'Mazarrón':                { Apartment: 2000, Villa: 1800 },
-  'Puerto de Mazarron':      { Apartment: 3100, Villa: 3100 }, // NB market-adjusted (coastal)
-  'La Manga del Mar Menor':  { Apartment: 2880, Villa: 2600 }, // SpainHouses €2875
-  'La Manga Club':           { Apartment: 3500, Villa: 4000 }, // Luxury golf resort — resale market (resort asking prices were inflated)
-  'Santa Rosalia':           { Apartment: 3800, Villa: 4500 }, // Lake & Life resort
-  'Santa Rosalia Lake':      { Apartment: 3800, Villa: 4500 },
-  'Altaona Golf':            { Apartment: 3200, Villa: 3800 }, // Golf resort
-  'La Serena Golf':          { Apartment: 3200, Villa: 3800 }, // Golf resort
-  'Baños y Mendigo':         { Apartment: 2900, Villa: 2900 }, // NB market-adjusted (resort area)
-  'La Manga':                { Apartment: 2880, Villa: 2600 },
+  'Los Alcazares':        { apt: 4200, vil: 5100 },
+  'Los Alcázares':        { apt: 4200, vil: 5100 },
+  'San Pedro del Pinatar':{ apt: 4000, vil: 4000 },
+  'San Javier':           { apt: 3800, vil: 4500 },
+  'Santiago de la Ribera':{ apt: 4000, vil: 4500 },
+  'Lo Pagan':             { apt: 3500, vil: 3500 },
+  'Playa Honda':          { apt: 3500, vil: 3500 },
+  'Los Nietos':           { apt: 3500, vil: 3500 },
+  'Los Urrutias':         { apt: 3000, vil: 3000 },
+  'Torre Pacheco':        { apt: 3300, vil: 3900 },
+  'Baños y Mendigo':      { apt: 3500, vil: 4500 },
+  'Altaona Golf':         { apt: 3500, vil: 4000 },
+  'La Serena Golf':       { apt: 3500, vil: 4000 },
+  'La Manga Club':        { apt: 5100, vil: 4400 },
+  'La Manga del Mar Menor':{ apt: 3100, vil: 3100 },
+  'La Manga':             { apt: 3100, vil: 3100 },
+  'Santa Rosalia':        { apt: 4500, vil: 5000 },
+  'Santa Rosalia Resort': { apt: 4500, vil: 5000 },
+  'Cartagena':            { apt: 3700, vil: 5300 },
+  'La Union':             { apt: 3000, vil: 2800 },
+  'Mazarrón':             { apt: 3500, vil: 3500 },
+  'Puerto de Mazarron':   { apt: 4300, vil: 3700 },
+  'Puerto de Mazarrón':   { apt: 4300, vil: 3700 },
+  'Aguilas':              { apt: 4800, vil: 2900 },
+  'El Alamillo':          { apt: 4000, vil: 3500 },
+  'Condado de Alhama':    { apt: 3500, vil: 3500 },
+  'Alhama de Murcia':     { apt: 3000, vil: 3000 },
+  'El Rafol D\'almunia':  { apt: 3000, vil: 3000 },
+  'Ráfol de Almunia':     { apt: 3000, vil: 3000 },
 };
 
-function getMarketPrice(town, region, type) {
-  // Check town-specific first
-  if (town && townMarket[town]) {
-    const simpleType = type === 'Penthouse' ? 'Apartment' : type === 'Bungalow' ? 'Apartment' : type === 'Studio' ? 'Apartment' : type === 'Townhouse' ? 'Villa' : type;
-    if (townMarket[town][simpleType]) return townMarket[town][simpleType];
+// Regional fallback new-build benchmarks (used when town not in areaNBBenchmarks)
+const regionNBFallback = {
+  'cb-north':      { apt: 5000, vil: 5000 },
+  'cb-south':      { apt: 4200, vil: 4400 },
+  'costa-calida':  { apt: 3800, vil: 4200 },
+  'costa-almeria': { apt: 3000, vil: 3000 },
+  'costa-valencia':{ apt: 4000, vil: 4000 },
+};
+
+function getNewBuildBenchmark(town, region, type, cats, beachKm, views) {
+  const isVilla = (type === 'Villa' || type === 'Townhouse' || type === 'Bungalow');
+
+  // Step 1: Base benchmark
+  let base = null;
+  if (town && areaNBBenchmarks[town]) {
+    base = isVilla ? areaNBBenchmarks[town].vil : areaNBBenchmarks[town].apt;
   }
-  const regionPrices = marketPrices[region] || marketPrices['cb-south'];
-  return regionPrices[type] || regionPrices['Apartment'];
+  if (!base) {
+    const fb = regionNBFallback[region] || regionNBFallback['cb-south'];
+    base = isVilla ? fb.vil : fb.apt;
+  }
+
+  // Step 2: Premium location multipliers (stacked multiplicatively, capped at 1.55)
+  let mult = 1.0;
+
+  // Golf resort
+  if (cats && cats.includes('golf')) mult *= 1.15;
+
+  // Beach distance
+  if (beachKm !== null) {
+    if (beachKm < 0.5) mult *= 1.20;       // frontline
+    else if (beachKm < 1.0) mult *= 1.10;  // near beach
+  }
+
+  // Frontline category (belt-and-suspenders with beach distance)
+  if (cats && cats.includes('frontline') && !(beachKm !== null && beachKm < 0.5)) mult *= 1.15;
+
+  // Sea views
+  if (views && views.includes('sea')) mult *= 1.10;
+
+  // Cap multiplier
+  mult = Math.min(mult, 1.55);
+
+  return Math.round(base * mult);
 }
 
 function getStatus(prop) {
@@ -281,10 +340,27 @@ function parseProperty(prop) {
   const beachKm = beachM > 0 ? +(beachM / 1000).toFixed(1) : null;
   const lat = parseFloat(prop.location?.latitude) || null;
   const lng = parseFloat(prop.location?.longitude) || null;
-  const mm2 = getMarketPrice(town, region, type);
+
+  // Compute categories and views first (needed for benchmark)
+  const categories = [];
+  if (prop.category?.golf == 1) categories.push('golf');
+  if (prop.category?.beach == 1) categories.push('beach');
+  if (prop.category?.urban == 1) categories.push('urban');
+  if (prop.category?.countryside == 1) categories.push('countryside');
+  if (prop.category?.first_line == 1) categories.push('frontline');
+
+  const views = [];
+  if (prop.views?.sea_views == 1) views.push('sea');
+  if (prop.views?.mountain_views == 1) views.push('mountain');
+  if (prop.views?.pool_views == 1) views.push('pool');
+  if (prop.views?.garden_views == 1) views.push('garden');
+  if (prop.views?.open_views == 1) views.push('open');
+
+  const mm2 = getNewBuildBenchmark(town, region, type, categories, beachKm, views);
   // For pm2 comparison: use usable living area when available (avoids basement/garage inflation in built_m2)
   // Falls back to built_m2 if no usable data
   const area = usableM2 > 0 ? usableM2 : builtM2;
+  const pm2 = area > 0 ? Math.round(price / area) : undefined;
 
   if (price <= 0 || area <= 0) return null;
 
@@ -303,22 +379,6 @@ function parseProperty(prop) {
     }
   }
 
-  // Categories
-  const categories = [];
-  if (prop.category?.golf == 1) categories.push('golf');
-  if (prop.category?.beach == 1) categories.push('beach');
-  if (prop.category?.urban == 1) categories.push('urban');
-  if (prop.category?.countryside == 1) categories.push('countryside');
-  if (prop.category?.first_line == 1) categories.push('frontline');
-
-  // Views
-  const views = [];
-  if (prop.views?.sea_views == 1) views.push('sea');
-  if (prop.views?.mountain_views == 1) views.push('mountain');
-  if (prop.views?.pool_views == 1) views.push('pool');
-  if (prop.views?.garden_views == 1) views.push('garden');
-  if (prop.views?.open_views == 1) views.push('open');
-
   return {
     d: 'Via Xavia Estate',
     p: title || `${type} in ${town}`,
@@ -327,7 +387,7 @@ function parseProperty(prop) {
     t: type,
     pf: price,
     pt: priceTo > 0 ? priceTo : price,
-    pm2: area > 0 ? Math.round(price / area) : undefined,
+    pm2,
     mm2,
     bm: area,           // usable living area (or built_m2 if no usable data) — avoids basement/garage inflation
     bm_full: builtM2,   // raw total built area (includes underground/garages)
