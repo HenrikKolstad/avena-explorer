@@ -359,14 +359,14 @@ export default function Explorer() {
               <h1 className="text-4xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">AVENA</h1>
               <p className="text-[9px] tracking-[6px] uppercase text-[#c9a84c]/60 mt-0.5 font-light">Estate</p>
             </a>
-            <div className="text-[10px] text-gray-600 mt-2 leading-relaxed">
+            <div className="text-[10px] text-gray-400 mt-2 leading-relaxed">
               <div>{t.hero_scanner}</div>
-              <div className="text-[9px] text-gray-700 mt-0.5">Costa Del Sol properties coming soon ⏳</div>
+              <div className="text-[9px] text-gray-500 mt-0.5">Costa Del Sol properties coming soon ⏳</div>
             </div>
-            <p className="text-[9px] text-gray-700 mt-1.5 flex items-center gap-1 flex-wrap">
+            <p className="text-[9px] text-gray-500 mt-1.5 flex items-center gap-1 flex-wrap">
               <span>In partnership with</span>
               <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: '#F5A623' }}>Xavia Estate</a>
-              <span className="text-gray-600">&</span>
+              <span className="text-gray-400">&</span>
               <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: '#635BFF' }}>Stripe</a>
             </p>
           </div>
