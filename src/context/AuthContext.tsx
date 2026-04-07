@@ -37,6 +37,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function checkSubscription(email: string) {
+    // Admin accounts always have full access
+    const ADMIN_EMAILS = ['henrik@xaviaestate.com', 'Henrik@xaviaestate.com'];
+    if (ADMIN_EMAILS.some(e => e.toLowerCase() === email.toLowerCase())) {
+      setIsPaid(true);
+      return;
+    }
+
     if (!supabase) return;
     const { data } = await supabase
       .from('subscriptions')

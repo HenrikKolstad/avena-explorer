@@ -136,16 +136,21 @@ export function calcYield(d: Property): YieldResult {
   return { gross: +(annual / avgP * 100).toFixed(1), annual: Math.round(annual), rate: Math.round(rate), weeks: baseWk, src };
 }
 
+// New builds trade at ~30% premium over resale — use that as the benchmark.
+// Comparing raw pm2 vs resale mm2 makes every new build look overpriced.
+// Instead: compare vs new-build market price (resale × 1.30).
+const NB_PREMIUM = 1.30;
+
 export function discount(d: Property): number {
-  // Compare against resale market price (mm2)
   if (!d.mm2 || !d.pm2) return 0;
-  return (d.mm2 - d.pm2) / d.mm2 * 100;
+  const nbMarket = d.mm2 * NB_PREMIUM;
+  return (nbMarket - d.pm2) / nbMarket * 100;
 }
 
 export function discountEuros(d: Property): number {
-  // Difference in total € vs resale market
   if (!d.mm2 || !d.bm) return 0;
-  return Math.round((d.mm2 * d.bm) - d.pf);
+  const nbMarket = d.mm2 * NB_PREMIUM;
+  return Math.round((nbMarket * d.bm) - d.pf);
 }
 
 export function monthsToCompletion(c: string): number {

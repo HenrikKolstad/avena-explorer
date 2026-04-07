@@ -1,18 +1,55 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Property, SortKey, SortDir } from '@/lib/types';
 import { loadProperties } from '@/lib/data';
 import { formatPrice, scoreClass, scoreColor, regionLabel, discount, discountEuros, calcYield } from '@/lib/scoring';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
+
+const MapView = dynamic(() => import('@/components/MapView'), { ssr: false });
 
 type QuickFilter = '' | 'budget' | 'mid' | 'premium' | 'beach' | 'golf' | 'cashflow' | 'favs';
+
+interface AiMemoResult {
+  verdict: 'BUY' | 'CONSIDER' | 'PASS';
+  confidence: number;
+  headline: string;
+  price_prediction: {
+    year1: number;
+    year3: number;
+    year5: number;
+    rationale: string;
+  };
+  strengths: string[];
+  risks: string[];
+  yield_outlook: string;
+  market_context: string;
+  comparable_position: string;
+  recommendation: string;
+}
 
 const LUXURY_THRESHOLD = 1_000_000;
 
 // Free tier limits
 const FREE_DEALS_LIMIT = 5;
 const FREE_YIELD_LIMIT = 3;
+
+// 5-year market value forecast helper
+function growthRate5yr(region: string): number {
+  const r = (region || '').toLowerCase();
+  if (r.includes('marbella') || r.includes('costa del sol') || r.includes('estepona') || r.includes('benahavis')) return 0.09;
+  if (r.includes('javea') || r.includes('altea') || r.includes('moraira') || r.includes('denia') || r.includes('cb-north')) return 0.085;
+  if (r.includes('mallorca') || r.includes('ibiza') || r.includes('balear')) return 0.10;
+  if (r.includes('barcelona') || r.includes('sitges')) return 0.065;
+  if (r.includes('valencia')) return 0.07;
+  if (r.includes('torrevieja') || r.includes('cb-south') || r.includes('alicante')) return 0.065;
+  return 0.075;
+}
+function profit5yr(pf: number, region: string): number {
+  return Math.round(pf * Math.pow(1 + growthRate5yr(region), 5) - pf);
+}
 
 export default function Explorer() {
   const { user, isPaid, loading: authLoading, signInWithEmail, signOut, startCheckout } = useAuth();
@@ -26,8 +63,9 @@ export default function Explorer() {
   });
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('');
   const [preview, setPreview] = useState<number | null>(null);
+  const [previewLuxScore, setPreviewLuxScore] = useState<number | null>(null);
   const [favs, setFavs] = useState<string[]>([]);
-  const [tab, setTab] = useState<'deals' | 'yield' | 'market' | 'luxury' | 'about' | 'legal'>('deals');
+  const [tab, setTab] = useState<'deals' | 'yield' | 'portfolio' | 'map' | 'market' | 'luxury' | 'about' | 'legal' | 'contact'>('deals');
   const [imgIdx, setImgIdx] = useState(0);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -37,6 +75,22 @@ export default function Explorer() {
   const [showWelcomePro, setShowWelcomePro] = useState(false);
   const [paywallEmail, setPaywallEmail] = useState('');
   const [paywallLoading, setPaywallLoading] = useState(false);
+  // AI Memo state
+  const [aiMemo, setAiMemo] = useState<AiMemoResult | null>(null);
+  const [aiMemoLoading, setAiMemoLoading] = useState(false);
+  const [aiMemoError, setAiMemoError] = useState<string | null>(null);
+  // Notes state (Supabase)
+  const [note, setNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  // Portfolio state
+  const [portfolio, setPortfolio] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('avena_portfolio');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
 
   useEffect(() => {
     loadProperties().then(d => { setProperties(d); setLoading(false); });
@@ -59,6 +113,15 @@ export default function Explorer() {
       return next;
     });
   }, []);
+
+  const togglePortfolio = useCallback((ref: string) => {
+    setPortfolio(prev => {
+      const next = prev.includes(ref) ? prev.filter(r => r !== ref) : [...prev, ref];
+      localStorage.setItem('avena_portfolio', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
 
   const filtered = useMemo(() => {
     let result = properties.filter(d => {
@@ -139,41 +202,149 @@ export default function Explorer() {
 
   const previewProp = preview !== null ? filtered[preview] : null;
 
-  // Reset image index when preview changes
-  useEffect(() => { setImgIdx(0); }, [preview]);
+  // Reset image index and AI memo when preview changes
+  useEffect(() => {
+    setImgIdx(0);
+    setAiMemo(null);
+    setAiMemoError(null);
+    setNote('');
+    setNoteSaved(false);
+  }, [preview]);
+
+  // Load note for current preview property from Supabase
+  useEffect(() => {
+    if (!user || !previewProp || !supabase) return;
+    const ref = previewProp.ref || previewProp.p;
+    supabase
+      .from('notes')
+      .select('note')
+      .eq('property_ref', ref)
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.note) setNote(data.note);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewProp?.ref, user?.id]);
+
+  const exportCSV = () => {
+    const headers = ['Project','Developer','Location','Region','Type','Price','€/m²','Market €/m²','Discount%','Score','Built m²','Plot m²','Beds','Beach km','Status','Completion','Yield%'];
+    const rows = filtered.map(d => [
+      d.p, d.d, d.l, regionLabel(d.r), d.t,
+      d.pf, d.pm2 || '', d.mm2,
+      discount(d).toFixed(1),
+      d._sc || '',
+      d.bm || '', d.pl || '', d.bd || '',
+      d.bk !== null ? d.bk : '',
+      d.s, d.c,
+      d._yield ? d._yield.gross : '',
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'avena-properties.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const fetchAiMemo = async () => {
+    if (!previewProp) return;
+    setAiMemoLoading(true);
+    setAiMemoError(null);
+    setAiMemo(null);
+    try {
+      const comparables = properties
+        .filter(p => p.r === previewProp.r && (p.ref || p.p) !== (previewProp.ref || previewProp.p))
+        .sort((a, b) => Math.abs(a.pf - previewProp.pf) - Math.abs(b.pf - previewProp.pf))
+        .slice(0, 5);
+      const res = await fetch('/api/ai/memo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ property: previewProp, comparables }),
+      });
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setAiMemo(data);
+    } catch {
+      setAiMemoError('Failed to generate analysis. Please try again.');
+    } finally {
+      setAiMemoLoading(false);
+    }
+  };
+
+  const saveNote = async () => {
+    if (!user || !previewProp || !supabase) return;
+    setNoteSaving(true);
+    const ref = previewProp.ref || previewProp.p;
+    await supabase.from('notes').upsert(
+      { user_id: user.id, property_ref: ref, note, created_at: new Date().toISOString() },
+      { onConflict: 'user_id,property_ref' }
+    );
+    setNoteSaving(false);
+    setNoteSaved(true);
+    setTimeout(() => setNoteSaved(false), 2000);
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#070709' }}>
         <div className="text-center">
-          <div className="text-3xl font-bold text-amber-400 font-serif mb-2">AVENA</div>
-          <div className="text-sm text-gray-500">Loading properties...</div>
+          <div className="text-5xl font-bold font-serif tracking-[0.3em] mb-3" style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c96a, #c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AVENA</div>
+          <div className="text-[10px] tracking-[6px] uppercase text-[#c9a84c]/40 mb-8">ESTATE</div>
+          <div className="text-xs text-gray-600 tracking-widest">Loading properties...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen bg-[#070709]">
       {/* TOP BAR */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-[#12121c] via-[#1a1520] to-[#12121c] border-b-2 border-amber-700/40 px-4 md:px-8 py-3 md:py-5 flex items-center justify-between flex-wrap gap-3 shadow-xl">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-serif tracking-widest bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent">AVENA</h1>
-          <p className="text-[10px] tracking-[4px] uppercase text-amber-500 mt-0.5">Estate</p>
-          <p className="text-[11px] text-gray-400 mt-1 max-w-xs leading-snug">Real-time investment intelligence across 1,000+ new builds on Spain&apos;s southern coast</p>
-          <p className="text-[10px] text-gray-600 italic mt-1">In partnership with <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors">Xavia Estate</a></p>
-        </div>
-        <div className="flex gap-3 md:gap-6 items-center">
+      <header className="relative sticky top-0 z-50 border-b border-[#1a1a24] px-4 md:px-8 py-4 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #c9a84c 30%, #e8c96a 50%, #c9a84c 70%, transparent 100%)' }} />
+        <div className="flex items-center justify-between gap-4">
+
+          {/* LEFT — logo */}
+          <div className="flex-shrink-0">
+            <a href="/" className="block cursor-pointer">
+              <h1 className="text-2xl md:text-4xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">AVENA</h1>
+              <p className="text-[9px] tracking-[6px] uppercase text-[#c9a84c]/60 mt-0.5 font-light">Estate</p>
+            </a>
+            <div className="text-[10px] text-gray-600 mt-2 leading-relaxed hidden md:block">
+              <div>Spain&apos;s first PropTech scanner</div>
+            </div>
+            <p className="text-[9px] text-gray-700 mt-1.5 hidden md:flex items-center gap-1 flex-wrap">
+              <span>With</span>
+              <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: '#F5A623' }}>Xavia Estate</a>
+              <span>&amp;</span>
+              <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: '#635BFF' }}>Stripe</a>
+            </p>
+          </div>
+
+          {/* CENTER — hero punchlines (desktop only) */}
+          <div className="hidden lg:flex flex-col gap-2 flex-1 max-w-md mx-auto text-center">
+            <div className="text-lg xl:text-xl font-semibold leading-snug text-gray-200">
+              Real-time investment intelligence for <span style={{ color: '#c9a84c' }}>Spain&apos;s southern coast</span>
+            </div>
+            <div className="h-px w-16 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #c9a84c, transparent)' }} />
+            <div className="text-lg xl:text-xl font-semibold leading-snug text-gray-200">
+              Find undervalued new builds <span style={{ color: '#c9a84c' }}>before anyone else</span>
+            </div>
+          </div>
+
+          {/* RIGHT — stats + auth */}
+          <div className="flex gap-3 md:gap-5 items-center flex-shrink-0">
           <div className="text-center">
-            <div className="text-xl md:text-2xl font-bold text-amber-400 font-serif">{stats.count}</div>
+            <div className="text-2xl md:text-3xl font-bold text-amber-400 font-serif">{stats.count}</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Properties</div>
           </div>
-          <div className="text-center">
-            <div className="text-xl md:text-2xl font-bold text-amber-400 font-serif">{stats.avgDisc}%</div>
+          <div className="text-center border-l border-[#1a1a24] pl-4 md:pl-6">
+            <div className="text-2xl md:text-3xl font-bold text-amber-400 font-serif">{stats.avgDisc}%</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Avg Discount</div>
           </div>
-          <div className="text-center">
-            <div className="text-xl md:text-2xl font-bold text-amber-400 font-serif">{stats.bestScore}</div>
+          <div className="text-center border-l border-[#1a1a24] pl-4 md:pl-6">
+            <div className="text-2xl md:text-3xl font-bold text-amber-400 font-serif">{stats.bestScore}</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Best Score</div>
           </div>
           {/* Auth button */}
@@ -182,7 +353,7 @@ export default function Explorer() {
               user ? (
                 <div className="flex items-center gap-3">
                   {isPaid ? (
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded-full font-semibold">PRO</span>
+                    <span className="text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, #c9a84c22, #c9a84c44)', border: '1px solid rgba(201,168,76,0.5)', color: '#c9a84c' }}>PRO</span>
                   ) : (
                     <button onClick={() => setShowPaywall(true)}
                       className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors">
@@ -196,11 +367,12 @@ export default function Explorer() {
               ) : (
                 <div className="flex items-center gap-2">
                   <button onClick={() => setShowAuthModal(true)}
-                    className="text-[11px] border border-amber-600 text-amber-400 hover:bg-amber-600/10 font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                    className="text-[11px] border border-[#c9a84c]/40 text-[#c9a84c]/80 hover:border-[#c9a84c] hover:text-[#c9a84c] font-semibold px-3 py-1.5 rounded-lg transition-all whitespace-nowrap">
                     Sign in
                   </button>
                   <button onClick={() => setShowPaywall(true)}
-                    className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                    className="text-[11px] text-black font-bold px-4 py-1.5 rounded-lg whitespace-nowrap"
+                    style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)' }}>
                     Subscribe
                   </button>
                 </div>
@@ -208,10 +380,11 @@ export default function Explorer() {
             )}
           </div>
         </div>
+        </div>
       </header>
 
       {/* FILTER BAR */}
-      <div className="bg-[#111118] border-b border-[#2a2a30] px-4 md:px-8 py-3 flex gap-3 overflow-x-auto items-end scrollbar-none">
+      <div className="bg-[#0a0a12] border-b border-[#1a1a24] px-4 md:px-8 py-2.5 flex gap-2 overflow-x-auto items-end scrollbar-none">
         <FilterSelect label="Region" value={filters.region} onChange={v => setFilters(f => ({...f, region: v}))}
           options={[['all','All Regions'],['cb-south','CB South'],['cb-north','CB North'],['costa-calida','C. Cálida']]} />
         <FilterSelect label="Type" value={filters.type} onChange={v => setFilters(f => ({...f, type: v}))}
@@ -223,31 +396,53 @@ export default function Explorer() {
         <FilterSelect label="Beds" value={String(filters.minBeds)} onChange={v => setFilters(f => ({...f, minBeds: +v}))}
           options={[['0','Any'],['1','1+'],['2','2+'],['3','3+'],['4','4+']]} />
         <div className="flex flex-col gap-1">
-          <label className="text-[9px] uppercase tracking-widest text-gray-500">Search</label>
+          <label className="text-[8px] tracking-[2px] text-gray-600 uppercase">Search</label>
           <input type="text" value={filters.query} onChange={e => setFilters(f => ({...f, query: e.target.value}))}
             placeholder="Developer, location..."
-            className="bg-[#08080d] border border-[#2a2a30] text-gray-200 px-3 py-1.5 rounded-md text-xs outline-none focus:border-amber-500 min-w-[150px]" />
+            className="text-gray-300 px-3 py-1.5 rounded-md text-xs outline-none min-w-[150px]"
+            style={{ background: '#0a0a12', border: '1px solid #1e1e28' }}
+            onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#c9a84c'; }}
+            onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#1e1e28'; }} />
+        </div>
+        <div className="flex flex-col gap-1 ml-auto">
+          <label className="text-[9px] uppercase tracking-widest text-gray-500 opacity-0">x</label>
+          <button onClick={exportCSV}
+            className="bg-[#18181f] border border-[#2a2a30] hover:border-amber-500/50 text-gray-400 hover:text-amber-400 px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap">
+            Export CSV ↓
+          </button>
         </div>
       </div>
 
       {/* QUICK FILTERS */}
-      <div className="bg-[#111118] border-b border-[#2a2a30] px-4 md:px-8 py-2 flex gap-2 overflow-x-auto scrollbar-none">
+      <div className="bg-[#070709] border-b border-[#1a1a24] px-4 md:px-8 py-2.5 flex gap-2 overflow-x-auto scrollbar-none">
         {([['budget','Budget <€200k'],['mid','Mid €200-400k'],['premium','Premium €400k+'],['beach','Beach <2km'],['golf','Golf Resort'],['cashflow','Cash-Flow +'],['favs','Favorites']] as [QuickFilter, string][]).map(([key, label]) => (
           <button key={key} onClick={() => { setQuickFilter(q => q === key ? '' : key); }}
-            className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${quickFilter === key ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-transparent border-[#2a2a30] text-gray-500 hover:text-gray-300'}`}>
+            className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${quickFilter === key ? 'bg-[#c9a84c]/15 border-[#c9a84c]/60 text-[#c9a84c]' : 'bg-transparent border-[#1f1f28] text-gray-600 hover:border-[#c9a84c]/30 hover:text-gray-400'}`}>
             {label}
           </button>
         ))}
       </div>
 
-      {/* TABS */}
-      <div className="flex gap-0 px-4 md:px-8 bg-[#111118] border-b border-[#2a2a30] overflow-x-auto scrollbar-none">
-        {([['deals','Deal Rankings'],['yield','Rental Yield'],['market','Market Overview'],['luxury','Luxury €1M+'],['about','Scoring Method'],['legal','Legal & Security']] as [typeof tab, string][]).map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={`flex-shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-amber-400 border-amber-400' : 'text-amber-700 border-transparent hover:text-amber-500'}`}>
-            {label}
-          </button>
-        ))}
+      {/* TABS — mobile: wrapping grid, desktop: scrollable row */}
+      <div className="bg-[#070709] border-b border-[#1a1a24]">
+        {/* Mobile */}
+        <div className="md:hidden flex flex-wrap px-2 pt-1 pb-0">
+          {([['deals','Deals'],['yield','Yield'],['portfolio','Portfolio'],['luxury','Luxury'],['map','Map'],['market','Market'],['about','Scoring'],['legal','Legal'],['contact','Contact']] as [typeof tab, string][]).map(([key, label]) => (
+            <button key={key} onClick={() => setTab(key)}
+              className={`px-3 py-2 text-[10px] font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-[#c9a84c] border-[#c9a84c]' : 'text-gray-600 border-transparent hover:text-gray-400'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {/* Desktop */}
+        <div className="hidden md:flex gap-0 px-8 overflow-x-auto scrollbar-none">
+          {([['deals','Deal Rankings'],['yield','Rental Yield'],['portfolio','Portfolio'],['luxury','Luxury €1M+'],['map','Map'],['market','Market Overview'],['about','Scoring Method'],['legal','Legal & Security'],['contact','Contact']] as [typeof tab, string][]).map(([key, label]) => (
+            <button key={key} onClick={() => setTab(key)}
+              className={`flex-shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-[#c9a84c] border-[#c9a84c]' : 'text-gray-600 border-transparent hover:text-gray-400'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* CONTENT */}
@@ -263,15 +458,21 @@ export default function Explorer() {
                 const isLocked = !isPaid && rank > FREE_DEALS_LIMIT;
                 return (
                   <div key={d.ref || d.p + i}
-                    onClick={() => isLocked ? setShowPaywall(true) : setPreview(i)}
-                    className={`bg-[#111118] border rounded-xl p-4 cursor-pointer transition-all active:scale-[0.99] ${isLocked ? 'opacity-40 blur-[2px] select-none' : 'border-[#2a2a30] hover:border-amber-500/40'} ${preview === i ? 'border-amber-500' : ''}`}>
+                    onClick={() => isLocked ? setShowPaywall(true) : (setPreview(i), setPreviewLuxScore(null))}
+                    className={`relative border rounded-2xl p-4 cursor-pointer transition-all active:scale-[0.99] ${isLocked ? 'opacity-30 blur-[2px] select-none border-[#1a1a24]' : preview === i ? 'border-[#c9a84c]/60 shadow-lg shadow-[#c9a84c]/5' : 'border-[#1e1e2a] hover:border-[#c9a84c]/30'}`}
+                    style={{ background: 'linear-gradient(160deg, #0e0e18 0%, #0a0a12 100%)' }}>
+                    {rank <= 3 && (
+                      <div className={`absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold ${rank === 1 ? 'bg-[#c9a84c] text-black' : rank === 2 ? 'bg-gray-400 text-black' : 'bg-amber-800 text-white'}`}>
+                        {rank}
+                      </div>
+                    )}
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1 pr-3">
-                        <div className="text-amber-300 font-semibold text-sm leading-tight">{d.p}</div>
-                        <div className="text-gray-500 text-[11px] mt-0.5">{d.l}</div>
+                        <div className="text-white font-semibold text-sm leading-snug">{d.p}</div>
+                        <div className="text-gray-600 text-[11px] mt-0.5">{d.l}</div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <span className={`text-xl font-extrabold font-serif ${scoreClass(d._sc || 0)}`}>{d._sc}</span>
+                        <span className={`text-2xl font-extrabold font-serif ${scoreClass(d._sc || 0)}`}>{d._sc}</span>
                         <div className="text-[9px] text-gray-600 uppercase tracking-wide">score</div>
                       </div>
                     </div>
@@ -279,14 +480,29 @@ export default function Explorer() {
                       <span className="text-white font-bold text-sm">{formatPrice(d.pf)}</span>
                       {d.pm2 ? <span className="text-gray-500 text-xs">€{d.pm2}/m²</span> : null}
                       {dc >= 0 ? (
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${dc >= 15 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-500/10 text-emerald-300'}`}>-{dc.toFixed(0)}%</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${dc >= 15 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-500/10 text-emerald-300'}`}>
+                          -{dc.toFixed(0)}% {discountEuros(d) > 0 ? `· save ${formatPrice(discountEuros(d))}` : ''}
+                        </span>
                       ) : (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">+{Math.abs(dc).toFixed(0)}%</span>
                       )}
+                      {(() => { const p5 = profit5yr(d.pf, d.r); return p5 > 0 ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#c9a84c]/10 text-[#c9a84c]">
+                          +{formatPrice(p5)} in 5yr
+                        </span>
+                      ) : null; })()}
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${d.s === 'off-plan' ? 'bg-emerald-500/12 text-emerald-400' : d.s === 'under-construction' ? 'bg-amber-500/12 text-amber-400' : 'bg-blue-500/12 text-blue-400'}`}>
                         {d.s === 'off-plan' ? 'Off-Plan' : d.s === 'under-construction' ? 'Building' : 'Ready'}
                       </span>
+                      {d.c && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500/80">~{d.c}</span>}
                       <span className="text-gray-600 text-[10px]">{d.bd}bd · {d.bm}m²{d.bk !== null ? ` · ${d.bk}km beach` : ''}</span>
+                    </div>
+                    <div className="flex justify-end mt-1.5">
+                      <button
+                        onClick={e => { e.stopPropagation(); if (!isLocked) togglePortfolio(d.ref || d.p); }}
+                        className={`text-[10px] px-2 py-0.5 rounded border transition-all ${portfolio.includes(d.ref || d.p) ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400' : 'border-[#2a2a30] text-gray-600 hover:text-gray-300'}`}>
+                        {portfolio.includes(d.ref || d.p) ? 'In Portfolio' : '+ Portfolio'}
+                      </button>
                     </div>
                   </div>
                 );
@@ -297,7 +513,7 @@ export default function Explorer() {
                   <div className="text-gray-400 text-xs mb-3">Subscribe to unlock all {filtered.length} properties</div>
                   <button onClick={() => user ? setShowPaywall(true) : setShowAuthModal(true)}
                     className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm">
-                    Subscribe — €49/month
+                    Subscribe — €79/month
                   </button>
                 </div>
               )}
@@ -306,9 +522,9 @@ export default function Explorer() {
               <table className="w-full border-collapse min-w-[1100px]">
                 <thead>
                   <tr>
-                    {([['#',''],['score','Score'],['developer','Developer'],['project','Project'],['','Region'],['','Type'],['price','Price'],['priceM2','€/m²'],['marketM2','Market'],['discount','Discount'],['built','Built'],['plot','Plot'],['beds','Beds'],['beach','Beach'],['','Status']] as [SortKey|'', string][]).map(([key, label], i) => (
+                    {([['#',''],['score','Score'],['developer','Developer'],['project','Project'],['','Region'],['','Type'],['price','Price'],['priceM2','€/m²'],['marketM2','Market'],['discount','Discount'],['built','Built'],['plot','Plot'],['beds','Beds'],['beach','Beach'],['','Status'],['','Completion'],['','+']] as [SortKey|'', string][]).map(([key, label], i) => (
                       <th key={i} onClick={() => key && handleSort(key as SortKey)}
-                        className={`bg-[#0e0e15] px-3 py-2.5 text-[10px] uppercase tracking-wider text-gray-500 text-left border-b border-[#2a2a30] cursor-pointer hover:text-amber-400 whitespace-nowrap sticky top-0 z-10 select-none ${sortKey === key ? 'text-amber-400' : ''}`}>
+                        className={`bg-[#09090f] px-3 py-2.5 text-[10px] uppercase tracking-wider text-gray-500 text-left border-b border-[#1a1a24] cursor-pointer hover:text-[#c9a84c] whitespace-nowrap sticky top-0 z-10 select-none ${sortKey === key ? 'text-[#c9a84c]' : ''}`}>
                         {label}{sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
                       </th>
                     ))}
@@ -321,35 +537,35 @@ export default function Explorer() {
                     const isTop3 = rank <= 3;
                     const isLocked = !isPaid && rank > FREE_DEALS_LIMIT;
                     return (
-                      <tr key={d.ref || d.p + i} onClick={() => isLocked ? setShowPaywall(true) : setPreview(i)}
-                        className={`transition-colors cursor-pointer hover:bg-[#1c1c26] ${isLocked ? 'opacity-40 blur-[2px] select-none' : ''} ${preview === i ? 'bg-amber-500/10 border-l-[3px] border-l-amber-500' : isTop3 ? 'bg-amber-500/[0.03]' : ''}`}>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs">
+                      <tr key={d.ref || d.p + i} onClick={() => isLocked ? setShowPaywall(true) : (setPreview(i), setPreviewLuxScore(null))}
+                        className={`transition-colors cursor-pointer hover:bg-[#0e0e18] ${isLocked ? 'opacity-40 blur-[2px] select-none' : ''} ${preview === i ? 'bg-[#c9a84c]/5 border-l-2 border-l-[#c9a84c]' : isTop3 ? 'bg-amber-500/[0.03]' : ''}`}>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-xs">
                           {isTop3 ? (
                             <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center font-extrabold text-[11px] ${rank === 1 ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/40' : rank === 2 ? 'bg-gray-400 text-black' : 'bg-amber-700 text-white'}`}>{rank}</span>
                           ) : <span className="text-gray-600">{rank}</span>}
                         </td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22]">
+                        <td className="px-3 py-2.5 border-b border-[#141420]">
                           <span className={`text-base font-extrabold font-serif ${scoreClass(d._sc || 0)}`}>{d._sc}</span>
                         </td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] text-[11px] font-semibold">{d.d}</td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22]">
-                          <div className="text-amber-300 font-semibold text-xs">{d.p}</div>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-[11px] font-semibold">{d.d}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420]">
+                          <div className="text-gray-100 font-semibold text-xs">{d.p}</div>
                           <div className="text-gray-500 text-[11px]">{d.l}</div>
                         </td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22]">
+                        <td className="px-3 py-2.5 border-b border-[#141420]">
                           <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold ${d.r === 'cb-south' ? 'bg-blue-500/10 text-blue-400' : d.r === 'cb-north' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
                             {regionLabel(d.r)}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22]">
+                        <td className="px-3 py-2.5 border-b border-[#141420]">
                           <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${d.t === 'Villa' ? 'bg-purple-500/10 text-purple-400' : d.t === 'Townhouse' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-blue-500/10 text-blue-400'}`}>
                             {d.t}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] font-bold text-[13px]">{formatPrice(d.pf)}</td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs text-gray-400">{d.pm2 ? `€${d.pm2}` : '-'}</td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs text-gray-400">€{d.mm2}</td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22]">
+                        <td className="px-3 py-2.5 border-b border-[#141420] font-bold text-[13px]">{formatPrice(d.pf)}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-xs text-gray-400">{d.pm2 ? `€${d.pm2}` : '-'}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-xs text-gray-400">€{d.mm2}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420]">
                           {(() => {
                             const de = discountEuros(d);
                             return dc >= 0 ? (
@@ -358,6 +574,7 @@ export default function Explorer() {
                                   -{dc.toFixed(0)}%
                                 </span>
                                 {de > 0 && <div className="text-[9px] text-emerald-500/70 mt-0.5">-€{(de/1000).toFixed(0)}k</div>}
+                                <div className="text-[9px] text-[#c9a84c]/80 mt-0.5 font-semibold">+€{(profit5yr(d.pf, d.r)/1000).toFixed(0)}k 5yr</div>
                               </div>
                             ) : (
                               <div>
@@ -365,18 +582,27 @@ export default function Explorer() {
                                   +{Math.abs(dc).toFixed(0)}%
                                 </span>
                                 {de < 0 && <div className="text-[9px] text-red-500/70 mt-0.5">+€{(Math.abs(de)/1000).toFixed(0)}k</div>}
+                                <div className="text-[9px] text-[#c9a84c]/80 mt-0.5 font-semibold">+€{(profit5yr(d.pf, d.r)/1000).toFixed(0)}k 5yr</div>
                               </div>
                             );
                           })()}
                         </td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs">{d.bm}m²</td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs text-gray-400">{d.pl ? `${d.pl}m²` : '-'}</td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs">{d.bd}</td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22] text-xs text-gray-400">{d.bk !== null ? `${d.bk}km` : '-'}</td>
-                        <td className="px-3 py-2.5 border-b border-[#1a1a22]">
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-xs">{d.bm}m²</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-xs text-gray-400">{d.pl ? `${d.pl}m²` : '-'}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-xs">{d.bd}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-xs text-gray-400">{d.bk !== null ? `${d.bk}km` : '-'}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420]">
                           <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${d.s === 'off-plan' ? 'bg-emerald-500/12 text-emerald-400' : d.s === 'under-construction' ? 'bg-amber-500/12 text-amber-400' : 'bg-blue-500/12 text-blue-400'}`}>
                             {d.s === 'off-plan' ? 'Off-Plan' : d.s === 'under-construction' ? 'Building' : 'Ready'}
                           </span>
+                        </td>
+                        <td className="px-3 py-2.5 border-b border-[#141420] text-[10px] text-amber-500/70 whitespace-nowrap">{d.c ? `~${d.c}` : '-'}</td>
+                        <td className="px-3 py-2.5 border-b border-[#141420]" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => !isLocked && togglePortfolio(d.ref || d.p)}
+                            className={`text-[10px] px-2 py-0.5 rounded border transition-all whitespace-nowrap ${portfolio.includes(d.ref || d.p) ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400' : 'border-[#2a2a30] text-gray-600 hover:text-gray-300'}`}>
+                            {portfolio.includes(d.ref || d.p) ? '✓' : '+'}
+                          </button>
                         </td>
                       </tr>
                     );
@@ -384,7 +610,7 @@ export default function Explorer() {
                   {/* Paywall CTA row after free limit */}
                   {!isPaid && filtered.length > FREE_DEALS_LIMIT && (
                     <tr>
-                      <td colSpan={15} className="px-6 py-5 text-center border-b border-[#1a1a22]">
+                      <td colSpan={17} className="px-6 py-5 text-center border-b border-[#141420]">
                         <div className="bg-gradient-to-r from-amber-900/20 via-amber-800/20 to-amber-900/20 border border-amber-600/40 rounded-xl p-5 max-w-xl mx-auto">
                           <div className="text-amber-400 font-bold text-sm mb-1">
                             🔒 {filtered.length - FREE_DEALS_LIMIT} more deals locked
@@ -392,7 +618,7 @@ export default function Explorer() {
                           <div className="text-gray-400 text-xs mb-3">Subscribe to unlock all {filtered.length} properties, full calculators, and rental yield data</div>
                           <button onClick={() => user ? setShowPaywall(true) : setShowAuthModal(true)}
                             className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition-colors">
-                            Subscribe — €49/month
+                            Subscribe — €79/month
                           </button>
                         </div>
                       </td>
@@ -405,19 +631,22 @@ export default function Explorer() {
           )}
 
           {tab === 'yield' && <YieldTab properties={filtered} isPaid={isPaid} onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} />}
+          {tab === 'portfolio' && <PortfolioTab properties={properties} portfolio={portfolio} onToggle={togglePortfolio} />}
+          {tab === 'map' && <MapView properties={filtered} onPreview={(ref) => { const idx = filtered.findIndex(p => (p.ref || p.p) === ref); if (idx !== -1) { setPreview(idx); setPreviewLuxScore(null); } }} isPaid={isPaid} />}
           {tab === 'market' && <MarketTab properties={filtered} />}
-          {tab === 'luxury' && <LuxuryTab properties={properties} isPaid={isPaid} onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} onPreview={(ref) => { const idx = filtered.findIndex(p => p.ref === ref); if (idx !== -1) setPreview(idx); }} />}
+          {tab === 'luxury' && <LuxuryTab properties={properties} isPaid={isPaid} onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} onPreview={(ref, lsc) => { const idx = filtered.findIndex(p => p.ref === ref); if (idx !== -1) { setPreview(idx); setPreviewLuxScore(lsc ?? null); } }} />}
           {tab === 'about' && <AboutTab />}
           {tab === 'legal' && <LegalTab />}
+          {tab === 'contact' && <ContactTab />}
         </div>
 
         {/* PREVIEW PANEL */}
         {previewProp && (
           <>
-          <div className="md:hidden fixed inset-0 bg-black/60 z-[299]" onClick={() => setPreview(null)} />
-          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-0 md:left-auto md:right-0 w-full md:w-[480px] h-[90vh] md:h-screen bg-[#111118] border-t md:border-t-0 md:border-l border-amber-500/25 z-[300] overflow-y-auto shadow-2xl rounded-t-2xl md:rounded-none animate-slide-in">
+          <div className="md:hidden fixed inset-0 bg-black/60 z-[299]" onClick={() => { setPreview(null); setPreviewLuxScore(null); }} />
+          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-0 md:left-auto md:right-0 w-full md:w-[480px] h-[90vh] md:h-screen border-t md:border-t-0 md:border-l border-[#1a1a24] z-[300] overflow-y-auto shadow-2xl rounded-t-2xl md:rounded-none animate-slide-in" style={{ background: 'linear-gradient(180deg, #0e0d18 0%, #09090f 100%)' }}>
             <div className="md:hidden w-12 h-1 bg-gray-700 rounded-full mx-auto mt-3 mb-1" />
-            <button onClick={() => setPreview(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full border border-[#2a2a30] text-gray-400 hover:text-amber-400 hover:border-amber-400 flex items-center justify-center z-10 bg-black/50">×</button>
+            <button onClick={() => { setPreview(null); setPreviewLuxScore(null); }} className="absolute top-4 right-4 w-8 h-8 rounded-full border border-[#2a2a30] text-gray-400 hover:text-amber-400 hover:border-amber-400 flex items-center justify-center z-10 bg-black/50">×</button>
             {/* IMAGE GALLERY */}
             {previewProp.imgs && previewProp.imgs.length > 0 ? (
               <div className="relative w-full h-60 bg-[#18181f]">
@@ -458,14 +687,124 @@ export default function Explorer() {
               <p className="text-gray-500 text-sm mb-4">{previewProp.l}</p>
 
               <div className="flex items-center gap-4 mb-5 p-4 bg-[#18181f] rounded-lg border border-[#2a2a30]">
-                <span className={`text-4xl font-extrabold font-serif ${scoreClass(previewProp._sc || 0)}`}>{previewProp._sc}</span>
-                <div className="flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-gray-500">Deal Score</div>
-                  <div className="h-1.5 bg-[#1e1e28] rounded-full mt-1.5 overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${previewProp._sc}%`, background: scoreColor(previewProp._sc || 0) }} />
+                {(() => {
+                  const displayScore = previewLuxScore !== null ? previewLuxScore : (previewProp._sc || 0);
+                  const label = previewLuxScore !== null ? 'Luxury Score' : 'Deal Score';
+                  return <>
+                    <span className={`text-4xl font-extrabold font-serif ${scoreClass(displayScore)}`}>{displayScore}</span>
+                    <div className="flex-1">
+                      <div className="text-[10px] uppercase tracking-widest text-gray-500">{label}</div>
+                      <div className="h-1.5 bg-[#1e1e28] rounded-full mt-1.5 overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${displayScore}%`, background: scoreColor(displayScore) }} />
+                      </div>
+                    </div>
+                  </>;
+                })()}
+              </div>
+
+              {/* AI ANALYSIS BUTTON */}
+              {isPaid && (
+                <button
+                  onClick={fetchAiMemo}
+                  disabled={aiMemoLoading}
+                  className="w-full mb-4 py-2.5 bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border border-purple-500/40 hover:border-purple-400/60 text-purple-300 font-semibold text-xs rounded-lg transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                  {aiMemoLoading ? (
+                    <><span className="animate-pulse">●</span> Analysing with Claude AI...</>
+                  ) : (
+                    <><span>✦</span> AI Analysis</>
+                  )}
+                </button>
+              )}
+              {aiMemoError && <div className="mb-4 text-xs text-red-400 text-center">{aiMemoError}</div>}
+
+              {/* AI MEMO RESULT */}
+              {aiMemo && (
+                <div className="mb-5 bg-[#13101f] border border-purple-500/30 rounded-xl overflow-hidden">
+                  {/* Verdict badge */}
+                  <div className={`px-5 py-4 flex items-center gap-4 border-b border-purple-500/20 ${aiMemo.verdict === 'BUY' ? 'bg-emerald-900/30' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-900/30' : 'bg-red-900/30'}`}>
+                    <span className={`text-3xl font-extrabold font-serif px-4 py-2 rounded-xl ${aiMemo.verdict === 'BUY' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-red-500/20 text-red-400 border border-red-500/40'}`}>
+                      {aiMemo.verdict}
+                    </span>
+                    <div className="flex-1">
+                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Confidence</div>
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <span key={i} className={`w-3 h-3 rounded-full ${i < aiMemo.confidence ? (aiMemo.verdict === 'BUY' ? 'bg-emerald-400' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-400' : 'bg-red-400') : 'bg-[#2a2a30]'}`} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-5 py-4 space-y-4">
+                    {/* Headline */}
+                    <p className="text-sm font-semibold text-white leading-snug">{aiMemo.headline}</p>
+
+                    {/* Price prediction */}
+                    <div>
+                      <div className="text-[10px] uppercase tracking-widest text-purple-400 mb-2">Price Prediction</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['year1', 'year3', 'year5'] as const).map((yr) => {
+                          const pred = aiMemo.price_prediction[yr];
+                          const growth = (((pred - previewProp!.pf) / previewProp!.pf) * 100).toFixed(1);
+                          return (
+                            <div key={yr} className="bg-[#18181f] rounded-lg p-2.5 text-center">
+                              <div className="text-[9px] uppercase tracking-wide text-gray-600 mb-1">Year {yr.replace('year','')}</div>
+                              <div className="text-sm font-bold text-white">{pred >= 1_000_000 ? `€${(pred/1_000_000).toFixed(1)}M` : `€${Math.round(pred/1000)}k`}</div>
+                              <div className={`text-[10px] font-semibold mt-0.5 ${Number(growth) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{Number(growth) >= 0 ? '+' : ''}{growth}%</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">{aiMemo.price_prediction.rationale}</p>
+                    </div>
+
+                    {/* Strengths */}
+                    {aiMemo.strengths.length > 0 && (
+                      <div>
+                        <div className="text-[10px] uppercase tracking-widest text-emerald-500 mb-1.5">Strengths</div>
+                        <ul className="space-y-1">
+                          {aiMemo.strengths.map((s, i) => <li key={i} className="text-xs text-gray-300 flex gap-2"><span className="text-emerald-500 flex-shrink-0">✓</span>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Risks */}
+                    {aiMemo.risks.length > 0 && (
+                      <div>
+                        <div className="text-[10px] uppercase tracking-widest text-red-500 mb-1.5">Risks</div>
+                        <ul className="space-y-1">
+                          {aiMemo.risks.map((r, i) => <li key={i} className="text-xs text-gray-300 flex gap-2"><span className="text-red-400 flex-shrink-0">⚠</span>{r}</li>)}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Yield outlook */}
+                    <div>
+                      <div className="text-[10px] uppercase tracking-widest text-amber-500 mb-1">Yield Outlook</div>
+                      <p className="text-xs text-gray-400 leading-relaxed">{aiMemo.yield_outlook}</p>
+                    </div>
+
+                    {/* Market context */}
+                    <div>
+                      <div className="text-[10px] uppercase tracking-widest text-blue-400 mb-1">Market Context</div>
+                      <p className="text-xs text-gray-400 leading-relaxed">{aiMemo.market_context}</p>
+                    </div>
+
+                    {/* Comparable position */}
+                    <div>
+                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">vs. Comparables</div>
+                      <p className="text-xs text-gray-400 leading-relaxed">{aiMemo.comparable_position}</p>
+                    </div>
+
+                    {/* Recommendation */}
+                    <div className={`p-3 rounded-lg border ${aiMemo.verdict === 'BUY' ? 'bg-emerald-900/20 border-emerald-500/25' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-900/20 border-amber-500/25' : 'bg-red-900/20 border-red-500/25'}`}>
+                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Recommendation</div>
+                      <p className="text-xs text-gray-300 leading-relaxed">{aiMemo.recommendation}</p>
+                    </div>
+
+                    <div className="text-[9px] text-purple-600/70 text-right">Powered by Claude AI</div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3 mb-5">
                 <StatBox label="Price" value={formatPrice(previewProp.pf)} />
@@ -481,6 +820,47 @@ export default function Explorer() {
                   </>
                 )}
               </div>
+
+              {/* 5-YEAR MARKET VALUE FORECAST */}
+              {(() => {
+                const region = (previewProp.r || '').toLowerCase();
+                const growthRate =
+                  region.includes('marbella') || region.includes('costa del sol') || region.includes('estepona') || region.includes('benahavis') ? 0.09 :
+                  region.includes('javea') || region.includes('altea') || region.includes('moraira') || region.includes('costa blanca norte') ? 0.085 :
+                  region.includes('mallorca') || region.includes('ibiza') ? 0.10 :
+                  region.includes('barcelona') || region.includes('sitges') ? 0.065 :
+                  region.includes('valencia') || region.includes('alicante') ? 0.07 :
+                  region.includes('torrevieja') || region.includes('costa blanca') ? 0.065 :
+                  0.075;
+                const base = previewProp.pf;
+                const yr1 = Math.round(base * Math.pow(1 + growthRate, 1));
+                const yr3 = Math.round(base * Math.pow(1 + growthRate, 3));
+                const yr5 = Math.round(base * Math.pow(1 + growthRate, 5));
+                const pct1 = (((yr1 - base) / base) * 100).toFixed(1);
+                const pct3 = (((yr3 - base) / base) * 100).toFixed(1);
+                const pct5 = (((yr5 - base) / base) * 100).toFixed(1);
+                const fmtK = (v: number) => v >= 1_000_000 ? `€${(v/1_000_000).toFixed(2)}M` : `€${Math.round(v/1000)}k`;
+                return (
+                  <div className="mb-5 bg-[#12101a] border border-[#c9a84c]/20 rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-[#c9a84c]/15 flex items-center justify-between">
+                      <div className="text-[10px] uppercase tracking-widest text-[#c9a84c]">5-Year Value Forecast</div>
+                      <div className="text-[9px] text-gray-600 uppercase tracking-wide">{(growthRate * 100).toFixed(1)}% avg/yr · {previewProp.r}</div>
+                    </div>
+                    <div className="grid grid-cols-3 divide-x divide-[#c9a84c]/10">
+                      {[['1 Year', fmtK(yr1), pct1], ['3 Years', fmtK(yr3), pct3], ['5 Years', fmtK(yr5), pct5]].map(([label, val, pct]) => (
+                        <div key={label} className="px-3 py-3 text-center">
+                          <div className="text-[9px] uppercase tracking-wide text-gray-600 mb-1">{label}</div>
+                          <div className="text-sm font-bold text-white">{val}</div>
+                          <div className="text-[10px] font-semibold text-emerald-400 mt-0.5">+{pct}%</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="px-4 py-2 border-t border-[#c9a84c]/10">
+                      <p className="text-[9px] text-gray-600 leading-relaxed">Based on regional historical appreciation rates. New-build premium typically adds 5–10% over resale. Not financial advice.</p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {previewProp.f && (
                 <div className="mb-5">
@@ -508,10 +888,83 @@ export default function Explorer() {
                 )}
               </div>
 
+              {/* COMPARABLE PROPERTIES */}
+              {(() => {
+                const comps = properties
+                  .filter(p => p.r === previewProp.r && p.t === previewProp.t && (p.ref || p.p) !== (previewProp.ref || previewProp.p))
+                  .filter(p => Math.abs(p.pf - previewProp.pf) / previewProp.pf <= 0.3)
+                  .sort((a, b) => Math.abs(a.pf - previewProp.pf) - Math.abs(b.pf - previewProp.pf))
+                  .slice(0, 3);
+                if (!comps.length) return null;
+                return (
+                  <div className="mb-5">
+                    <h4 className="text-[11px] uppercase tracking-widest text-amber-500 mb-2">Comparable Properties</h4>
+                    <div className="space-y-2">
+                      {comps.map((c, i) => (
+                        <div key={c.ref || i} className="bg-[#18181f] border border-[#2a2a30] rounded-lg p-3 flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs text-amber-300 font-semibold truncate">{c.p}</div>
+                            <div className="text-[10px] text-gray-500">{c.l}</div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-xs font-bold text-white">{formatPrice(c.pf)}</div>
+                            {c.pm2 && <div className="text-[10px] text-gray-500">€{c.pm2}/m²</div>}
+                          </div>
+                          <span className={`text-sm font-extrabold font-serif flex-shrink-0 ${scoreClass(c._sc || 0)}`}>{c._sc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* NOTES */}
+              <div className="mb-4">
+                <h4 className="text-[11px] uppercase tracking-widest text-amber-500 mb-2">Private Note</h4>
+                {user ? (
+                  <div>
+                    <textarea
+                      value={note}
+                      onChange={e => setNote(e.target.value)}
+                      placeholder="Add a private note..."
+                      rows={3}
+                      className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-200 px-3 py-2 rounded-lg text-xs outline-none focus:border-amber-500 resize-none"
+                    />
+                    <div className="flex justify-end mt-1">
+                      <button onClick={saveNote} disabled={noteSaving}
+                        className="text-[10px] px-3 py-1 bg-amber-600 hover:bg-amber-500 text-black font-semibold rounded transition-all disabled:opacity-50">
+                        {noteSaving ? 'Saving...' : noteSaved ? 'Saved!' : 'Save Note'}
+                      </button>
+                    </div>
+                    {/* SQL note for Supabase setup */}
+                    {/* Run this SQL in Supabase dashboard:
+                      CREATE TABLE IF NOT EXISTS notes (
+                        id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+                        user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+                        property_ref text NOT NULL,
+                        note text,
+                        created_at timestamptz DEFAULT now(),
+                        UNIQUE(user_id, property_ref)
+                      );
+                      ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+                      CREATE POLICY "Users manage own notes" ON notes FOR ALL USING (auth.uid() = user_id);
+                    */}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500 text-center py-2 border border-[#2a2a30] rounded-lg">
+                    <button onClick={() => setShowAuthModal(true)} className="text-amber-500 hover:text-amber-400">Sign in</button> to save notes
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2 mb-3">
                 <button onClick={() => toggleFav(previewProp.ref || previewProp.p)}
                   className={`flex-1 py-2.5 rounded-lg text-xs font-semibold border transition-all ${favs.includes(previewProp.ref || previewProp.p) ? 'border-amber-500 text-amber-400' : 'border-[#2a2a30] text-gray-400 hover:text-amber-400'}`}>
                   {favs.includes(previewProp.ref || previewProp.p) ? 'Remove Favorite' : 'Add to Favorites'}
+                </button>
+                <button onClick={() => togglePortfolio(previewProp.ref || previewProp.p)}
+                  className={`flex-1 py-2.5 rounded-lg text-xs font-semibold border transition-all ${portfolio.includes(previewProp.ref || previewProp.p) ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400' : 'border-[#2a2a30] text-gray-400 hover:text-emerald-400'}`}>
+                  {portfolio.includes(previewProp.ref || previewProp.p) ? 'In Portfolio' : '+ Portfolio'}
                 </button>
               </div>
 
@@ -598,31 +1051,39 @@ export default function Explorer() {
       {/* PAYWALL MODAL */}
       {showPaywall && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
-          <div className="bg-[#111118] border border-amber-500/30 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-[#111118] border-2 border-[#c9a84c]/50 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl shadow-amber-900/20" onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowPaywall(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">×</button>
             <div className="text-center mb-6">
-              <div className="font-serif text-2xl text-amber-400 mb-1">Avena Estate PRO</div>
-              <div className="text-4xl font-bold text-white mb-1">€49<span className="text-lg text-gray-400 font-normal">/month</span></div>
-              <p className="text-gray-400 text-sm">Full access to all deals and rental yield data</p>
+              <div className="text-3xl mb-2">🔒</div>
+              <div className="text-gray-400 text-xs uppercase tracking-widest mb-1">You&apos;re viewing 5 of 1,040+ scored properties</div>
+              <div className="font-serif text-2xl text-[#c9a84c] mb-1">Unlock 1,040+ Investment Deals</div>
+              <div className="font-serif text-xl text-white mb-0.5">Avena Estate PRO</div>
+              <div className="text-4xl font-bold text-white mb-1">€79<span className="text-lg text-gray-400 font-normal">/month</span></div>
+              <p className="text-gray-500 text-xs">Just €2.60/day · Cancel anytime</p>
             </div>
             <ul className="space-y-2 mb-6">
               {[
-                ['✓', 'All 1,000+ properties unlocked'],
+                ['✓', 'All 1,040+ properties unlocked'],
+                ['✓', 'Save up to 30% vs market price'],
                 ['✓', 'Full rental yield analysis for every property'],
                 ['✓', 'Cash-on-cash return & mortgage calculator'],
+                ['✓', 'Luxury €1M+ segment analysis'],
                 ['✓', 'Daily updates — new listings every morning'],
-                ['✓', 'Cancel anytime'],
               ].map(([icon, text]) => (
                 <li key={text} className="flex items-center gap-2 text-sm text-gray-300">
-                  <span className="text-emerald-400 font-bold">{icon}</span> {text}
+                  <span className="text-[#c9a84c] font-bold">{icon}</span> {text}
                 </li>
               ))}
             </ul>
             {user ? (
-              <button onClick={startCheckout} disabled={paywallLoading}
-                className="w-full bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold py-3.5 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm tracking-wide disabled:opacity-50">
-                Subscribe — €49/month →
-              </button>
+              <>
+                <button onClick={startCheckout} disabled={paywallLoading}
+                  className="w-full font-bold py-3.5 rounded-lg transition-all text-sm tracking-wide disabled:opacity-50 text-black"
+                  style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c)' }}>
+                  {paywallLoading ? 'Redirecting…' : 'Subscribe — €79/month →'}
+                </button>
+                <p className="text-center text-gray-600 text-[10px] mt-2">Just €2.60/day for institutional-grade property intelligence</p>
+              </>
             ) : (
               <form onSubmit={async e => {
                 e.preventDefault();
@@ -647,12 +1108,14 @@ export default function Explorer() {
                   placeholder="your@email.com"
                   value={paywallEmail}
                   onChange={e => setPaywallEmail(e.target.value)}
-                  className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-amber-500 mb-3"
+                  className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-[#c9a84c] mb-3"
                 />
                 <button type="submit" disabled={paywallLoading}
-                  className="w-full bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold py-3.5 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm tracking-wide disabled:opacity-50">
-                  {paywallLoading ? 'Redirecting to Stripe…' : 'Subscribe — €49/month →'}
+                  className="w-full font-bold py-3.5 rounded-lg transition-all text-sm tracking-wide disabled:opacity-50 text-black"
+                  style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c)' }}>
+                  {paywallLoading ? 'Redirecting to Stripe…' : 'Subscribe — €79/month →'}
                 </button>
+                <p className="text-center text-gray-600 text-[10px] mt-2">Just €2.60/day for institutional-grade property intelligence</p>
               </form>
             )}
             <div className="mt-4 pt-4 border-t border-[#2a2a30]">
@@ -668,7 +1131,7 @@ export default function Explorer() {
                   <span key={card} className="text-[9px] font-bold px-2 py-0.5 rounded border border-[#2a2a30] text-gray-500 tracking-wider">{card}</span>
                 ))}
               </div>
-              <p className="text-center text-gray-600 text-[10px]">Cancel anytime · No contracts · Billed monthly</p>
+              <p className="text-center text-gray-600 text-[10px]">Cancel anytime · Secured by Stripe</p>
             </div>
           </div>
         </div>
@@ -682,9 +1145,12 @@ function FilterSelect({ label, value, onChange, options }: {
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[9px] uppercase tracking-widest text-gray-500">{label}</label>
+      <label className="text-[8px] tracking-[2px] text-gray-600 uppercase">{label}</label>
       <select value={value} onChange={e => onChange(e.target.value)}
-        className="bg-[#08080d] border border-[#2a2a30] text-gray-200 px-3 py-1.5 rounded-md text-xs outline-none focus:border-amber-500 min-w-[130px]">
+        className="text-gray-300 px-3 py-1.5 rounded-md text-xs outline-none min-w-[130px]"
+        style={{ background: '#0a0a12', border: '1px solid #1e1e28' }}
+        onFocus={e => { (e.target as HTMLSelectElement).style.borderColor = '#c9a84c'; }}
+        onBlur={e => { (e.target as HTMLSelectElement).style.borderColor = '#1e1e28'; }}>
         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
     </div>
@@ -693,14 +1159,16 @@ function FilterSelect({ label, value, onChange, options }: {
 
 function StatBox({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-[#18181f] border border-[#2a2a30] rounded-lg p-3 text-center">
-      <div className="text-lg font-bold font-serif">{value}</div>
-      <div className="text-[9px] uppercase tracking-wide text-gray-500 mt-0.5">{label}</div>
+    <div className="rounded-xl p-3 text-center" style={{ background: '#0d0d16', border: '1px solid #1a1a24' }}>
+      <div className="text-[8px] uppercase tracking-[3px] text-gray-600 mb-1.5">{label}</div>
+      <div className="text-sm font-bold text-gray-100">{value}</div>
     </div>
   );
 }
 
-function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; onToggle: () => void }) {
+function YieldCard({ d, expanded, onToggle, fmtC, sym }: { d: Property; expanded: boolean; onToggle: () => void; fmtC?: (n: number) => string; sym?: string }) {
+  const fmt = fmtC || formatPrice;
+  const symb = sym || '€';
   const [downPct, setDownPct] = useState(30);
   const [interestPct, setInterestPct] = useState(3.75);
   if (!d._yield) return null;
@@ -749,19 +1217,21 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
         <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-[#1e1e28]">
           <div>
             <div className="text-[9px] text-gray-500 uppercase tracking-wide mb-0.5">Avg Night</div>
-            <div className="text-sm font-bold">€{d._yield.rate}</div>
+            <div className="text-sm font-bold">{fmt(d._yield.rate)}</div>
           </div>
           <div>
             <div className="text-[9px] text-gray-500 uppercase tracking-wide mb-0.5">Annual Gross</div>
-            <div className="text-sm font-bold">{formatPrice(d._yield.annual)}</div>
+            <div className="text-sm font-bold">{fmt(d._yield.annual)}</div>
           </div>
           <div>
-            <div className="text-[9px] text-gray-500 uppercase tracking-wide mb-0.5">Annual Net</div>
-            <div className="text-sm font-bold text-emerald-400">{formatPrice(net)}</div>
+            <div className="text-[9px] text-gray-500 uppercase tracking-wide mb-0.5">Annual Profit</div>
+            <div className={`text-sm font-bold ${annualCashflow >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt(annualCashflow)}</div>
+            <div className={`text-[10px] font-semibold mt-0.5 ${annualCashflow >= 0 ? 'text-emerald-500/70' : 'text-red-500/70'}`}>{fmt(Math.round(annualCashflow / 12))}/mo</div>
+            <div className="text-[8px] text-gray-600">after costs &amp; mortgage</div>
           </div>
           <div>
             <div className="text-[9px] text-gray-500 uppercase tracking-wide mb-0.5">Avg Price</div>
-            <div className="text-sm font-bold">{formatPrice(d.pf)}</div>
+            <div className="text-sm font-bold">{fmt(d.pf)}</div>
           </div>
         </div>
 
@@ -777,6 +1247,13 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
             <div className="text-[9px] text-gray-500">Net Yield</div>
             <div className="text-sm font-bold text-emerald-400">{netYield}%</div>
           </div>
+        </div>
+
+        {/* Calculator hint */}
+        <div className={`mt-3 pt-2 border-t border-[#1e1e28] flex items-center justify-center gap-1.5 transition-all ${expanded ? 'opacity-0 h-0 overflow-hidden mt-0 pt-0 border-0' : ''}`}>
+          <span className="text-amber-500 text-[10px]">🧮</span>
+          <span className="text-[10px] text-amber-600 font-medium">Click to open mortgage &amp; cashflow calculator</span>
+          <span className="text-amber-700 text-[10px]">↓</span>
         </div>
       </div>
 
@@ -813,23 +1290,25 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <div className="text-[9px] text-gray-500 uppercase tracking-wide">Down Payment</div>
-              <div className="text-sm font-bold text-amber-400">{formatPrice(downPayment)}</div>
+              <div className="text-sm font-bold text-amber-400">{fmt(downPayment)}</div>
             </div>
             <div>
               <div className="text-[9px] text-gray-500 uppercase tracking-wide">Mortgage/Mo</div>
-              <div className="text-sm font-bold">{formatPrice(mortgageMo)}</div>
+              <div className="text-sm font-bold">{fmt(mortgageMo)}</div>
             </div>
             <div>
-              <div className="text-[9px] text-gray-500 uppercase tracking-wide">Annual Cashflow</div>
-              <div className={`text-sm font-bold ${annualCashflow >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{formatPrice(annualCashflow)}</div>
+              <div className="text-[9px] text-gray-500 uppercase tracking-wide">Profit After Mortgage</div>
+              <div className={`text-sm font-bold ${annualCashflow >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt(annualCashflow)}</div>
+              <div className="text-[8px] text-gray-700 mt-0.5">rent − costs − mortgage</div>
             </div>
             <div>
-              <div className="text-[9px] text-gray-500 uppercase tracking-wide">Total Cost (13%)</div>
-              <div className="text-sm font-bold">{formatPrice(totalCost)}</div>
+              <div className="text-[9px] text-gray-500 uppercase tracking-wide">Total All-In Cost</div>
+              <div className="text-sm font-bold">{fmt(totalCost)}</div>
+              <div className="text-[8px] text-gray-600 mt-0.5">{fmt(d.pf)} + {fmt(buyFee)} fees</div>
             </div>
             <div>
               <div className="text-[9px] text-gray-500 uppercase tracking-wide">Loan Amount</div>
-              <div className="text-sm font-bold">{formatPrice(loanAmt)}</div>
+              <div className="text-sm font-bold">{fmt(loanAmt)}</div>
             </div>
             <div>
               <div className="text-[9px] text-gray-500 uppercase tracking-wide">Cash-on-Cash</div>
@@ -849,9 +1328,43 @@ function YieldCard({ d, expanded, onToggle }: { d: Property; expanded: boolean; 
   );
 }
 
+const CURRENCIES = [
+  { code: 'EUR', symbol: '€', label: 'EUR €' },
+  { code: 'NOK', symbol: 'kr', label: 'NOK kr' },
+  { code: 'GBP', symbol: '£', label: 'GBP £' },
+  { code: 'SEK', symbol: 'kr', label: 'SEK kr' },
+  { code: 'DKK', symbol: 'kr', label: 'DKK kr' },
+];
+
 function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; isPaid: boolean; onUpgrade: () => void }) {
   const [sortMode, setSortMode] = useState<'yield' | 'income' | 'price'>('yield');
   const [expandedRef, setExpandedRef] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<string>(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('avena_currency') || 'EUR';
+    return 'EUR';
+  });
+  const [rates, setRates] = useState<Record<string, number>>({ EUR: 1 });
+
+  useEffect(() => {
+    fetch('https://api.frankfurter.app/latest?base=EUR&symbols=NOK,GBP,SEK,DKK')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.rates) setRates({ EUR: 1, ...data.rates });
+      })
+      .catch(() => {
+        // Fallback static rates if API fails
+        setRates({ EUR: 1, NOK: 11.7, GBP: 0.86, SEK: 11.2, DKK: 7.46 });
+      });
+  }, []);
+
+  const handleCurrencyChange = (c: string) => {
+    setCurrency(c);
+    if (typeof window !== 'undefined') localStorage.setItem('avena_currency', c);
+  };
+
+  const convert = (eur: number) => Math.round(eur * (rates[currency] || 1));
+  const sym = CURRENCIES.find(c => c.code === currency)?.symbol || '€';
+  const fmtC = (eur: number) => `${sym}${convert(eur).toLocaleString()}`;
 
   const sorted = [...properties].filter(p => p._yield).sort((a, b) => {
     if (sortMode === 'yield') return (b._yield?.gross || 0) - (a._yield?.gross || 0);
@@ -899,8 +1412,8 @@ function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; i
           <span className="text-gray-400">Occupancy:</span> 16–24 weeks/year based on beach distance &bull;{' '}
           <span className="text-gray-400">Self-managed model</span> (no management company)
         </div>
-        <div className="flex gap-2">
-          {([['yield', 'By Yield %'], ['income', 'By Income €'], ['price', 'By Price']] as ['yield' | 'income' | 'price', string][]).map(([key, label]) => (
+        <div className="flex gap-2 items-center flex-wrap">
+          {([['yield', 'By Yield %'], ['income', 'By Income'], ['price', 'By Price']] as ['yield' | 'income' | 'price', string][]).map(([key, label]) => (
             <button key={key} onClick={() => setSortMode(key)}
               className={`text-[10px] px-3 py-1 rounded border transition-all ${sortMode === key ? 'bg-amber-600 border-amber-600 text-black font-semibold' : 'border-[#2a2a30] text-gray-400 hover:border-amber-600/50'}`}>
               {label}
@@ -910,7 +1423,16 @@ function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; i
       </div>
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h2 className="font-serif text-xl text-amber-400">Estimated Rental Yield</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="font-serif text-xl text-amber-400">Estimated Rental Yield</h2>
+          <select
+            value={currency}
+            onChange={e => handleCurrencyChange(e.target.value)}
+            className="bg-[#08080d] border border-[#c9a84c]/40 text-[#c9a84c] px-2 py-1 rounded-lg text-[11px] outline-none focus:border-[#c9a84c] cursor-pointer font-semibold"
+          >
+            {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
+          </select>
+        </div>
         <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
           <span className="text-amber-400 text-sm">💰</span>
           <span className="text-amber-300 text-xs font-medium">Tap any card to open the loan & investment calculator</span>
@@ -923,6 +1445,8 @@ function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; i
             d={d}
             expanded={expandedRef === (d.ref || String(i))}
             onToggle={() => setExpandedRef(expandedRef === (d.ref || String(i)) ? null : (d.ref || String(i)))}
+            fmtC={fmtC}
+            sym={sym}
           />
         ))}
         {/* Blurred preview cards for free users */}
@@ -950,7 +1474,7 @@ function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; i
           </p>
           <button onClick={onUpgrade}
             className="bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold px-8 py-3 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm tracking-wide">
-            Subscribe — €49/month
+            Subscribe — €79/month
           </button>
         </div>
       )}
@@ -1177,6 +1701,242 @@ function MarketTab({ properties }: { properties: Property[] }) {
           </table>
         </div>
       </div>
+
+      {/* Developer Scorecard */}
+      {(() => {
+        const devMap: Record<string, { count: number; totalScore: number; totalDisc: number; discCount: number; totalPrice: number; regions: Set<string>; totalBeach: number; beachCount: number }> = {};
+        properties.forEach(p => {
+          const dev = p.d || 'Unknown';
+          if (!devMap[dev]) devMap[dev] = { count: 0, totalScore: 0, totalDisc: 0, discCount: 0, totalPrice: 0, regions: new Set(), totalBeach: 0, beachCount: 0 };
+          devMap[dev].count++;
+          devMap[dev].totalScore += (p._sc || 0);
+          devMap[dev].totalPrice += p.pf;
+          devMap[dev].regions.add(p.r);
+          const d = p.pm2 && p.mm2 ? (((p.mm2 - p.pm2) / p.mm2) * 100) : 0;
+          if (d > 0) { devMap[dev].totalDisc += d; devMap[dev].discCount++; }
+          if (p.bk !== null) { devMap[dev].totalBeach += p.bk; devMap[dev].beachCount++; }
+        });
+        const devs = Object.entries(devMap)
+          .map(([name, d]) => ({
+            name,
+            count: d.count,
+            avgScore: Math.round(d.totalScore / d.count),
+            avgDisc: d.discCount > 0 ? (d.totalDisc / d.discCount).toFixed(1) : null,
+            avgPrice: Math.round(d.totalPrice / d.count),
+            regions: Array.from(d.regions),
+            avgBeach: d.beachCount > 0 ? (d.totalBeach / d.beachCount).toFixed(1) : null,
+          }))
+          .filter(d => d.count >= 2)
+          .sort((a, b) => b.avgScore - a.avgScore)
+          .slice(0, 15);
+
+        return (
+          <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
+            <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">Developer Scorecard</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {devs.map((dev, i) => (
+                <div key={dev.name} className="bg-[#18181f] border border-[#2a2a30] rounded-xl p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0 pr-2">
+                      <div className="text-sm font-semibold text-amber-300 truncate">{dev.name}</div>
+                      <div className="text-[10px] text-gray-500 mt-0.5">{dev.count} propert{dev.count !== 1 ? 'ies' : 'y'}</div>
+                    </div>
+                    <span className={`text-xl font-extrabold font-serif flex-shrink-0 ${dev.avgScore >= 70 ? 'text-emerald-400' : dev.avgScore >= 50 ? 'text-amber-400' : 'text-gray-400'}`}>
+                      {i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : ''}{dev.avgScore}
+                    </span>
+                  </div>
+                  {/* Score bar */}
+                  <div className="h-1.5 bg-[#0a0a0f] rounded-full overflow-hidden mb-3">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${dev.avgScore}%`, background: dev.avgScore >= 70 ? '#34d399' : dev.avgScore >= 50 ? '#f59e0b' : '#6b7280' }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div>
+                      <div className="text-[9px] text-gray-600 uppercase tracking-wide">Avg Price</div>
+                      <div className="text-xs font-semibold text-white">{dev.avgPrice >= 1_000_000 ? `€${(dev.avgPrice/1_000_000).toFixed(1)}M` : `€${Math.round(dev.avgPrice/1000)}k`}</div>
+                    </div>
+                    {dev.avgDisc && (
+                      <div>
+                        <div className="text-[9px] text-gray-600 uppercase tracking-wide">Avg Discount</div>
+                        <div className="text-xs font-semibold text-emerald-400">{dev.avgDisc}%</div>
+                      </div>
+                    )}
+                    {dev.avgBeach && (
+                      <div>
+                        <div className="text-[9px] text-gray-600 uppercase tracking-wide">Avg Beach</div>
+                        <div className="text-xs font-semibold text-blue-400">{dev.avgBeach}km</div>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-[9px] text-gray-600 uppercase tracking-wide">Regions</div>
+                      <div className="text-xs font-semibold text-gray-300">{dev.regions.map(r => regionLabel(r)).join(', ')}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+function PortfolioTab({ properties, portfolio, onToggle }: {
+  properties: Property[];
+  portfolio: string[];
+  onToggle: (ref: string) => void;
+}) {
+  const portfolioProps = properties.filter(p => portfolio.includes(p.ref || p.p));
+
+  const exportPortfolioCSV = () => {
+    if (!portfolioProps.length) return;
+    const headers = ['Project','Developer','Location','Price','Yield%','Annual Income','Score'];
+    const rows = portfolioProps.map(d => [d.p, d.d, d.l, d.pf, d._yield?.gross || '', d._yield?.annual || '', d._sc || '']);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'avena-portfolio.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const [downPct, setDownPct] = useState(30);
+  const [interestPct, setInterestPct] = useState(3.75);
+
+  const totalInvestment = portfolioProps.reduce((a, b) => a + b.pf, 0);
+  const totalAnnualIncome = portfolioProps.reduce((a, b) => a + (b._yield?.annual || 0), 0);
+  const blendedYield = totalInvestment > 0 ? ((totalAnnualIncome / totalInvestment) * 100).toFixed(2) : '0';
+  const totalDiscountSaved = portfolioProps.reduce((a, b) => {
+    const d = b.pm2 && b.mm2 ? (b.mm2 - b.pm2) * b.bm : 0;
+    return a + Math.max(0, d);
+  }, 0);
+  const regions = new Set(portfolioProps.map(p => p.r));
+  const types = new Set(portfolioProps.map(p => p.t));
+  const divScore = Math.min(10, regions.size * 3 + types.size * 2);
+
+  // Portfolio mortgage calc
+  const totalCost = Math.round(totalInvestment * 1.13);
+  const downPayment = Math.round(totalCost * (downPct / 100));
+  const loanAmt = totalCost - downPayment;
+  const rate = (interestPct / 100) / 12;
+  const n = 25 * 12;
+  const totalMortgageMo = loanAmt > 0 ? Math.round(loanAmt * rate * Math.pow(1 + rate, n) / (Math.pow(1 + rate, n) - 1)) : 0;
+  const netAnnualIncome = Math.round(totalAnnualIncome * 0.75);
+  const annualCashflow = netAnnualIncome - totalMortgageMo * 12;
+
+  if (!portfolioProps.length) {
+    return (
+      <div className="p-8 text-center">
+        <div className="text-4xl mb-4">📊</div>
+        <div className="font-serif text-xl text-amber-400 mb-2">Portfolio Simulator</div>
+        <p className="text-gray-400 text-sm max-w-md mx-auto">Click the <span className="text-emerald-400 font-semibold">+ Portfolio</span> button on any property card or in the deals table to add properties to your portfolio.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 md:p-6 space-y-5 overflow-x-hidden w-full">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="font-serif text-xl text-amber-400">Portfolio Simulator</h2>
+        <button onClick={exportPortfolioCSV}
+          className="text-xs px-3 py-1.5 bg-[#18181f] border border-[#2a2a30] hover:border-amber-500/50 text-gray-400 hover:text-amber-400 rounded transition-all font-semibold">
+          Export CSV ↓
+        </button>
+      </div>
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Total Investment', value: formatPrice(totalInvestment) },
+          { label: 'Annual Income', value: formatPrice(totalAnnualIncome) },
+          { label: 'Blended Yield', value: `${blendedYield}%` },
+          { label: 'Discount Saved', value: totalDiscountSaved > 0 ? formatPrice(totalDiscountSaved) : 'N/A' },
+        ].map(s => (
+          <div key={s.label} className="bg-[#111118] border border-[#2a2a30] rounded-lg p-4 text-center">
+            <div className="text-xl font-bold font-serif text-amber-400">{s.value}</div>
+            <div className="text-[9px] uppercase tracking-widest text-gray-500 mt-1">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Diversification */}
+      <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-4 flex items-center gap-4">
+        <div className="flex-1">
+          <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Diversification Score</div>
+          <div className="h-2 bg-[#1e1e28] rounded-full overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all" style={{ width: `${divScore * 10}%` }} />
+          </div>
+        </div>
+        <div className="text-2xl font-extrabold font-serif text-amber-400">{divScore}/10</div>
+        <div className="text-xs text-gray-500">
+          <div>{regions.size} region{regions.size !== 1 ? 's' : ''}</div>
+          <div>{types.size} type{types.size !== 1 ? 's' : ''}</div>
+        </div>
+      </div>
+
+      {/* Portfolio mortgage calculator */}
+      <div className="bg-[#111118] border border-[#2a2a30] rounded-xl p-5">
+        <div className="text-[11px] uppercase tracking-widest text-amber-500 mb-4">Combined Mortgage Calculator</div>
+        <div className="mb-3">
+          <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Down Payment</span><span className="text-amber-400 font-bold">{downPct}%</span></div>
+          <input type="range" min={10} max={100} step={5} value={downPct} onChange={e => setDownPct(Number(e.target.value))} className="w-full accent-amber-500 h-1.5 rounded cursor-pointer" />
+        </div>
+        <div className="mb-4">
+          <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Interest Rate</span><span className="text-amber-400 font-bold">{interestPct.toFixed(2)}%</span></div>
+          <input type="range" min={1} max={8} step={0.25} value={interestPct} onChange={e => setInterestPct(Number(e.target.value))} className="w-full accent-amber-500 h-1.5 rounded cursor-pointer" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+          {[
+            { label: 'Total Down Payment', value: formatPrice(downPayment), color: 'text-amber-400' },
+            { label: 'Monthly Mortgage', value: formatPrice(totalMortgageMo), color: 'text-white' },
+            { label: 'Annual Profit', value: formatPrice(annualCashflow), sub: `${formatPrice(Math.round(annualCashflow/12))}/mo`, color: annualCashflow >= 0 ? 'text-emerald-400' : 'text-red-400' },
+          ].map(s => (
+            <div key={s.label} className="bg-[#18181f] rounded-lg p-3">
+              <div className="text-[9px] text-gray-500 uppercase tracking-wide mb-1">{s.label}</div>
+              <div className={`text-sm font-bold ${s.color}`}>{s.value}</div>
+              {'sub' in s && s.sub && <div className={`text-[10px] mt-0.5 ${s.color} opacity-70`}>{s.sub}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Property list */}
+      <div>
+        <div className="text-[11px] uppercase tracking-widest text-gray-500 mb-3">Properties in Portfolio ({portfolioProps.length})</div>
+        <div className="space-y-2">
+          {portfolioProps.map(p => (
+            <div key={p.ref || p.p} className="bg-[#111118] border border-[#2a2a30] rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-amber-300 font-semibold text-sm leading-snug">{p.p}</div>
+                  <div className="text-gray-500 text-xs mt-0.5">{p.l} · {p.t}</div>
+                </div>
+                <button onClick={() => onToggle(p.ref || p.p)}
+                  className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-all text-sm font-bold">
+                  ×
+                </button>
+              </div>
+              <div className="flex items-center gap-4 mt-2 flex-wrap">
+                <div>
+                  <div className="text-sm font-bold text-white">{formatPrice(p.pf)}</div>
+                </div>
+                {p._yield && (
+                  <div className="text-xs text-emerald-400 font-semibold">{p._yield.gross}% yield</div>
+                )}
+                {p._sc && (
+                  <div className="flex items-center gap-1">
+                    <span className={`text-base font-extrabold font-serif ${scoreClass(p._sc)}`}>{p._sc}</span>
+                    <span className="text-[9px] text-gray-600 uppercase">score</span>
+                  </div>
+                )}
+                {p._yield && (
+                  <div className="text-xs text-gray-500">{formatPrice(p._yield.annual)}/yr gross</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1185,7 +1945,7 @@ function LuxuryTab({ properties, isPaid, onUpgrade, onPreview }: {
   properties: Property[];
   isPaid: boolean;
   onUpgrade: () => void;
-  onPreview: (ref: string) => void;
+  onPreview: (ref: string, lsc: number) => void;
 }) {
   const [sortMode, setSortMode] = useState<'value' | 'price' | 'pm2' | 'plot'>('value');
   const [regionFilter, setRegionFilter] = useState<string>('all');
@@ -1308,7 +2068,7 @@ function LuxuryTab({ properties, isPaid, onUpgrade, onPreview }: {
           return (
             <div key={p.ref || i}
               className="bg-[#111118] border border-[#2a2a30] rounded-2xl overflow-hidden hover:border-amber-500/40 transition-all cursor-pointer group"
-              onClick={() => onPreview(p.ref || '')}>
+              onClick={() => onPreview(p.ref || '', p._lsc)}>
 
               {/* Image */}
               {p.imgs && p.imgs.length > 0 ? (
@@ -1416,7 +2176,7 @@ function LuxuryTab({ properties, isPaid, onUpgrade, onPreview }: {
           <div className="text-amber-400 font-serif text-lg mb-1">🔒 PRO feature</div>
           <p className="text-gray-400 text-sm mb-4">Subscribe to unlock full luxury portfolio access, investment calculator, and rental yield data.</p>
           <button onClick={onUpgrade} className="bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold px-8 py-3 rounded-lg text-sm tracking-wide">
-            Subscribe — €49/month
+            Subscribe — €79/month
           </button>
         </div>
       )}
@@ -1516,7 +2276,105 @@ function LegalTab() {
         </p>
         <div className="mt-3 flex gap-4">
           <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-300 text-xs underline">Xavia Estate website →</a>
-          <a href="mailto:info@xaviaestate.com" className="text-amber-500 hover:text-amber-300 text-xs underline">info@xaviaestate.com</a>
+          <a href="mailto:Henrik@xaviaestate.com" className="text-amber-500 hover:text-amber-300 text-xs underline">Henrik@xaviaestate.com</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContactTab() {
+  return (
+    <div className="p-4 md:p-10 flex justify-center">
+      <div className="w-full max-w-lg">
+        {/* Card */}
+        <div className="relative bg-gradient-to-b from-[#18141f] to-[#0f0d15] border-2 border-[#c9a84c]/50 rounded-3xl overflow-hidden shadow-2xl shadow-[#c9a84c]/10">
+
+          {/* Gold shimmer top bar */}
+          <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, transparent, #c9a84c, #e8c96a, #c9a84c, transparent)' }} />
+
+          {/* Top accent glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full opacity-10 blur-3xl pointer-events-none" style={{ background: '#c9a84c' }} />
+
+          <div className="px-8 pt-10 pb-8 relative">
+            {/* Avatar */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-extrabold font-serif text-black shadow-xl shadow-[#c9a84c]/30"
+                  style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c)' }}>
+                  HK
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 border-[#0f0d15] flex items-center justify-center text-sm"
+                  style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)' }}>
+                  ✦
+                </div>
+              </div>
+            </div>
+
+            {/* Name & title */}
+            <div className="text-center mb-8">
+              <div className="font-serif text-3xl font-bold mb-1" style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c96a, #c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Henrik Kolstad
+              </div>
+              <div className="text-[11px] uppercase tracking-[4px] text-gray-500">Founder · Avena Estate</div>
+              <div className="mt-3 text-xs text-gray-500 leading-relaxed max-w-xs mx-auto">
+                Spain&apos;s new-build property intelligence platform. Helping investors find real value.
+              </div>
+            </div>
+
+            {/* Contact links */}
+            <div className="space-y-3 mb-8">
+              <a href="mailto:Henrik@xaviaestate.com"
+                className="flex items-center gap-4 rounded-2xl p-4 border border-[#c9a84c]/20 hover:border-[#c9a84c]/60 transition-all group"
+                style={{ background: 'rgba(201,168,76,0.05)' }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg"
+                  style={{ background: 'linear-gradient(135deg, #c9a84c22, #c9a84c44)', border: '1px solid rgba(201,168,76,0.4)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-0.5">Direct Email</div>
+                  <div className="text-sm font-semibold truncate group-hover:text-white transition-colors" style={{ color: '#e8c96a' }}>Henrik@xaviaestate.com</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 group-hover:opacity-80 transition-opacity flex-shrink-0">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+
+              <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-4 rounded-2xl p-4 border border-[#c9a84c]/20 hover:border-[#c9a84c]/60 transition-all group"
+                style={{ background: 'rgba(201,168,76,0.05)' }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg"
+                  style={{ background: 'linear-gradient(135deg, #c9a84c22, #c9a84c44)', border: '1px solid rgba(201,168,76,0.4)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-0.5">Partner Agency</div>
+                  <div className="text-sm font-semibold truncate group-hover:text-white transition-colors" style={{ color: '#e8c96a' }}>www.xaviaestate.com</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 group-hover:opacity-80 transition-opacity flex-shrink-0">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px w-full mb-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent)' }} />
+
+            {/* Footer note */}
+            <div className="text-center">
+              <div className="text-[9px] uppercase tracking-[3px] text-gray-700 mb-2">Licensed Real Estate · Spain</div>
+              <p className="text-[10px] text-gray-600 leading-relaxed">
+                All property transactions are handled by Xavia Estate and their certified legal partners operating across Costa Blanca &amp; Costa Cálida.
+              </p>
+            </div>
+          </div>
+
+          {/* Gold shimmer bottom bar */}
+          <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #c9a84c, transparent)' }} />
         </div>
       </div>
     </div>

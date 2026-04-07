@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "src/app/api/ai/memo/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
