@@ -7,6 +7,8 @@ import { loadProperties } from '@/lib/data';
 import { formatPrice, scoreClass, scoreColor, regionLabel, discount, discountEuros, calcYield } from '@/lib/scoring';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
+import { LANGUAGES } from '@/lib/translations';
 
 const MapView = dynamic(() => import('@/components/MapView'), { ssr: false });
 
@@ -53,6 +55,7 @@ function profit5yr(pf: number, region: string): number {
 
 export default function Explorer() {
   const { user, isPaid, loading: authLoading, signInWithEmail, signOut, startCheckout } = useAuth();
+  const { lang, setLang, t } = useLanguage();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>('score');
@@ -312,7 +315,7 @@ export default function Explorer() {
               <p className="text-[9px] tracking-[6px] uppercase text-[#c9a84c]/60 mt-0.5 font-light">Estate</p>
             </a>
             <div className="text-[10px] text-gray-600 mt-2 leading-relaxed hidden md:block">
-              <div>Spain&apos;s first PropTech scanner</div>
+              <div>{t.hero_scanner}</div>
             </div>
             <p className="text-[9px] text-gray-700 mt-1.5 hidden md:flex items-center gap-1 flex-wrap">
               <span>With</span>
@@ -325,11 +328,11 @@ export default function Explorer() {
           {/* CENTER — hero punchlines (desktop only) */}
           <div className="hidden lg:flex flex-col gap-2 flex-1 max-w-md mx-auto text-center">
             <div className="text-lg xl:text-xl font-semibold leading-snug text-gray-200">
-              Real-time investment intelligence for <span style={{ color: '#c9a84c' }}>Spain&apos;s southern coast</span>
+              {t.hero_line1}
             </div>
             <div className="h-px w-16 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #c9a84c, transparent)' }} />
             <div className="text-lg xl:text-xl font-semibold leading-snug text-gray-200">
-              Find undervalued new builds <span style={{ color: '#c9a84c' }}>before anyone else</span>
+              {t.hero_line2}
             </div>
           </div>
 
@@ -361,19 +364,19 @@ export default function Explorer() {
                     </button>
                   )}
                   <button onClick={signOut} className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors">
-                    Sign out
+                    {t.btn_signout}
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <button onClick={() => setShowAuthModal(true)}
                     className="text-[11px] border border-[#c9a84c]/40 text-[#c9a84c]/80 hover:border-[#c9a84c] hover:text-[#c9a84c] font-semibold px-3 py-1.5 rounded-lg transition-all whitespace-nowrap">
-                    Sign in
+                    {t.btn_signin}
                   </button>
                   <button onClick={() => setShowPaywall(true)}
                     className="text-[11px] text-black font-bold px-4 py-1.5 rounded-lg whitespace-nowrap"
                     style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)' }}>
-                    Subscribe
+                    {t.btn_subscribe}
                   </button>
                 </div>
               )
@@ -386,11 +389,11 @@ export default function Explorer() {
       {/* FILTER BAR */}
       <div className="bg-[#0a0a12] border-b border-[#1a1a24] px-4 md:px-8 py-2.5 flex gap-2 overflow-x-auto items-end scrollbar-none">
         <FilterSelect label="Region" value={filters.region} onChange={v => setFilters(f => ({...f, region: v}))}
-          options={[['all','All Regions'],['cb-south','CB South'],['cb-north','CB North'],['costa-calida','C. Cálida']]} />
+          options={[['all',t.filter_all_regions],['cb-south',t.filter_cb_south],['cb-north',t.filter_cb_north],['costa-calida',t.filter_calida]]} />
         <FilterSelect label="Type" value={filters.type} onChange={v => setFilters(f => ({...f, type: v}))}
-          options={[['all','All Types'],['Villa','Villa'],['Apartment','Apartment'],['Townhouse','Townhouse'],['Bungalow','Bungalow']]} />
+          options={[['all',t.filter_all_types],['Villa','Villa'],['Apartment','Apartment'],['Townhouse','Townhouse'],['Bungalow','Bungalow']]} />
         <FilterSelect label="Status" value={filters.status} onChange={v => setFilters(f => ({...f, status: v}))}
-          options={[['all','All'],['off-plan','Off-Plan'],['under-construction','Building'],['ready','Ready']]} />
+          options={[['all',t.filter_all_status],['off-plan',t.filter_offplan],['under-construction',t.filter_construction],['ready',t.filter_ready]]} />
         <FilterSelect label="Min Score" value={String(filters.minScore)} onChange={v => setFilters(f => ({...f, minScore: +v}))}
           options={[['0','Any'],['40','40+'],['50','50+'],['60','60+'],['70','70+'],['80','80+']]} />
         <FilterSelect label="Beds" value={String(filters.minBeds)} onChange={v => setFilters(f => ({...f, minBeds: +v}))}
@@ -398,11 +401,27 @@ export default function Explorer() {
         <div className="flex flex-col gap-1">
           <label className="text-[8px] tracking-[2px] text-gray-600 uppercase">Search</label>
           <input type="text" value={filters.query} onChange={e => setFilters(f => ({...f, query: e.target.value}))}
-            placeholder="Developer, location..."
+            placeholder={t.search_placeholder}
             className="text-gray-300 px-3 py-1.5 rounded-md text-xs outline-none min-w-[150px]"
             style={{ background: '#0a0a12', border: '1px solid #1e1e28' }}
             onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#c9a84c'; }}
             onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#1e1e28'; }} />
+        </div>
+        {/* Language switcher */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[8px] tracking-[2px] text-gray-600 uppercase opacity-0">Lang</label>
+          <div className="flex items-center gap-1">
+            {LANGUAGES.map(l => (
+              <button
+                key={l.code}
+                onClick={() => setLang(l.code)}
+                title={l.label}
+                className={`text-lg leading-none transition-all hover:scale-110 ${lang === l.code ? 'opacity-100 scale-110' : 'opacity-40 hover:opacity-70'}`}
+              >
+                {l.flag}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex flex-col gap-1 ml-auto">
           <label className="text-[9px] uppercase tracking-widest text-gray-500 opacity-0">x</label>
@@ -427,7 +446,7 @@ export default function Explorer() {
       <div className="bg-[#070709] border-b border-[#1a1a24]">
         {/* Mobile */}
         <div className="md:hidden flex flex-wrap px-2 pt-1 pb-0">
-          {([['deals','Deals'],['yield','Yield'],['portfolio','Portfolio'],['luxury','Luxury'],['map','Map'],['market','Market'],['about','Scoring'],['legal','Legal'],['contact','Contact']] as [typeof tab, string][]).map(([key, label]) => (
+          {([[`deals`,t.tab_deals],[`yield`,t.tab_yield],[`portfolio`,t.tab_portfolio],[`luxury`,t.tab_luxury],[`map`,t.tab_map],[`market`,t.tab_market],[`about`,t.tab_scoring],[`legal`,t.tab_legal],[`contact`,t.tab_contact]] as [typeof tab, string][]).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`px-3 py-2 text-[10px] font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-[#c9a84c] border-[#c9a84c]' : 'text-gray-600 border-transparent hover:text-gray-400'}`}>
               {label}
@@ -436,7 +455,7 @@ export default function Explorer() {
         </div>
         {/* Desktop */}
         <div className="hidden md:flex gap-0 px-8 overflow-x-auto scrollbar-none">
-          {([['deals','Deal Rankings'],['yield','Rental Yield'],['portfolio','Portfolio'],['luxury','Luxury €1M+'],['map','Map'],['market','Market Overview'],['about','Scoring Method'],['legal','Legal & Security'],['contact','Contact']] as [typeof tab, string][]).map(([key, label]) => (
+          {([[`deals`,t.tab_deals],[`yield`,t.tab_yield],[`portfolio`,t.tab_portfolio],[`luxury`,t.tab_luxury],[`map`,t.tab_map],[`market`,t.tab_market],[`about`,t.tab_scoring],[`legal`,t.tab_legal],[`contact`,t.tab_contact]] as [typeof tab, string][]).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`flex-shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-[#c9a84c] border-[#c9a84c]' : 'text-gray-600 border-transparent hover:text-gray-400'}`}>
               {label}
@@ -492,7 +511,7 @@ export default function Explorer() {
                         </span>
                       ) : null; })()}
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${d.s === 'off-plan' ? 'bg-emerald-500/12 text-emerald-400' : d.s === 'under-construction' ? 'bg-amber-500/12 text-amber-400' : 'bg-blue-500/12 text-blue-400'}`}>
-                        {d.s === 'off-plan' ? 'Off-Plan' : d.s === 'under-construction' ? 'Building' : 'Ready'}
+                        {d.s === 'off-plan' ? t.status_offplan : d.s === 'under-construction' ? t.status_construction : t.status_ready}
                       </span>
                       {d.c && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500/80">~{d.c}</span>}
                       <span className="text-gray-600 text-[10px]">{d.bd}bd · {d.bm}m²{d.bk !== null ? ` · ${d.bk}km beach` : ''}</span>
@@ -522,7 +541,7 @@ export default function Explorer() {
               <table className="w-full border-collapse min-w-[1100px]">
                 <thead>
                   <tr>
-                    {([['#',''],['score','Score'],['developer','Developer'],['project','Project'],['','Region'],['','Type'],['price','Price'],['priceM2','€/m²'],['marketM2','Market'],['discount','Discount'],['built','Built'],['plot','Plot'],['beds','Beds'],['beach','Beach'],['','Status'],['','Completion'],['','+']] as [SortKey|'', string][]).map(([key, label], i) => (
+                    {([['#',''],['score',t.col_score],['developer',t.col_developer],['project',t.col_project],['',t.col_region],['',t.col_type],['price',t.col_price],['priceM2',t.col_pm2],['marketM2',t.col_market],['discount',t.col_discount],['built',t.col_built],['plot',t.col_plot],['beds',t.col_beds],['beach',t.lbl_beach],['','Status'],['','Completion'],['','+']] as [SortKey|'', string][]).map(([key, label], i) => (
                       <th key={i} onClick={() => key && handleSort(key as SortKey)}
                         className={`bg-[#09090f] px-3 py-2.5 text-[10px] uppercase tracking-wider text-gray-500 text-left border-b border-[#1a1a24] cursor-pointer hover:text-[#c9a84c] whitespace-nowrap sticky top-0 z-10 select-none ${sortKey === key ? 'text-[#c9a84c]' : ''}`}>
                         {label}{sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
@@ -593,7 +612,7 @@ export default function Explorer() {
                         <td className="px-3 py-2.5 border-b border-[#141420] text-xs text-gray-400">{d.bk !== null ? `${d.bk}km` : '-'}</td>
                         <td className="px-3 py-2.5 border-b border-[#141420]">
                           <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${d.s === 'off-plan' ? 'bg-emerald-500/12 text-emerald-400' : d.s === 'under-construction' ? 'bg-amber-500/12 text-amber-400' : 'bg-blue-500/12 text-blue-400'}`}>
-                            {d.s === 'off-plan' ? 'Off-Plan' : d.s === 'under-construction' ? 'Building' : 'Ready'}
+                            {d.s === 'off-plan' ? t.status_offplan : d.s === 'under-construction' ? t.status_construction : t.status_ready}
                           </span>
                         </td>
                         <td className="px-3 py-2.5 border-b border-[#141420] text-[10px] text-amber-500/70 whitespace-nowrap">{d.c ? `~${d.c}` : '-'}</td>
@@ -663,7 +682,7 @@ export default function Explorer() {
                 )}
                 {/* Status badge */}
                 <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-[11px] font-bold ${previewProp.s === 'off-plan' ? 'bg-emerald-500/90 text-white' : previewProp.s === 'ready' ? 'bg-blue-500/90 text-white' : 'bg-amber-500/90 text-black'}`}>
-                  {previewProp.s === 'off-plan' ? 'Off-Plan' : previewProp.s === 'ready' ? 'Key Ready' : 'Under Construction'}
+                  {previewProp.s === 'off-plan' ? t.status_offplan : previewProp.s === 'ready' ? t.status_ready : t.status_construction}
                 </div>
               </div>
             ) : (
@@ -709,9 +728,9 @@ export default function Explorer() {
                   disabled={aiMemoLoading}
                   className="w-full mb-4 py-2.5 bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border border-purple-500/40 hover:border-purple-400/60 text-purple-300 font-semibold text-xs rounded-lg transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                   {aiMemoLoading ? (
-                    <><span className="animate-pulse">●</span> Analysing with Claude AI...</>
+                    <><span className="animate-pulse">●</span> {t.memo_generating}</>
                   ) : (
-                    <><span>✦</span> AI Analysis</>
+                    <><span>✦</span> {t.btn_ai}</>
                   )}
                 </button>
               )}
@@ -726,7 +745,7 @@ export default function Explorer() {
                       {aiMemo.verdict}
                     </span>
                     <div className="flex-1">
-                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Confidence</div>
+                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">{t.memo_confidence}</div>
                       <div className="flex gap-0.5">
                         {Array.from({ length: 10 }).map((_, i) => (
                           <span key={i} className={`w-3 h-3 rounded-full ${i < aiMemo.confidence ? (aiMemo.verdict === 'BUY' ? 'bg-emerald-400' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-400' : 'bg-red-400') : 'bg-[#2a2a30]'}`} />
@@ -747,7 +766,7 @@ export default function Explorer() {
                           const growth = (((pred - previewProp!.pf) / previewProp!.pf) * 100).toFixed(1);
                           return (
                             <div key={yr} className="bg-[#18181f] rounded-lg p-2.5 text-center">
-                              <div className="text-[9px] uppercase tracking-wide text-gray-600 mb-1">Year {yr.replace('year','')}</div>
+                              <div className="text-[9px] uppercase tracking-wide text-gray-600 mb-1">{yr === 'year1' ? t.memo_price_yr1 : yr === 'year3' ? t.memo_price_yr3 : t.memo_price_yr5}</div>
                               <div className="text-sm font-bold text-white">{pred >= 1_000_000 ? `€${(pred/1_000_000).toFixed(1)}M` : `€${Math.round(pred/1000)}k`}</div>
                               <div className={`text-[10px] font-semibold mt-0.5 ${Number(growth) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{Number(growth) >= 0 ? '+' : ''}{growth}%</div>
                             </div>
@@ -760,7 +779,7 @@ export default function Explorer() {
                     {/* Strengths */}
                     {aiMemo.strengths.length > 0 && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-widest text-emerald-500 mb-1.5">Strengths</div>
+                        <div className="text-[10px] uppercase tracking-widest text-emerald-500 mb-1.5">{t.memo_strengths}</div>
                         <ul className="space-y-1">
                           {aiMemo.strengths.map((s, i) => <li key={i} className="text-xs text-gray-300 flex gap-2"><span className="text-emerald-500 flex-shrink-0">✓</span>{s}</li>)}
                         </ul>
@@ -770,7 +789,7 @@ export default function Explorer() {
                     {/* Risks */}
                     {aiMemo.risks.length > 0 && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-widest text-red-500 mb-1.5">Risks</div>
+                        <div className="text-[10px] uppercase tracking-widest text-red-500 mb-1.5">{t.memo_risks}</div>
                         <ul className="space-y-1">
                           {aiMemo.risks.map((r, i) => <li key={i} className="text-xs text-gray-300 flex gap-2"><span className="text-red-400 flex-shrink-0">⚠</span>{r}</li>)}
                         </ul>
@@ -779,25 +798,25 @@ export default function Explorer() {
 
                     {/* Yield outlook */}
                     <div>
-                      <div className="text-[10px] uppercase tracking-widest text-amber-500 mb-1">Yield Outlook</div>
+                      <div className="text-[10px] uppercase tracking-widest text-amber-500 mb-1">{t.memo_yield_outlook}</div>
                       <p className="text-xs text-gray-400 leading-relaxed">{aiMemo.yield_outlook}</p>
                     </div>
 
                     {/* Market context */}
                     <div>
-                      <div className="text-[10px] uppercase tracking-widest text-blue-400 mb-1">Market Context</div>
+                      <div className="text-[10px] uppercase tracking-widest text-blue-400 mb-1">{t.memo_market_context}</div>
                       <p className="text-xs text-gray-400 leading-relaxed">{aiMemo.market_context}</p>
                     </div>
 
                     {/* Comparable position */}
                     <div>
-                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">vs. Comparables</div>
+                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">{t.memo_vs_comparables}</div>
                       <p className="text-xs text-gray-400 leading-relaxed">{aiMemo.comparable_position}</p>
                     </div>
 
                     {/* Recommendation */}
                     <div className={`p-3 rounded-lg border ${aiMemo.verdict === 'BUY' ? 'bg-emerald-900/20 border-emerald-500/25' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-900/20 border-amber-500/25' : 'bg-red-900/20 border-red-500/25'}`}>
-                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Recommendation</div>
+                      <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">{t.memo_recommendation}</div>
                       <p className="text-xs text-gray-300 leading-relaxed">{aiMemo.recommendation}</p>
                     </div>
 
