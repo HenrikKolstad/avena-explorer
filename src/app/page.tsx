@@ -310,7 +310,9 @@ export default function Explorer() {
         <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #c9a84c 30%, #e8c96a 50%, #c9a84c 70%, transparent 100%)' }} />
 
         {/* MOBILE HEADER */}
-        <div className="flex md:hidden items-center justify-between gap-3">
+        <div className="flex md:hidden flex-col gap-2">
+          {/* Row 1: logo + stats + auth */}
+          <div className="flex items-center justify-between gap-3">
           <a href="/" className="flex-shrink-0">
             <h1 className="text-2xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent">AVENA</h1>
             <p className="text-[8px] tracking-[5px] uppercase text-[#c9a84c]/60 font-light">Estate</p>
@@ -348,6 +350,20 @@ export default function Explorer() {
                 </div>
               )
             )}
+          </div>
+          </div>
+          {/* Row 2: tagline + partnership */}
+          <div className="border-t border-[#1a1a24] pt-2">
+            <div className="text-[9px] text-gray-400 leading-relaxed">
+              <div>{t.hero_scanner}</div>
+              <div className="text-gray-500 mt-0.5">Costa Del Sol properties coming soon ⏳</div>
+            </div>
+            <p className="text-[9px] text-gray-500 mt-1 flex items-center gap-1 flex-wrap">
+              <span>In partnership with</span>
+              <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="font-semibold" style={{ color: '#F5A623' }}>Xavia Estate</a>
+              <span className="text-gray-400">&</span>
+              <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" className="font-semibold" style={{ color: '#635BFF' }}>Stripe</a>
+            </p>
           </div>
         </div>
 
