@@ -63,35 +63,37 @@ export default function MapView({
       : `€${Math.round(n / 1000)}k`;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-220px)] min-h-[500px]">
+    <div className="flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-220px)] min-h-[400px] md:min-h-[500px]">
       {/* Map controls */}
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-[#111118] border-b border-[#2a2a30] flex-wrap">
-        <span className="text-[9px] uppercase tracking-widest text-gray-500 mr-1">Show:</span>
-        {([
-          ['all', 'All Properties'],
-          ['deals', 'Top Deals (70+)'],
-          ['yield', 'High Yield (5%+)'],
-          ['luxury', 'Luxury €1M+'],
-        ] as [MapFilter, string][]).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setMapFilter(key)}
-            className={`text-[10px] px-3 py-1 rounded-full border transition-all ${
-              mapFilter === key
-                ? 'bg-amber-500/20 border-amber-500 text-amber-400'
-                : 'border-[#2a2a30] text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-        <span className="ml-auto text-[10px] text-gray-600">{filtered.length} properties shown</span>
+      <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-3 px-3 md:px-4 py-2 bg-[#111118] border-b border-[#2a2a30]">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[9px] uppercase tracking-widest text-gray-500">Show:</span>
+          {([
+            ['all', 'All'],
+            ['deals', 'Top 70+'],
+            ['yield', 'Yield 5%+'],
+            ['luxury', '€1M+'],
+          ] as [MapFilter, string][]).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setMapFilter(key)}
+              className={`text-[10px] px-2.5 py-1 rounded-full border transition-all min-h-[32px] ${
+                mapFilter === key
+                  ? 'bg-amber-500/20 border-amber-500 text-amber-400'
+                  : 'border-[#2a2a30] text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+          <span className="text-[10px] text-gray-600 ml-1">{filtered.length} shown</span>
+        </div>
         {/* Legend */}
-        <div className="flex items-center gap-3 text-[9px] text-gray-500 border-l border-[#2a2a30] pl-3">
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />Score 80+</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />Score 60+</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block" />Score &lt;60</span>
-          <span className="flex items-center gap-1"><span className="text-gray-400">size</span> = price</span>
+        <div className="flex items-center gap-2 text-[9px] text-gray-500 md:border-l md:border-[#2a2a30] md:pl-3 md:ml-auto">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />80+</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />60+</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />&lt;60</span>
+          <span className="text-gray-600">size=price</span>
         </div>
       </div>
 

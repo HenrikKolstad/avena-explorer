@@ -497,31 +497,21 @@ export default function Explorer() {
       </div>
 
       {/* QUICK FILTERS */}
-      <div className="bg-[#070709] border-b border-[#1a1a24] px-4 md:px-8 py-2.5 flex gap-2 overflow-x-auto scrollbar-none">
-        {([['budget','Budget <€200k'],['mid','Mid €200-400k'],['premium','Premium €400k+'],['beach','Beach <2km'],['golf','Golf Resort'],['cashflow','Cash-Flow +'],['favs','Favorites']] as [QuickFilter, string][]).map(([key, label]) => (
+      <div className="bg-[#070709] border-b border-[#1a1a24] px-3 md:px-8 py-2 flex gap-1.5 md:gap-2 overflow-x-auto scrollbar-none">
+        {([['budget','<€200k'],['mid','€200-400k'],['premium','€400k+'],['beach','Beach'],['golf','Golf'],['cashflow','Cash+'],['favs','Favs']] as [QuickFilter, string][]).map(([key, label]) => (
           <button key={key} onClick={() => { setQuickFilter(q => q === key ? '' : key); }}
-            className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${quickFilter === key ? 'bg-[#c9a84c]/15 border-[#c9a84c]/60 text-[#c9a84c]' : 'bg-transparent border-[#1f1f28] text-gray-600 hover:border-[#c9a84c]/30 hover:text-gray-400'}`}>
+            className={`flex-shrink-0 px-2.5 md:px-3 py-1.5 rounded-full text-[10px] md:text-[11px] font-semibold border transition-all min-h-[36px] flex items-center ${quickFilter === key ? 'bg-[#c9a84c]/15 border-[#c9a84c]/60 text-[#c9a84c]' : 'bg-transparent border-[#1f1f28] text-gray-600 hover:border-[#c9a84c]/30 hover:text-gray-400'}`}>
             {label}
           </button>
         ))}
       </div>
 
-      {/* TABS — mobile: wrapping grid, desktop: scrollable row */}
+      {/* TABS — mobile: horizontally scrollable, desktop: scrollable row */}
       <div className="bg-[#070709] border-b border-[#1a1a24]">
-        {/* Mobile */}
-        <div className="md:hidden flex flex-wrap px-2 pt-1 pb-0">
+        <div className="flex gap-0 px-2 md:px-8 overflow-x-auto scrollbar-none">
           {([[`deals`,t.tab_deals],[`yield`,t.tab_yield],[`portfolio`,t.tab_portfolio],[`luxury`,t.tab_luxury],[`map`,t.tab_map],[`market`,t.tab_market],[`about`,t.tab_scoring],[`legal`,t.tab_legal],[`contact`,t.tab_contact]] as [typeof tab, string][]).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`px-3 py-2 text-[10px] font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-[#c9a84c] border-[#c9a84c]' : 'text-gray-600 border-transparent hover:text-gray-400'}`}>
-              {label}
-            </button>
-          ))}
-        </div>
-        {/* Desktop */}
-        <div className="hidden md:flex gap-0 px-8 overflow-x-auto scrollbar-none">
-          {([[`deals`,t.tab_deals],[`yield`,t.tab_yield],[`portfolio`,t.tab_portfolio],[`luxury`,t.tab_luxury],[`map`,t.tab_map],[`market`,t.tab_market],[`about`,t.tab_scoring],[`legal`,t.tab_legal],[`contact`,t.tab_contact]] as [typeof tab, string][]).map(([key, label]) => (
-            <button key={key} onClick={() => setTab(key)}
-              className={`flex-shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold tracking-wide border-b-2 transition-all ${tab === key ? 'text-[#c9a84c] border-[#c9a84c]' : 'text-gray-600 border-transparent hover:text-gray-400'}`}>
+              className={`flex-shrink-0 whitespace-nowrap px-3 md:px-5 py-2.5 text-[10px] md:text-xs font-semibold tracking-wide border-b-2 transition-all min-h-[44px] flex items-center ${tab === key ? 'text-[#c9a84c] border-[#c9a84c]' : 'text-gray-600 border-transparent hover:text-gray-400'}`}>
               {label}
             </button>
           ))}
@@ -725,7 +715,7 @@ export default function Explorer() {
         {previewProp && (
           <>
           <div className="md:hidden fixed inset-0 bg-black/60 z-[299]" onClick={() => { setPreview(null); setPreviewLuxScore(null); }} />
-          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-0 md:left-auto md:right-0 w-full md:w-[480px] h-[90vh] md:h-screen border-t md:border-t-0 md:border-l border-[#1a1a24] z-[300] overflow-y-auto shadow-2xl rounded-t-2xl md:rounded-none animate-slide-in" style={{ background: 'linear-gradient(180deg, #0e0d18 0%, #09090f 100%)' }}>
+          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-0 md:left-auto md:right-0 w-full md:w-[480px] h-[92vh] md:h-screen border-t md:border-t-0 md:border-l border-[#1a1a24] z-[300] overflow-y-auto shadow-2xl rounded-t-2xl md:rounded-none animate-slide-in overscroll-contain" style={{ background: 'linear-gradient(180deg, #0e0d18 0%, #09090f 100%)' }}>
             <div className="md:hidden w-12 h-1 bg-gray-700 rounded-full mx-auto mt-3 mb-1" />
             <button onClick={() => { setPreview(null); setPreviewLuxScore(null); }} className="absolute top-4 right-4 w-8 h-8 rounded-full border border-[#2a2a30] text-gray-400 hover:text-amber-400 hover:border-amber-400 flex items-center justify-center z-10 bg-black/50">×</button>
             {/* IMAGE GALLERY */}
@@ -763,8 +753,8 @@ export default function Explorer() {
                 ))}
               </div>
             )}
-            <div className="p-6">
-              <h2 className="font-serif text-xl text-amber-300 mb-1">{previewProp.p}</h2>
+            <div className="p-4 md:p-6">
+              <h2 className="font-serif text-lg md:text-xl text-amber-300 mb-1 pr-8">{previewProp.p}</h2>
               <p className="text-gray-500 text-sm mb-4">{previewProp.l}</p>
 
               <div className="flex items-center gap-4 mb-5 p-4 bg-[#18181f] rounded-lg border border-[#2a2a30]">
@@ -802,15 +792,15 @@ export default function Explorer() {
               {aiMemo && (
                 <div className="mb-5 bg-[#13101f] border border-purple-500/30 rounded-xl overflow-hidden">
                   {/* Verdict badge */}
-                  <div className={`px-5 py-4 flex items-center gap-4 border-b border-purple-500/20 ${aiMemo.verdict === 'BUY' ? 'bg-emerald-900/30' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-900/30' : 'bg-red-900/30'}`}>
+                  <div className={`px-4 py-4 flex items-center gap-3 border-b border-purple-500/20 ${aiMemo.verdict === 'BUY' ? 'bg-emerald-900/30' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-900/30' : 'bg-red-900/30'}`}>
                     <span className={`text-3xl font-extrabold font-serif px-4 py-2 rounded-xl ${aiMemo.verdict === 'BUY' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-red-500/20 text-red-400 border border-red-500/40'}`}>
                       {aiMemo.verdict}
                     </span>
                     <div className="flex-1">
                       <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">{t.memo_confidence}</div>
-                      <div className="flex gap-0.5">
+                      <div className="flex gap-0.5 flex-wrap">
                         {Array.from({ length: 10 }).map((_, i) => (
-                          <span key={i} className={`w-3 h-3 rounded-full ${i < aiMemo.confidence ? (aiMemo.verdict === 'BUY' ? 'bg-emerald-400' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-400' : 'bg-red-400') : 'bg-[#2a2a30]'}`} />
+                          <span key={i} className={`w-2.5 h-2.5 rounded-full ${i < aiMemo.confidence ? (aiMemo.verdict === 'BUY' ? 'bg-emerald-400' : aiMemo.verdict === 'CONSIDER' ? 'bg-amber-400' : 'bg-red-400') : 'bg-[#2a2a30]'}`} />
                         ))}
                       </div>
                     </div>
@@ -1074,8 +1064,8 @@ export default function Explorer() {
 
       {/* WELCOME PRO TOAST */}
       {showWelcomePro && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[600] animate-slide-up">
-          <div className="bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500/50 rounded-2xl px-6 py-4 shadow-2xl flex items-center gap-4 min-w-[300px]">
+        <div className="fixed bottom-6 left-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[600] animate-slide-up">
+          <div className="bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500/50 rounded-2xl px-4 md:px-6 py-4 shadow-2xl flex items-center gap-3 md:gap-4 md:min-w-[300px]">
             <div className="text-3xl">🎉</div>
             <div>
               <div className="text-emerald-300 font-bold text-sm">Welcome to Avena PRO!</div>
@@ -1089,11 +1079,11 @@ export default function Explorer() {
 
       {/* AUTH MODAL */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowAuthModal(false)}>
-          <div className="bg-[#111118] border border-[#2a2a30] rounded-2xl p-8 w-full max-w-sm mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">×</button>
+        <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowAuthModal(false)}>
+          <div className="relative bg-[#111118] border border-[#2a2a30] rounded-t-2xl md:rounded-2xl p-6 md:p-8 w-full max-w-sm md:mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white text-xl">×</button>
             <div className="text-center mb-6">
-              <div className="font-serif text-2xl text-amber-400 mb-1">Sign in to Avena Estate</div>
+              <div className="font-serif text-xl md:text-2xl text-amber-400 mb-1">Sign in to Avena Estate</div>
               <p className="text-gray-400 text-sm">We&apos;ll email you a magic link — no password needed.</p>
             </div>
             {authSent ? (
@@ -1131,15 +1121,15 @@ export default function Explorer() {
 
       {/* PAYWALL MODAL */}
       {showPaywall && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
-          <div className="bg-[#111118] border-2 border-[#c9a84c]/50 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl shadow-amber-900/20" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowPaywall(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">×</button>
-            <div className="text-center mb-6">
-              <div className="text-3xl mb-2">🔒</div>
+        <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
+          <div className="relative bg-[#111118] border-2 border-[#c9a84c]/50 rounded-t-2xl md:rounded-2xl p-5 md:p-8 w-full max-w-md md:mx-4 shadow-2xl shadow-amber-900/20 max-h-[92vh] overflow-y-auto overscroll-contain" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowPaywall(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white text-xl">×</button>
+            <div className="text-center mb-4 md:mb-6">
+              <div className="text-2xl md:text-3xl mb-2">🔒</div>
               <div className="text-gray-400 text-xs uppercase tracking-widest mb-1">You&apos;re viewing 5 of 1,040+ scored properties</div>
-              <div className="font-serif text-2xl text-[#c9a84c] mb-1">Unlock 1,040+ Investment Deals</div>
-              <div className="font-serif text-xl text-white mb-0.5">Avena Estate PRO</div>
-              <div className="text-4xl font-bold text-white mb-1">€79<span className="text-lg text-gray-400 font-normal">/month</span></div>
+              <div className="font-serif text-xl md:text-2xl text-[#c9a84c] mb-1">Unlock 1,040+ Investment Deals</div>
+              <div className="font-serif text-lg md:text-xl text-white mb-0.5">Avena Estate PRO</div>
+              <div className="text-3xl md:text-4xl font-bold text-white mb-1">€79<span className="text-base md:text-lg text-gray-400 font-normal">/month</span></div>
               <p className="text-gray-500 text-xs">Just €2.60/day · Cancel anytime</p>
             </div>
             <ul className="space-y-2 mb-6">
@@ -1228,7 +1218,7 @@ function FilterSelect({ label, value, onChange, options }: {
     <div className="flex flex-col gap-1">
       <label className="text-[8px] tracking-[2px] text-gray-600 uppercase">{label}</label>
       <select value={value} onChange={e => onChange(e.target.value)}
-        className="text-gray-300 px-3 py-1.5 rounded-md text-xs outline-none min-w-[130px]"
+        className="w-full text-gray-300 px-3 py-1.5 rounded-md text-xs outline-none md:min-w-[130px]"
         style={{ background: '#0a0a12', border: '1px solid #1e1e28' }}
         onFocus={e => { (e.target as HTMLSelectElement).style.borderColor = '#c9a84c'; }}
         onBlur={e => { (e.target as HTMLSelectElement).style.borderColor = '#1e1e28'; }}>
@@ -1295,7 +1285,7 @@ function YieldCard({ d, expanded, onToggle, fmtC, sym }: { d: Property; expanded
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-[#1e1e28]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 pt-3 border-t border-[#1e1e28]">
           <div>
             <div className="text-[9px] text-gray-500 uppercase tracking-wide mb-0.5">Avg Night</div>
             <div className="text-sm font-bold">{fmt(d._yield.rate)}</div>
@@ -1316,15 +1306,15 @@ function YieldCard({ d, expanded, onToggle, fmtC, sym }: { d: Property; expanded
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
           <div className="text-[9px] text-gray-600">
-            {d.t} · {d.bd}bed · {d._yield.weeks}wk
+            {d.t} · {d.bd}bd · {d._yield.weeks}wk
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[9px]">{srcIcon}</span>
-            <span className="text-[9px] text-gray-600">{d._yield.src}</span>
+            <span className="text-[9px] text-gray-600 truncate max-w-[100px]">{d._yield.src}</span>
           </div>
-          <div className="text-right">
+          <div className="ml-auto text-right">
             <div className="text-[9px] text-gray-500">Net Yield</div>
             <div className="text-sm font-bold text-emerald-400">{netYield}%</div>
           </div>
@@ -1454,9 +1444,9 @@ function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; i
   });
 
   return (
-    <div className="p-6">
+    <div className="p-3 md:p-6">
       {/* Three info boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-5">
         <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-4">
           <div className="text-[9px] uppercase tracking-widest text-amber-600 font-bold mb-2">How It Works</div>
           <p className="text-[11px] text-gray-400 leading-relaxed">
@@ -1487,25 +1477,25 @@ function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; i
       </div>
 
       {/* Source bar + Sort */}
-      <div className="flex flex-wrap justify-between items-center bg-[#111118] border border-[#2a2a30] rounded-lg px-4 py-2 mb-4 gap-2">
-        <div className="text-[10px] text-gray-500">
-          <span className="text-gray-400">Sources:</span> AirDNA, Airbtics, Vrbo, Booking.com (2025–2026 data) &bull;{' '}
-          <span className="text-gray-400">Occupancy:</span> 16–24 weeks/year based on beach distance &bull;{' '}
-          <span className="text-gray-400">Self-managed model</span> (no management company)
+      <div className="flex flex-col gap-2 bg-[#111118] border border-[#2a2a30] rounded-lg px-4 py-2 mb-4 md:flex-row md:justify-between md:items-center">
+        <div className="text-[10px] text-gray-500 leading-relaxed">
+          <span className="text-gray-400">Sources:</span> AirDNA, Airbtics, Vrbo, Booking.com (2025–2026) &bull;{' '}
+          <span className="text-gray-400">Occupancy:</span> 16–24 wk/yr &bull;{' '}
+          <span className="text-gray-400">Self-managed</span>
         </div>
-        <div className="flex gap-2 items-center flex-wrap">
-          {([['yield', 'By Yield %'], ['income', 'By Income'], ['price', 'By Price']] as ['yield' | 'income' | 'price', string][]).map(([key, label]) => (
+        <div className="flex gap-1.5 items-center flex-wrap">
+          {([['yield', 'Yield %'], ['income', 'Income'], ['price', 'Price']] as ['yield' | 'income' | 'price', string][]).map(([key, label]) => (
             <button key={key} onClick={() => setSortMode(key)}
-              className={`text-[10px] px-3 py-1 rounded border transition-all ${sortMode === key ? 'bg-amber-600 border-amber-600 text-black font-semibold' : 'border-[#2a2a30] text-gray-400 hover:border-amber-600/50'}`}>
+              className={`text-[10px] px-3 py-1.5 rounded border transition-all min-h-[36px] ${sortMode === key ? 'bg-amber-600 border-amber-600 text-black font-semibold' : 'border-[#2a2a30] text-gray-400 hover:border-amber-600/50'}`}>
               {label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
         <div className="flex items-center gap-3">
-          <h2 className="font-serif text-xl text-amber-400">Estimated Rental Yield</h2>
+          <h2 className="font-serif text-lg md:text-xl text-amber-400">Estimated Rental Yield</h2>
           <select
             value={currency}
             onChange={e => handleCurrencyChange(e.target.value)}
@@ -1516,7 +1506,7 @@ function YieldTab({ properties, isPaid, onUpgrade }: { properties: Property[]; i
         </div>
         <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
           <span className="text-amber-400 text-sm">💰</span>
-          <span className="text-amber-300 text-xs font-medium">Tap any card to open the loan & investment calculator</span>
+          <span className="text-amber-300 text-xs font-medium">Tap any card to open the loan &amp; investment calculator</span>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1626,8 +1616,8 @@ function MarketTab({ properties }: { properties: Property[] }) {
   const medianPrice = properties.length ? [...properties].sort((a, b) => a.pf - b.pf)[Math.floor(properties.length / 2)].pf : 0;
 
   return (
-    <div className="p-6 space-y-4">
-      <h2 className="font-serif text-xl text-amber-400">Market Overview</h2>
+    <div className="p-3 md:p-6 space-y-3 md:space-y-4">
+      <h2 className="font-serif text-lg md:text-xl text-amber-400">Market Overview</h2>
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1722,17 +1712,17 @@ function MarketTab({ properties }: { properties: Property[] }) {
       {/* Price distribution */}
       <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
         <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">Price Distribution</h3>
-        <div className="flex items-end gap-2 h-24">
+        <div className="flex items-end gap-1 md:gap-2 h-24">
           {bandData.map(b => (
             <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
-              <span className="text-[9px] text-amber-400 font-semibold">{b.count}</span>
+              <span className="text-[8px] md:text-[9px] text-amber-400 font-semibold">{b.count}</span>
               <div className="w-full bg-amber-500/50 rounded-t" style={{ height: `${maxBandCount ? (b.count / maxBandCount) * 72 : 0}px` }} />
             </div>
           ))}
         </div>
-        <div className="flex gap-2 mt-1">
+        <div className="flex gap-1 md:gap-2 mt-1">
           {bandData.map(b => (
-            <div key={b.label} className="flex-1 text-center text-[8px] text-gray-600 leading-tight">{b.label}</div>
+            <div key={b.label} className="flex-1 text-center text-[7px] md:text-[8px] text-gray-600 leading-tight">{b.label}</div>
           ))}
         </div>
       </div>
@@ -1756,10 +1746,11 @@ function MarketTab({ properties }: { properties: Property[] }) {
         </div>
       </div>
 
-      {/* Top towns table */}
+      {/* Top towns — table on desktop, cards on mobile */}
       <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-5">
         <h3 className="text-[11px] uppercase tracking-widest text-gray-500 mb-4">Top Towns</h3>
-        <div className="overflow-x-auto">
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-[9px] uppercase tracking-widest text-gray-600 border-b border-[#2a2a30]">
@@ -1780,6 +1771,21 @@ function MarketTab({ properties }: { properties: Property[] }) {
               ))}
             </tbody>
           </table>
+        </div>
+        {/* Mobile cards */}
+        <div className="md:hidden space-y-2">
+          {topTowns.map(t => (
+            <div key={t.town} className="flex items-center justify-between bg-[#18181f] rounded-lg px-3 py-2.5 border border-[#2a2a30]">
+              <div className="flex-1 min-w-0">
+                <div className="text-gray-200 text-xs font-semibold truncate">{t.town}</div>
+                <div className="text-blue-400 text-[10px]">{t.count} listings</div>
+              </div>
+              <div className="text-right flex-shrink-0 ml-3">
+                <div className="text-amber-400 text-xs font-bold">{formatPrice(t.avgPrice)}</div>
+                <div className="text-emerald-400 text-[10px]">€{t.avgM2.toLocaleString()}/m²</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -2075,55 +2081,55 @@ function LuxuryTab({ properties, isPaid, onUpgrade, onPreview }: {
   return (
     <div className="p-4 md:p-6 space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="font-serif text-2xl text-amber-400">Luxury Portfolio</h2>
-          <p className="text-gray-500 text-sm mt-1">Properties €1,000,000+ — ranked within the luxury segment only</p>
-        </div>
-        <div className="flex gap-3">
-          <div className="bg-[#111118] border border-[#2a2a30] rounded-lg px-4 py-2 text-center">
-            <div className="text-xl font-bold font-serif text-amber-400">{filtered.length}</div>
-            <div className="text-[9px] uppercase tracking-widest text-gray-500">Luxury Props</div>
+      <div>
+        <h2 className="font-serif text-xl md:text-2xl text-amber-400">Luxury Portfolio</h2>
+        <p className="text-gray-500 text-sm mt-1">Properties €1,000,000+ — ranked within the luxury segment only</p>
+        <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="bg-[#111118] border border-[#2a2a30] rounded-lg px-3 py-2 text-center">
+            <div className="text-lg font-bold font-serif text-amber-400">{filtered.length}</div>
+            <div className="text-[9px] uppercase tracking-widest text-gray-500">Props</div>
           </div>
-          <div className="bg-[#111118] border border-[#2a2a30] rounded-lg px-4 py-2 text-center">
-            <div className="text-xl font-bold font-serif text-amber-400">{formatPrice(avgLuxPrice)}</div>
+          <div className="bg-[#111118] border border-[#2a2a30] rounded-lg px-3 py-2 text-center">
+            <div className="text-lg font-bold font-serif text-amber-400 truncate">{formatPrice(avgLuxPrice)}</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Avg Price</div>
           </div>
-          <div className="bg-[#111118] border border-[#2a2a30] rounded-lg px-4 py-2 text-center">
-            <div className="text-xl font-bold font-serif text-amber-400">€{avgLuxPm2.toLocaleString()}</div>
+          <div className="bg-[#111118] border border-[#2a2a30] rounded-lg px-3 py-2 text-center">
+            <div className="text-lg font-bold font-serif text-amber-400">€{avgLuxPm2.toLocaleString()}</div>
             <div className="text-[9px] uppercase tracking-widest text-gray-500">Avg €/m²</div>
           </div>
         </div>
       </div>
 
       {/* Filters + Sort */}
-      <div className="flex flex-wrap gap-3 items-end bg-[#111118] border border-[#2a2a30] rounded-xl px-4 py-3">
-        <div className="flex flex-col gap-1">
-          <span className="text-[9px] uppercase tracking-widest text-gray-500">Region</span>
-          <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
-            className="bg-[#08080d] border border-[#2a2a30] text-gray-200 px-3 py-1.5 rounded-md text-xs outline-none focus:border-amber-500">
-            <option value="all">All Regions</option>
-            <option value="cb-north">CB North</option>
-            <option value="cb-south">CB South</option>
-            <option value="costa-calida">Costa Cálida</option>
-          </select>
+      <div className="flex flex-col gap-3 bg-[#111118] border border-[#2a2a30] rounded-xl px-4 py-3">
+        <div className="flex gap-3 flex-wrap">
+          <div className="flex flex-col gap-1 flex-1 min-w-[120px]">
+            <span className="text-[9px] uppercase tracking-widest text-gray-500">Region</span>
+            <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
+              className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-200 px-3 py-1.5 rounded-md text-xs outline-none focus:border-amber-500">
+              <option value="all">All Regions</option>
+              <option value="cb-north">CB North</option>
+              <option value="cb-south">CB South</option>
+              <option value="costa-calida">Costa Cálida</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1 flex-1 min-w-[120px]">
+            <span className="text-[9px] uppercase tracking-widest text-gray-500">Type</span>
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+              className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-200 px-3 py-1.5 rounded-md text-xs outline-none focus:border-amber-500">
+              <option value="all">All Types</option>
+              <option value="Villa">Villa</option>
+              <option value="Apartment">Apartment</option>
+              <option value="Townhouse">Townhouse</option>
+            </select>
+          </div>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-[9px] uppercase tracking-widest text-gray-500">Type</span>
-          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
-            className="bg-[#08080d] border border-[#2a2a30] text-gray-200 px-3 py-1.5 rounded-md text-xs outline-none focus:border-amber-500">
-            <option value="all">All Types</option>
-            <option value="Villa">Villa</option>
-            <option value="Apartment">Apartment</option>
-            <option value="Townhouse">Townhouse</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-1 ml-auto">
           <span className="text-[9px] uppercase tracking-widest text-gray-500">Rank by</span>
-          <div className="flex gap-1">
-            {([['value','Best Value'],['price','Price ↑'],['pm2','€/m² ↑'],['plot','Plot Size']] as ['value'|'price'|'pm2'|'plot', string][]).map(([k, l]) => (
+          <div className="flex gap-1 flex-wrap">
+            {([['value','Best Value'],['price','Price ↑'],['pm2','€/m² ↑'],['plot','Plot']] as ['value'|'price'|'pm2'|'plot', string][]).map(([k, l]) => (
               <button key={k} onClick={() => setSortMode(k)}
-                className={`text-[10px] px-3 py-1.5 rounded border transition-all ${sortMode === k ? 'bg-amber-600 border-amber-600 text-black font-semibold' : 'border-[#2a2a30] text-gray-400 hover:border-amber-600/50'}`}>
+                className={`text-[10px] px-3 py-1.5 rounded border transition-all min-h-[36px] ${sortMode === k ? 'bg-amber-600 border-amber-600 text-black font-semibold' : 'border-[#2a2a30] text-gray-400 hover:border-amber-600/50'}`}>
                 {l}
               </button>
             ))}
@@ -2267,7 +2273,7 @@ function LuxuryTab({ properties, isPaid, onUpgrade, onPreview }: {
 
 function AboutTab() {
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 md:p-8 max-w-3xl">
       <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-6">
         <h3 className="font-serif text-lg text-amber-400 mb-3">How the AVENA Deal Score Works</h3>
         <p className="text-gray-400 text-sm leading-relaxed mb-4">
@@ -2296,7 +2302,7 @@ function ScoreFactor({ title, desc }: { title: string; desc: string }) {
 
 function LegalTab() {
   return (
-    <div className="p-8 max-w-4xl space-y-4">
+    <div className="p-4 md:p-8 max-w-4xl space-y-3 md:space-y-4">
       <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-6">
         <h3 className="font-serif text-lg text-amber-400 mb-3">Your Investment is Secured by Law</h3>
         <p className="text-gray-400 text-sm leading-relaxed">
@@ -2333,7 +2339,7 @@ function LegalTab() {
 
       <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-6">
         <h4 className="text-amber-300 font-semibold mb-3 text-sm">Typical Purchase Costs (Spain)</h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {[
             { label: 'VAT (IVA)', value: '10%', note: 'New builds only' },
             { label: 'Stamp Duty (AJD)', value: '1.5%', note: 'On new builds' },
@@ -2366,7 +2372,7 @@ function LegalTab() {
 
 function ContactTab() {
   return (
-    <div className="p-4 md:p-10 flex justify-center">
+    <div className="p-3 md:p-10 flex justify-center">
       <div className="w-full max-w-lg">
         {/* Card */}
         <div className="relative bg-gradient-to-b from-[#18141f] to-[#0f0d15] border-2 border-[#c9a84c]/50 rounded-3xl overflow-hidden shadow-2xl shadow-[#c9a84c]/10">
@@ -2377,7 +2383,7 @@ function ContactTab() {
           {/* Top accent glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full opacity-10 blur-3xl pointer-events-none" style={{ background: '#c9a84c' }} />
 
-          <div className="px-8 pt-10 pb-8 relative">
+          <div className="px-5 md:px-8 pt-8 md:pt-10 pb-6 md:pb-8 relative">
             {/* Avatar */}
             <div className="flex justify-center mb-6">
               <div className="relative">
