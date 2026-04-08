@@ -772,7 +772,7 @@ export default function Explorer() {
               }}
             >
               {/* Collapse toggle button — centered in sidebar, no overflow clipping */}
-              <div className="flex justify-center pt-16 pb-2">
+              <div className="flex justify-center pt-3 pb-2">
                 <button
                   onClick={() => setSidebarCollapsed(v => !v)}
                   className="w-6 h-6 rounded-full border border-[#2a2a30] flex items-center justify-center transition-colors hover:border-amber-500/50 hover:text-amber-400"
