@@ -753,7 +753,7 @@ export default function Explorer() {
             onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
           >
             <span className="text-base flex-shrink-0 w-5 text-center leading-none">{icon}</span>
-            {!sidebarCollapsed && (
+            {(!sidebarCollapsed || mobileSidebarOpen) && (
               <span className="text-[12px] font-medium tracking-wide whitespace-nowrap overflow-hidden flex-1 text-left flex items-center gap-1.5">
                 <span className="flex-1">{label}</span>
                 {disabled && <span className="text-[9px] text-gray-700 font-normal">soon</span>}
@@ -764,7 +764,7 @@ export default function Explorer() {
         );
 
         const SectionHeader = ({ label }: { label: string }) => (
-          sidebarCollapsed ? <div className="h-px mx-2 my-1.5 bg-[#1a1a24]" /> : (
+          (sidebarCollapsed && !mobileSidebarOpen) ? <div className="h-px mx-2 my-1.5 bg-[#1a1a24]" /> : (
             <div className="px-3 pt-4 pb-1">
               <span className="text-[9px] font-bold uppercase tracking-[3px]" style={{ color: 'rgba(201,168,76,0.5)' }}>{label}</span>
             </div>
