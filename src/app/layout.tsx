@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { getStructuredData } from "./structured-data";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Avena Terminal — Spain Property Investment Terminal",
@@ -41,6 +42,7 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-950 text-gray-100 antialiased">
         <LanguageProvider><AuthProvider>{children}</AuthProvider></LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );
