@@ -68,7 +68,7 @@ export default function Explorer() {
   const [preview, setPreview] = useState<number | null>(null);
   const [previewLuxScore, setPreviewLuxScore] = useState<number | null>(null);
   const [favs, setFavs] = useState<string[]>([]);
-  const [tab, setTab] = useState<'deals' | 'yield' | 'portfolio' | 'map' | 'market' | 'luxury' | 'about' | 'legal' | 'contact'>('deals');
+  const [tab, setTab] = useState<'deals' | 'yield' | 'portfolio' | 'map' | 'market' | 'luxury' | 'about' | 'legal' | 'contact' | 'whyavena'>('deals');
   const [imgIdx, setImgIdx] = useState(0);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -362,7 +362,7 @@ export default function Explorer() {
           </button>
           <a href="/" className="flex-shrink-0">
             <h1 className="text-2xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent">AVENA</h1>
-            <p className="text-[8px] tracking-[5px] uppercase text-[#c9a84c]/60 font-light">Estate</p>
+            <p className="text-[8px] tracking-[5px] uppercase text-[#c9a84c]/60 font-light">Terminal</p>
           </a>
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="text-center">
@@ -422,7 +422,7 @@ export default function Explorer() {
           <div className="flex-shrink-0">
             <a href="/" className="block cursor-pointer">
               <h1 className="text-4xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">AVENA</h1>
-              <p className="text-[9px] tracking-[6px] uppercase text-[#c9a84c]/60 mt-0.5 font-light">Estate</p>
+              <p className="text-[9px] tracking-[6px] uppercase text-[#c9a84c]/60 mt-0.5 font-light">Terminal</p>
             </a>
             <div className="text-[10px] text-gray-400 mt-2 leading-relaxed">
               <div>{t.hero_scanner}</div>
@@ -652,7 +652,7 @@ export default function Explorer() {
 
                 {/* INFO */}
                 <SectionHeader label="INFO" />
-                <NavItem icon="ℹ️" label="Why Avena" onClick={() => go('deals')} />
+                <NavItem icon="ℹ️" label="Why Avena" isActive={tab === 'whyavena'} onClick={() => go('whyavena')} />
                 <NavItem icon="⚖️" label="Legal and Security" isActive={tab === 'legal'} onClick={() => go('legal')} />
                 <NavItem icon="✉️" label="Contact" isActive={tab === 'contact'} onClick={() => go('contact')} />
                 <NavItem icon="📖" label="About" isActive={tab === 'about'} onClick={() => go('about')} />
@@ -807,7 +807,7 @@ export default function Explorer() {
           className={`flex-1 transition-all duration-200 max-md:!ml-0 overflow-x-hidden min-w-0 ${preview !== null ? 'md:mr-[480px]' : ''}`}
           style={{ marginLeft: sidebarCollapsed ? 60 : 240 }}
         >
-          {!user && tab === 'deals' && (
+          {(tab === 'whyavena' || (!user && tab === 'deals')) && (
             <div className="px-4 md:px-8 py-8 border-b border-[#1a1a24]">
               {/* Headline */}
               <div className="text-center mb-8">
@@ -1515,7 +1515,7 @@ export default function Explorer() {
           <div className="relative bg-[#111118] border border-[#2a2a30] rounded-t-2xl md:rounded-2xl p-6 md:p-8 w-full max-w-sm md:mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white text-xl">×</button>
             <div className="text-center mb-6">
-              <div className="font-serif text-xl md:text-2xl text-amber-400 mb-1">Sign in to Avena Estate</div>
+              <div className="font-serif text-xl md:text-2xl text-amber-400 mb-1">Sign in to Avena Terminal</div>
               <p className="text-gray-400 text-sm">We&apos;ll email you a magic link — no password needed.</p>
             </div>
             {authSent ? (
@@ -1560,7 +1560,7 @@ export default function Explorer() {
               <div className="text-2xl md:text-3xl mb-2">🔒</div>
               <div className="text-gray-400 text-xs uppercase tracking-widest mb-1">You&apos;re viewing 5 of 1,040+ scored properties</div>
               <div className="font-serif text-xl md:text-2xl text-[#c9a84c] mb-1">Unlock 1,040+ Investment Deals</div>
-              <div className="font-serif text-lg md:text-xl text-white mb-0.5">Avena Estate PRO</div>
+              <div className="font-serif text-lg md:text-xl text-white mb-0.5">Avena Terminal PRO</div>
               <div className="text-3xl md:text-4xl font-bold text-white mb-1">€79<span className="text-base md:text-lg text-gray-400 font-normal">/month</span></div>
               <p className="text-gray-500 text-xs">Just €2.60/day · Cancel anytime</p>
             </div>
@@ -2923,7 +2923,7 @@ function ContactTab() {
               <div className="font-serif text-3xl font-bold mb-1" style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c96a, #c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Henrik Kolstad
               </div>
-              <div className="text-[11px] uppercase tracking-[4px] text-gray-500">Founder · Avena Estate</div>
+              <div className="text-[11px] uppercase tracking-[4px] text-gray-500">Founder · Avena Terminal</div>
               <div className="mt-3 text-xs text-gray-500 leading-relaxed max-w-xs mx-auto">
                 Spain&apos;s new-build property intelligence platform. Helping investors find real value.
               </div>
