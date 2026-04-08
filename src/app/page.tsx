@@ -114,8 +114,8 @@ export default function Explorer() {
   });
   // Email capture popup state
   const [showEmailCapture, setShowEmailCapture] = useState(false);
-  // Header ref for CSS var
-  const headerRef = useRef<HTMLElement>(null);
+  // Header ref for CSS var (points to sticky top zone wrapper div)
+  const headerRef = useRef<HTMLDivElement>(null);
 
   // Sidebar state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -378,9 +378,11 @@ export default function Explorer() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#070709] overflow-hidden">
+    <div className="min-h-screen bg-[#070709] overflow-x-hidden">
+      {/* STICKY TOP ZONE — header + filter bar + quick chips, measured for sidebar offset */}
+      <div ref={headerRef} className="sticky top-0 z-50">
       {/* TOP BAR */}
-      <header ref={headerRef} className="relative flex-shrink-0 z-50 border-b border-[#1a1a24] px-4 md:px-8 py-3 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
+      <header className="relative border-b border-[#1a1a24] px-4 md:px-8 py-3 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
         <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #c9a84c 30%, #e8c96a 50%, #c9a84c 70%, transparent 100%)' }} />
 
         {/* MOBILE HEADER */}
@@ -620,6 +622,7 @@ export default function Explorer() {
           </button>
         ))}
       </div>
+      </div>{/* end sticky top zone */}
 
       {/* ── SIDEBAR (desktop fixed + mobile overlay) ── */}
       {(() => {
@@ -746,12 +749,13 @@ export default function Explorer() {
           <>
             {/* ── DESKTOP SIDEBAR ── */}
             <div
-              className="hidden md:flex flex-col flex-shrink-0 z-40 border-r border-[#1a1a24] overflow-y-auto"
+              className="hidden md:flex flex-col fixed left-0 z-40 border-r border-[#1a1a24] overflow-y-auto"
               style={{
                 background: '#0d0d14',
                 width: sidebarWidth,
                 transition: 'width 0.2s ease',
-                height: '100%',
+                top: headerH,
+                height: `calc(100vh - ${headerH}px)`,
               }}
             >
               {/* Collapse toggle button */}
@@ -771,16 +775,7 @@ export default function Explorer() {
               <SidebarContent />
             </div>
 
-            {/* ── TABLET SIDEBAR ── */}
-            <div
-              className="hidden md:[@media(min-width:768px)_and_(max-width:1023px)]:flex flex-col flex-shrink-0 z-40 border-r border-[#1a1a24] overflow-y-auto"
-              style={{
-                background: '#0d0d14',
-                width: 60,
-                transition: 'width 0.2s ease',
-                height: '100%',
-              }}
-            />
+            {/* ── TABLET SIDEBAR (placeholder removed — desktop sidebar handles tablet too) ── */}
 
             {/* ── MOBILE OVERLAY ── */}
             {mobileSidebarOpen && (
@@ -847,10 +842,10 @@ export default function Explorer() {
         function go(t: TabKey) { setTab(t); }
       })()}
 
-      {/* CONTENT — app shell: sidebar + main both scroll independently */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* CONTENT — main area, offset by fixed sidebar */}
+      <div className="flex overflow-x-hidden">
         <div
-          className={`flex-1 overflow-y-auto overflow-x-hidden min-w-0 ${preview !== null ? 'md:mr-[480px]' : ''}`}
+          className={`flex-1 overflow-x-hidden min-w-0 transition-all duration-200 ${sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-[240px]'} ${preview !== null ? 'md:mr-[480px]' : ''}`}
         >
           {(tab === 'whyavena' || (!user && tab === 'deals')) && (
             <div className="px-4 md:px-8 py-8 border-b border-[#1a1a24]">
