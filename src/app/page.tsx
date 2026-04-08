@@ -756,7 +756,7 @@ export default function Explorer() {
           const go = (t: TabKey) => { setTab(t); onClose?.(); };
           return (
             <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
-              {!sidebarCollapsed && (
+              {(!sidebarCollapsed || onClose) && (
                 <>
                   {/* Logo */}
                   <div className="px-4 pt-4 pb-2 flex-shrink-0 border-b border-[#1a1a24]">
