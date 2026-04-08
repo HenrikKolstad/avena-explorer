@@ -494,6 +494,12 @@ export default function Explorer() {
                   ) : (
                     <button onClick={() => setShowPaywall(true)} className="text-[11px] font-bold px-3 py-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)', color: '#000' }}>Go PRO</button>
                   )}
+                  {user.email?.toLowerCase() === 'henrik@xaviaestate.com' && (
+                    <>
+                      <a href="/admin" className="text-[11px] text-amber-500 hover:text-amber-400 font-semibold">Admin</a>
+                      <a href="/developer" className="text-[11px] text-blue-400 hover:text-blue-300 font-semibold">Dev</a>
+                    </>
+                  )}
                   <button onClick={signOut} className="text-[11px] text-gray-500">↩</button>
                 </div>
               ) : (
@@ -616,6 +622,12 @@ export default function Explorer() {
                       <span className="text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, #c9a84c22, #c9a84c44)', border: '1px solid rgba(201,168,76,0.5)', color: '#c9a84c' }}>PRO</span>
                     ) : (
                       <button onClick={() => setShowPaywall(true)} className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">Upgrade →</button>
+                    )}
+                    {user.email?.toLowerCase() === 'henrik@xaviaestate.com' && (
+                      <>
+                        <a href="/admin" className="text-[10px] text-amber-500 hover:text-amber-400 font-semibold whitespace-nowrap border border-amber-500/30 px-2 py-1 rounded">Admin</a>
+                        <a href="/developer" className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold whitespace-nowrap border border-blue-400/30 px-2 py-1 rounded">Dev</a>
+                      </>
                     )}
                     <button onClick={signOut} className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap">{t.btn_signout}</button>
                   </div>
