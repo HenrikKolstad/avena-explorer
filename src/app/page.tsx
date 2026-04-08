@@ -346,7 +346,7 @@ export default function Explorer() {
   return (
     <div className="min-h-screen bg-[#070709]">
       {/* TOP BAR */}
-      <header className="relative sticky top-0 z-50 border-b border-[#1a1a24] px-4 md:px-8 py-3 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
+      <header ref={(el) => { if (el) document.documentElement.style.setProperty('--header-h', el.offsetHeight + 'px'); }} className="relative sticky top-0 z-50 border-b border-[#1a1a24] px-4 md:px-8 py-3 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
         <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #c9a84c 30%, #e8c96a 50%, #c9a84c 70%, transparent 100%)' }} />
 
         {/* MOBILE HEADER */}
@@ -355,7 +355,7 @@ export default function Explorer() {
           <div className="flex items-center justify-between gap-3">
           <button
             onClick={() => setMobileSidebarOpen(true)}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-amber-400 transition-colors"
+            className="flex-shrink-0 w-11 h-11 flex items-center justify-center text-[#c9a84c] hover:text-amber-300 active:scale-90 transition-all"
             aria-label="Open navigation"
           >
             <span className="text-xl leading-none">☰</span>
@@ -403,6 +403,7 @@ export default function Explorer() {
           <div className="border-t border-[#1a1a24] pt-2">
             <div className="text-[9px] text-gray-400 leading-relaxed">
               <div>{t.hero_scanner}</div>
+              <div className="text-[9px] italic text-[#c9a84c]/60 tracking-wide mt-0.5">The Bloomberg of European property investment</div>
               <div className="text-gray-500 mt-0.5">Costa Del Sol properties coming soon ⏳</div>
               <div className="text-gray-600 mt-0.5">⏳ Building ⏳</div>
             </div>
@@ -697,11 +698,13 @@ export default function Explorer() {
           <>
             {/* ── DESKTOP SIDEBAR (fixed left) ── */}
             <div
-              className="hidden md:flex flex-col fixed left-0 top-0 h-full z-40 border-r border-[#1a1a24]"
+              className="hidden md:flex flex-col fixed left-0 z-40 border-r border-[#1a1a24]"
               style={{
                 background: '#0d0d14',
                 width: sidebarWidth,
                 transition: 'width 0.2s ease',
+                top: 'var(--header-h, 80px)',
+                height: 'calc(100vh - var(--header-h, 80px))',
               }}
             >
               {/* Collapse toggle button */}
@@ -723,11 +726,13 @@ export default function Explorer() {
 
             {/* ── TABLET hover expand (768–1023px) — uses absolute positioning so it overlays ── */}
             <div
-              className="hidden md:[@media(min-width:768px)_and_(max-width:1023px)]:flex flex-col fixed left-0 top-0 h-full z-40 border-r border-[#1a1a24]"
+              className="hidden md:[@media(min-width:768px)_and_(max-width:1023px)]:flex flex-col fixed left-0 z-40 border-r border-[#1a1a24]"
               style={{
                 background: '#0d0d14',
                 width: 60,
                 transition: 'width 0.2s ease',
+                top: 'var(--header-h, 80px)',
+                height: 'calc(100vh - var(--header-h, 80px))',
               }}
             />
 
