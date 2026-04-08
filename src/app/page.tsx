@@ -1061,7 +1061,8 @@ export default function Explorer() {
                   <tr>
                     {([['#',''],['score',t.col_score],['developer',t.col_developer],['project',t.col_project],['',t.col_region],['',t.col_type],['price',t.col_price],['priceM2',t.col_pm2],['marketM2',t.col_market],['discount',t.col_discount],['built',t.col_built],['plot',t.col_plot],['beds',t.col_beds],['beach',t.lbl_beach],['','Status'],['','Completion'],['','+']] as [SortKey|'', string][]).map(([key, label], i) => (
                       <th key={i} onClick={() => key && handleSort(key as SortKey)}
-                        className={`bg-[#09090f] px-3 py-2.5 text-[10px] uppercase tracking-wider text-gray-500 text-left border-b border-[#1a1a24] cursor-pointer hover:text-[#c9a84c] whitespace-nowrap sticky top-0 z-10 select-none ${sortKey === key ? 'text-[#c9a84c]' : ''}`}>
+                        style={{ position: 'sticky', top: headerH, background: '#0a0a10' }}
+                        className={`px-3 py-2 text-[10px] uppercase tracking-widest text-left border-b border-t border-[#1a1a24] cursor-pointer hover:text-[#c9a84c] whitespace-nowrap z-10 select-none ${sortKey === key ? 'text-[#c9a84c] font-bold' : 'text-gray-400'}`}>
                         {label}{sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
                       </th>
                     ))}
