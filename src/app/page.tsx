@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Property, SortKey, SortDir } from '@/lib/types';
 import { loadProperties, syncSnapshots } from '@/lib/data';
@@ -125,14 +125,17 @@ export default function Explorer() {
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
 
-  // Observe header height and keep --header-h CSS var updated
-  useEffect(() => {
+  // Measure header height synchronously before paint (useLayoutEffect) + keep updated via ResizeObserver
+  const [headerH, setHeaderH] = useState(100);
+  useLayoutEffect(() => {
     if (!headerRef.current) return;
-    const updateHeaderH = (el: HTMLElement) => {
-      document.documentElement.style.setProperty('--header-h', el.offsetHeight + 'px');
+    const update = (el: HTMLElement) => {
+      const h = el.offsetHeight;
+      setHeaderH(h);
+      document.documentElement.style.setProperty('--header-h', h + 'px');
     };
-    updateHeaderH(headerRef.current);
-    const ro = new ResizeObserver(() => { if (headerRef.current) updateHeaderH(headerRef.current); });
+    update(headerRef.current);
+    const ro = new ResizeObserver(() => { if (headerRef.current) update(headerRef.current); });
     ro.observe(headerRef.current);
     return () => ro.disconnect();
   }, []);
@@ -748,8 +751,8 @@ export default function Explorer() {
                 background: '#0d0d14',
                 width: sidebarWidth,
                 transition: 'width 0.2s ease',
-                top: 'var(--header-h, 80px)',
-                height: 'calc(100vh - var(--header-h, 80px))',
+                top: headerH,
+                height: `calc(100vh - ${headerH}px)`,
               }}
             >
               {/* Collapse toggle button */}
@@ -776,8 +779,8 @@ export default function Explorer() {
                 background: '#0d0d14',
                 width: 60,
                 transition: 'width 0.2s ease',
-                top: 'var(--header-h, 80px)',
-                height: 'calc(100vh - var(--header-h, 80px))',
+                top: headerH,
+                height: `calc(100vh - ${headerH}px)`,
               }}
             />
 
