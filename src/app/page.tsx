@@ -546,11 +546,11 @@ export default function Explorer() {
         </div>
 
         {/* DESKTOP HEADER */}
-        <div className="hidden md:flex items-center justify-between gap-4">
+        <div className="hidden md:flex items-center justify-between gap-2">
           {/* LEFT — logo */}
           <div className="flex-shrink-0">
             <a href="/" className="block cursor-pointer">
-              <h1 className="text-4xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">AVENA</h1>
+              <h1 className={`font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity ${sidebarCollapsed ? 'text-4xl' : 'text-2xl'}`}>AVENA</h1>
               <p className="text-[9px] tracking-[6px] uppercase text-[#c9a84c]/60 mt-0.5 font-light">Terminal</p>
             </a>
             {sidebarCollapsed && (
@@ -569,51 +569,55 @@ export default function Explorer() {
             </p>
           </div>
 
-          {/* CENTER — hero punchlines — hidden when sidebar expanded to prevent wrapping */}
-          <div className={`flex-col gap-2 flex-1 max-w-md mx-auto text-center ${sidebarCollapsed ? 'hidden lg:flex' : 'hidden'}`}>
-            <div className="text-lg xl:text-xl font-bold leading-snug bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">{t.hero_line1}</div>
-            <div className="h-px w-16 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #c9a84c, transparent)' }} />
-            <div className="text-lg xl:text-xl font-bold leading-snug bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">{t.hero_line2}</div>
-            <p className="text-[11px] text-[#c9a84c]/70 mt-1 italic tracking-wide">The Bloomberg of European property investment</p>
-          </div>
+          {/* CENTER — hero punchlines — only when sidebar collapsed */}
+          {sidebarCollapsed && (
+            <div className="hidden lg:flex flex-col gap-2 flex-1 max-w-md mx-auto text-center">
+              <div className="text-lg xl:text-xl font-bold leading-snug bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">{t.hero_line1}</div>
+              <div className="h-px w-16 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #c9a84c, transparent)' }} />
+              <div className="text-lg xl:text-xl font-bold leading-snug bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">{t.hero_line2}</div>
+              <p className="text-[11px] text-[#c9a84c]/70 mt-1 italic tracking-wide">The Bloomberg of European property investment</p>
+            </div>
+          )}
 
-          {/* RIGHT — stats + auth */}
-          <div className="flex gap-5 items-center flex-shrink-0">
+          {/* RIGHT — stats + auth — compact when sidebar expanded */}
+          <div className={`flex items-center flex-shrink-0 ${sidebarCollapsed ? 'gap-5' : 'gap-2'}`}>
             <div className="text-center">
-              <div className="text-3xl font-bold text-amber-400 font-serif">{stats.count.toLocaleString()}</div>
+              <div className={`font-bold text-amber-400 font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`}>{stats.count.toLocaleString()}</div>
               <div className="text-[9px] uppercase tracking-widest text-gray-500">Properties</div>
             </div>
-            <div className="text-center border-l border-[#1a1a24] pl-6">
-              <div className="text-3xl font-bold text-amber-400 font-serif">{stats.avgDisc}%</div>
-              <div className="text-[9px] uppercase tracking-widest text-gray-500">Avg Discount</div>
+            <div className={`text-center border-l border-[#1a1a24] ${sidebarCollapsed ? 'pl-6' : 'pl-2'}`}>
+              <div className={`font-bold text-amber-400 font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`}>{stats.avgDisc}%</div>
+              <div className="text-[9px] uppercase tracking-widest text-gray-500">Avg Disc</div>
             </div>
-            <div className="text-center border-l border-[#1a1a24] pl-6">
-              <div className="text-3xl font-bold text-amber-400 font-serif">{Math.round(stats.bestScore)}</div>
+            <div className={`text-center border-l border-[#1a1a24] ${sidebarCollapsed ? 'pl-6' : 'pl-2'}`}>
+              <div className={`font-bold text-amber-400 font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`}>{Math.round(stats.bestScore)}</div>
               <div className="text-[9px] uppercase tracking-widest text-gray-500">Best Score</div>
             </div>
-            <div className="text-center border-l border-[#1a1a24] pl-6">
+            <div className={`text-center border-l border-[#1a1a24] ${sidebarCollapsed ? 'pl-6' : 'pl-2'}`}>
               <div className="flex items-center justify-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-                <div className="text-3xl font-bold text-emerald-400 font-serif">{stats.newThisWeek}</div>
+                <div className={`font-bold text-emerald-400 font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`}>{stats.newThisWeek}</div>
               </div>
-              <div className="text-[9px] uppercase tracking-widest text-gray-500">New This Week</div>
+              <div className="text-[9px] uppercase tracking-widest text-gray-500">New/Week</div>
             </div>
-            <a href="https://instagram.com/avenaestate" target="_blank" rel="noopener noreferrer"
-              className="text-gray-500 hover:text-[#E1306C] transition-colors ml-2" title="@avenaestate on Instagram">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-              </svg>
-            </a>
-            <div className="ml-4">
+            {sidebarCollapsed && (
+              <a href="https://instagram.com/avenaestate" target="_blank" rel="noopener noreferrer"
+                className="text-gray-500 hover:text-[#E1306C] transition-colors ml-2" title="@avenaestate on Instagram">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+              </a>
+            )}
+            <div className={sidebarCollapsed ? 'ml-4' : 'ml-2'}>
               {!authLoading && (
                 user ? (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     {isPaid ? (
                       <span className="text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide" style={{ background: 'linear-gradient(135deg, #c9a84c22, #c9a84c44)', border: '1px solid rgba(201,168,76,0.5)', color: '#c9a84c' }}>PRO</span>
                     ) : (
-                      <button onClick={() => setShowPaywall(true)} className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors">Upgrade →</button>
+                      <button onClick={() => setShowPaywall(true)} className="text-[11px] bg-amber-600 hover:bg-amber-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">Upgrade →</button>
                     )}
-                    <button onClick={signOut} className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors">{t.btn_signout}</button>
+                    <button onClick={signOut} className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap">{t.btn_signout}</button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
