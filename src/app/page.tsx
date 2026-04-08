@@ -148,7 +148,7 @@ export default function Explorer() {
     const measure = () => {
       if (!headerRef.current) return;
       const h = headerRef.current.getBoundingClientRect().height;
-      if (h > 0) setHeaderH(h + 16); // +16px safety buffer
+      if (h > 0) setHeaderH(h);
     };
     measure();
     setTimeout(measure, 100);
@@ -157,7 +157,7 @@ export default function Explorer() {
     const ro = new ResizeObserver(measure);
     if (headerRef.current) ro.observe(headerRef.current);
     return () => ro.disconnect();
-  }, []);
+  }, [sidebarCollapsed]);
 
   // Mobile: auto-hide header on scroll down, show on scroll up
   const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
