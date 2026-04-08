@@ -581,6 +581,8 @@ export default function Explorer() {
             <p className="text-[9px] text-gray-500 mt-1 flex items-center gap-1 flex-wrap">
               <span>In partnership with</span>
               <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="font-semibold" style={{ color: '#F5A623' }}>Xavia Estate</a>
+              <span className="text-gray-600">·</span>
+              <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" className="font-semibold" style={{ color: '#635BFF' }}>stripe</a>
               <a href="https://instagram.com/avenaestate" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#E1306C] transition-colors ml-0.5" title="@avenaestate">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
@@ -611,6 +613,8 @@ export default function Explorer() {
             <p className="text-[9px] text-gray-500 mt-1.5 flex items-center gap-1 flex-wrap">
               <span>In partnership with</span>
               <a href="https://www.xaviaestate.com" target="_blank" rel="noopener noreferrer" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: '#F5A623' }}>Xavia Estate</a>
+              <span className="text-gray-600">·</span>
+              <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: '#635BFF' }}>stripe</a>
             </p>
           </div>
 
