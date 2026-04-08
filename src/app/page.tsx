@@ -379,7 +379,7 @@ export default function Explorer() {
   return (
     <div className="min-h-screen bg-[#070709]">
       {/* HEADER — fixed top, offset left by sidebar on desktop */}
-      <div ref={headerRef} className="fixed top-0 right-0 z-40" style={{ left: sidebarCollapsed ? 60 : 240 }}>
+      <div ref={headerRef} className="fixed top-0 z-40" style={{ width: `calc(100% - ${sidebarCollapsed ? 60 : 240}px)`, marginLeft: sidebarCollapsed ? 60 : 240 }}>
       {/* TOP BAR */}
       <header className="relative border-b border-[#1a1a24] px-4 md:px-8 py-3 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
         <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #c9a84c 30%, #e8c96a 50%, #c9a84c 70%, transparent 100%)' }} />
