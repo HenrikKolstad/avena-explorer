@@ -351,8 +351,8 @@ export default function Explorer() {
 
         {/* MOBILE HEADER */}
         <div className="flex md:hidden flex-col gap-2">
-          {/* Row 1: hamburger + logo + auth */}
-          <div className="flex items-center justify-between gap-2">
+          {/* Row 1: hamburger + logo + auth only */}
+          <div className="flex items-center justify-between">
             <button
               onClick={() => setMobileSidebarOpen(true)}
               className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-[#c9a84c] active:scale-90 transition-all"
@@ -364,42 +364,42 @@ export default function Explorer() {
               <h1 className="text-2xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent">AVENA</h1>
               <p className="text-[8px] tracking-[5px] uppercase text-[#c9a84c]/60 font-light">Terminal</p>
             </a>
-            {/* Stats strip — compact */}
-            <div className="flex items-center gap-1.5 flex-1 justify-center">
-              <div className="text-center">
-                <div className="text-base font-bold text-amber-400 font-serif leading-none">{stats.count}</div>
-                <div className="text-[7px] uppercase tracking-widest text-gray-600">Props</div>
-              </div>
-              <div className="text-center border-l border-[#1a1a24] pl-1.5">
-                <div className="text-base font-bold text-amber-400 font-serif leading-none">{stats.avgDisc}%</div>
-                <div className="text-[7px] uppercase tracking-widest text-gray-600">Disc</div>
-              </div>
-              <div className="text-center border-l border-[#1a1a24] pl-1.5">
-                <div className="flex items-center gap-0.5">
-                  <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-                  <div className="text-base font-bold text-emerald-400 font-serif leading-none">{stats.newThisWeek}</div>
-                </div>
-                <div className="text-[7px] uppercase tracking-widest text-gray-600">New</div>
-              </div>
-            </div>
-            {/* Auth — always right-aligned, never clipped */}
+            {/* Auth — right side, full space */}
             {!authLoading && (
               user ? (
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {isPaid ? (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'linear-gradient(135deg, #c9a84c22, #c9a84c44)', border: '1px solid rgba(201,168,76,0.5)', color: '#c9a84c' }}>PRO</span>
+                    <span className="text-[11px] px-3 py-1 rounded-full font-bold" style={{ background: 'linear-gradient(135deg, #c9a84c22, #c9a84c44)', border: '1px solid rgba(201,168,76,0.5)', color: '#c9a84c' }}>PRO</span>
                   ) : (
-                    <button onClick={() => setShowPaywall(true)} className="text-[10px] bg-amber-600 text-black font-bold px-2 py-1 rounded-lg">PRO</button>
+                    <button onClick={() => setShowPaywall(true)} className="text-[11px] font-bold px-3 py-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)', color: '#000' }}>Go PRO</button>
                   )}
-                  <button onClick={signOut} className="text-[10px] text-gray-600">↩</button>
+                  <button onClick={signOut} className="text-[11px] text-gray-500">↩</button>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button onClick={() => setShowAuthModal(true)} className="text-[10px] border border-[#c9a84c]/40 text-[#c9a84c]/80 font-semibold px-2.5 py-1.5 rounded-lg">Sign In</button>
-                  <button onClick={() => setShowPaywall(true)} className="text-[10px] text-black font-bold px-2.5 py-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)' }}>PRO</button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => setShowAuthModal(true)} className="text-[11px] border border-[#c9a84c]/50 text-[#c9a84c] font-semibold px-3 py-1.5 rounded-lg">Sign In</button>
+                  <button onClick={() => setShowPaywall(true)} className="text-[11px] text-black font-bold px-3 py-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)' }}>PRO</button>
                 </div>
               )
             )}
+          </div>
+          {/* Stats strip — row between logo and tagline */}
+          <div className="flex items-center gap-3 border-t border-[#1a1a24] pt-2">
+            <div className="text-center">
+              <div className="text-sm font-bold text-amber-400 font-serif leading-none">{stats.count}</div>
+              <div className="text-[7px] uppercase tracking-widest text-gray-600">Properties</div>
+            </div>
+            <div className="text-center border-l border-[#1a1a24] pl-3">
+              <div className="text-sm font-bold text-amber-400 font-serif leading-none">{stats.avgDisc}%</div>
+              <div className="text-[7px] uppercase tracking-widest text-gray-600">Avg Discount</div>
+            </div>
+            <div className="text-center border-l border-[#1a1a24] pl-3">
+              <div className="flex items-center gap-0.5">
+                <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
+                <div className="text-sm font-bold text-emerald-400 font-serif leading-none">{stats.newThisWeek}</div>
+              </div>
+              <div className="text-[7px] uppercase tracking-widest text-gray-600">New This Week</div>
+            </div>
           </div>
           {/* Row 2: tagline + partnership */}
           <div className="border-t border-[#1a1a24] pt-2">
