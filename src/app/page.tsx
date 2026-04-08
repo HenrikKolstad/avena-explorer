@@ -72,13 +72,13 @@ function ProGate({ onUpgrade, feature }: { onUpgrade: () => void; feature: strin
         style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)' }}>
         Upgrade to PRO →
       </button>
-      <p className="text-[11px] text-gray-600 mt-3">Cancel anytime · €29/month</p>
+      <p className="text-[11px] text-gray-600 mt-3">Cancel anytime · €79/month</p>
     </div>
   );
 }
 
 export default function Explorer() {
-  const { user, isPaid, loading: authLoading, signInWithEmail, signOut, startCheckout } = useAuth();
+  const { user, isPaid, loading: authLoading, signInWithEmail, signInWithPassword, signOut, startCheckout } = useAuth();
   const { lang, setLang, t } = useLanguage();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +98,9 @@ export default function Explorer() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [authEmail, setAuthEmail] = useState('');
   const [authSent, setAuthSent] = useState(false);
+  const [authMode, setAuthMode] = useState<'magic' | 'password'>('magic');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
   const [authLoading2, setAuthLoading2] = useState(false);
   const [showWelcomePro, setShowWelcomePro] = useState(false);
   const [paywallEmail, setPaywallEmail] = useState('');
@@ -818,7 +821,7 @@ export default function Explorer() {
                     <div className="px-3 py-3 mt-2 border-t border-[#1a1a24]">
                       <button onClick={() => setShowPaywall(true)}
                         className="w-full py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-semibold hover:bg-amber-500/20 transition-all">
-                        Upgrade to PRO — €29/mo
+                        Upgrade to PRO — €79/mo
                       </button>
                     </div>
                   )}
@@ -1060,7 +1063,7 @@ export default function Explorer() {
                     onClick={() => setShowPaywall(true)}
                     className="px-8 py-3.5 rounded-xl font-bold text-black text-sm shadow-lg shadow-amber-900/30 hover:scale-[1.02] transition-transform"
                     style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a)' }}>
-                    Start PRO — €29/month →
+                    Start PRO — €79/month →
                   </button>
                   <button
                     onClick={() => setShowAuthModal(true)}
@@ -1144,7 +1147,7 @@ export default function Explorer() {
                   <div className="text-gray-400 text-xs mb-3">Subscribe to unlock all {filtered.length} properties</div>
                   <button onClick={() => user ? setShowPaywall(true) : setShowAuthModal(true)}
                     className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm">
-                    Subscribe — €29/month
+                    Subscribe — €79/month
                   </button>
                 </div>
               )}
@@ -1733,36 +1736,61 @@ export default function Explorer() {
         <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowAuthModal(false)}>
           <div className="relative bg-[#111118] border border-[#2a2a30] rounded-t-2xl md:rounded-2xl p-6 md:p-8 w-full max-w-sm md:mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white text-xl">×</button>
-            <div className="text-center mb-6">
+            <div className="text-center mb-5">
               <div className="font-serif text-xl md:text-2xl text-amber-400 mb-1">Sign in to Avena Terminal</div>
-              <p className="text-gray-400 text-sm">We&apos;ll email you a magic link — no password needed.</p>
+              {/* Mode toggle */}
+              <div className="flex items-center justify-center gap-1 mt-3 bg-[#08080d] rounded-lg p-1 w-fit mx-auto">
+                <button onClick={() => { setAuthMode('magic'); setAuthError(''); }} className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${authMode === 'magic' ? 'bg-amber-500 text-black' : 'text-gray-400 hover:text-white'}`}>Magic Link</button>
+                <button onClick={() => { setAuthMode('password'); setAuthError(''); }} className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${authMode === 'password' ? 'bg-amber-500 text-black' : 'text-gray-400 hover:text-white'}`}>Password</button>
+              </div>
             </div>
+            {authError && <div className="mb-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center">{authError}</div>}
             {authSent ? (
               <div className="text-center py-4">
                 <div className="text-4xl mb-3">📬</div>
                 <div className="text-amber-400 font-semibold mb-2">Check your inbox</div>
                 <p className="text-gray-400 text-sm">Magic link sent to <span className="text-white">{authEmail}</span>. Click it to sign in.</p>
+                <button onClick={() => { setAuthSent(false); setAuthError(''); }} className="mt-4 text-xs text-gray-500 hover:text-gray-300 underline">← Try again</button>
               </div>
-            ) : (
+            ) : authMode === 'magic' ? (
               <form onSubmit={async e => {
                 e.preventDefault();
+                setAuthError('');
                 setAuthLoading2(true);
                 const { error } = await signInWithEmail(authEmail);
                 setAuthLoading2(false);
-                if (error) alert('Error: ' + error);
-                else setAuthSent(true);
+                if (error) {
+                  if (error.toLowerCase().includes('rate limit')) setAuthError('Too many emails sent. Wait 1 hour or use Password login instead.');
+                  else setAuthError(error);
+                } else setAuthSent(true);
               }}>
-                <input
-                  type="email"
-                  required
-                  placeholder="your@email.com"
-                  value={authEmail}
+                <input type="email" required placeholder="your@email.com" value={authEmail}
                   onChange={e => setAuthEmail(e.target.value)}
-                  className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-amber-500 mb-4"
-                />
+                  className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-amber-500 mb-4" />
                 <button type="submit" disabled={authLoading2}
                   className="w-full bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold py-3 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm disabled:opacity-50">
                   {authLoading2 ? 'Sending…' : 'Send Magic Link →'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={async e => {
+                e.preventDefault();
+                setAuthError('');
+                setAuthLoading2(true);
+                const { error } = await signInWithPassword(authEmail, authPassword);
+                setAuthLoading2(false);
+                if (error) setAuthError(error);
+                else { setShowAuthModal(false); setAuthPassword(''); }
+              }}>
+                <input type="email" required placeholder="your@email.com" value={authEmail}
+                  onChange={e => setAuthEmail(e.target.value)}
+                  className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-amber-500 mb-3" />
+                <input type="password" required placeholder="Password" value={authPassword}
+                  onChange={e => setAuthPassword(e.target.value)}
+                  className="w-full bg-[#08080d] border border-[#2a2a30] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-amber-500 mb-4" />
+                <button type="submit" disabled={authLoading2}
+                  className="w-full bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold py-3 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm disabled:opacity-50">
+                  {authLoading2 ? 'Signing in…' : 'Sign In →'}
                 </button>
               </form>
             )}
@@ -1780,8 +1808,8 @@ export default function Explorer() {
               <div className="text-gray-400 text-xs uppercase tracking-widest mb-1">You&apos;re viewing 5 of 1,800+ scored properties</div>
               <div className="font-serif text-xl md:text-2xl text-[#c9a84c] mb-1">Unlock 1,800+ Investment Deals</div>
               <div className="font-serif text-lg md:text-xl text-white mb-0.5">Avena Terminal PRO</div>
-              <div className="text-3xl md:text-4xl font-bold text-white mb-1">€29<span className="text-base md:text-lg text-gray-400 font-normal">/month</span></div>
-              <p className="text-gray-500 text-xs">Just €0.97/day · Cancel anytime</p>
+              <div className="text-3xl md:text-4xl font-bold text-white mb-1">€79<span className="text-base md:text-lg text-gray-400 font-normal">/month</span></div>
+              <p className="text-gray-500 text-xs">Just €2.63/day · Cancel anytime</p>
             </div>
             <ul className="space-y-2 mb-6">
               {[
@@ -1802,9 +1830,9 @@ export default function Explorer() {
                 <button onClick={startCheckout} disabled={paywallLoading}
                   className="w-full font-bold py-3.5 rounded-lg transition-all text-sm tracking-wide disabled:opacity-50 text-black"
                   style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c)' }}>
-                  {paywallLoading ? 'Redirecting…' : 'Subscribe — €29/month →'}
+                  {paywallLoading ? 'Redirecting…' : 'Subscribe — €79/month →'}
                 </button>
-                <p className="text-center text-gray-600 text-[10px] mt-2">Just €0.97/day for institutional-grade property intelligence</p>
+                <p className="text-center text-gray-600 text-[10px] mt-2">Just €2.63/day for institutional-grade property intelligence</p>
               </>
             ) : (
               <form onSubmit={async e => {
@@ -1835,9 +1863,9 @@ export default function Explorer() {
                 <button type="submit" disabled={paywallLoading}
                   className="w-full font-bold py-3.5 rounded-lg transition-all text-sm tracking-wide disabled:opacity-50 text-black"
                   style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c)' }}>
-                  {paywallLoading ? 'Redirecting to Stripe…' : 'Subscribe — €29/month →'}
+                  {paywallLoading ? 'Redirecting to Stripe…' : 'Subscribe — €79/month →'}
                 </button>
-                <p className="text-center text-gray-600 text-[10px] mt-2">Just €0.97/day for institutional-grade property intelligence</p>
+                <p className="text-center text-gray-600 text-[10px] mt-2">Just €2.63/day for institutional-grade property intelligence</p>
               </form>
             )}
             <div className="mt-4 pt-4 border-t border-[#2a2a30]">
@@ -2284,7 +2312,7 @@ function YieldTab({ properties, isPaid, onUpgrade, onCurrencyChange }: { propert
           </p>
           <button onClick={onUpgrade}
             className="bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold px-8 py-3 rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all text-sm tracking-wide">
-            Subscribe — €29/month
+            Subscribe — €79/month
           </button>
         </div>
       )}
@@ -3030,7 +3058,7 @@ function LuxuryTab({ properties, isPaid, onUpgrade, onPreview }: {
           <div className="text-amber-400 font-serif text-lg mb-1">🔒 PRO feature</div>
           <p className="text-gray-400 text-sm mb-4">Subscribe to unlock full luxury portfolio access, investment calculator, and rental yield data.</p>
           <button onClick={onUpgrade} className="bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold px-8 py-3 rounded-lg text-sm tracking-wide">
-            Subscribe — €29/month
+            Subscribe — €79/month
           </button>
         </div>
       )}

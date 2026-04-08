@@ -16,6 +16,7 @@ interface AuthContextType {
   isPaid: boolean;
   loading: boolean;
   signInWithEmail: (email: string) => Promise<{ error: string | null }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   startCheckout: () => Promise<void>;
 }
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   isPaid: false,
   loading: true,
   signInWithEmail: async () => ({ error: null }),
+  signInWithPassword: async () => ({ error: null }),
   signOut: async () => {},
   startCheckout: async () => {},
 });
@@ -90,6 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error?.message ?? null };
   }
 
+  async function signInWithPassword(email: string, password: string) {
+    if (!supabase) return { error: 'Supabase not configured' };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
+  }
+
   async function signOut() {
     if (!supabase) return;
     await supabase.auth.signOut();
@@ -110,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, isPaid, loading, signInWithEmail, signOut, startCheckout }}>
+    <AuthContext.Provider value={{ user, session, isPaid, loading, signInWithEmail, signInWithPassword, signOut, startCheckout }}>
       {children}
     </AuthContext.Provider>
   );
