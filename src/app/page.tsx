@@ -290,6 +290,9 @@ export default function Explorer() {
   // Reset pagination when filters change
   useEffect(() => { setDisplayLimit(100); }, [filters, quickFilter]);
 
+  // Derived: the slice to actually render (single source of truth)
+  const visibleDeals = useMemo(() => filtered.slice(0, displayLimit), [filtered, displayLimit]);
+
   const stats = useMemo(() => {
     if (!filtered.length) return { count: 0, avgDisc: 0, bestScore: 0, newThisWeek: 0 };
     const discs = filtered.map(d => displayDiscount(d)).filter(x => x > 0);
@@ -1001,7 +1004,7 @@ export default function Explorer() {
             <>
             {/* MOBILE CARD LIST */}
             <div className="md:hidden px-3 pb-6 space-y-2 pt-2">
-              {filtered.slice(0, displayLimit).map((d, i) => {
+              {visibleDeals.map((d, i) => {
                 const dc = displayDiscount(d);
                 const rank = i + 1;
                 const isLocked = !isPaid && rank > FREE_DEALS_LIMIT;
@@ -1088,7 +1091,7 @@ export default function Explorer() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.slice(0, displayLimit).map((d, i) => {
+                  {visibleDeals.map((d, i) => {
                     const dc = displayDiscount(d);
                     const rank = i + 1;
                     const isTop3 = rank <= 3;

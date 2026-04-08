@@ -5,6 +5,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 
 export const metadata: Metadata = {
   title: "Avena Terminal — Spain Property Investment Terminal",
+  verification: { google: "197e3d48f8d51384" },
   description: "Spain's first PropTech/Fintech terminal. 1,040+ new builds ranked in real-time. Save up to 35% on new builds in Costa Blanca & Costa Cálida.",
   metadataBase: new URL("https://avena-estate.com"),
   openGraph: {
