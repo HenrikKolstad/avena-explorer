@@ -159,6 +159,36 @@ export default function Explorer() {
     return () => ro.disconnect();
   }, []);
 
+  // Mobile: auto-hide header on scroll down, show on scroll up
+  const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const isM = window.innerWidth < 768;
+        if (isM) {
+          // Only hide after scrolling past the header
+          if (y > headerH && y > lastScrollY.current + 8) {
+            setMobileHeaderHidden(true);
+          } else if (y < lastScrollY.current - 4) {
+            setMobileHeaderHidden(false);
+          }
+        } else {
+          setMobileHeaderHidden(false);
+        }
+        lastScrollY.current = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [headerH]);
+
 
   // Track desktop vs mobile for sidebar-aware layout
   const [isDesktop, setIsDesktop] = useState(false);
@@ -471,7 +501,10 @@ export default function Explorer() {
           marginLeft: sidebarCollapsed ? 32 : 240,
           left: 'auto',
           right: 0,
-        } : {}}>
+        } : {
+          transform: mobileHeaderHidden ? `translateY(-${headerH}px)` : 'translateY(0)',
+          transition: 'transform 0.3s ease',
+        }}>
       {/* TOP BAR */}
       <header className="relative border-b border-[#1a1a24] px-4 md:px-8 py-3 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
         <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #c9a84c 30%, #e8c96a 50%, #c9a84c 70%, transparent 100%)' }} />
@@ -966,7 +999,7 @@ export default function Explorer() {
       {/* CONTENT — padded top (header height) + left (sidebar width on desktop only) */}
       <div
         className={`overflow-x-hidden min-w-0 transition-[margin-right] duration-200 ${preview !== null ? 'md:mr-[480px]' : ''}`}
-        style={{ paddingTop: headerH, paddingLeft: isDesktop ? (sidebarCollapsed ? 32 : 240) : 0 }}
+        style={{ paddingTop: (!isDesktop && mobileHeaderHidden) ? 0 : headerH, paddingLeft: isDesktop ? (sidebarCollapsed ? 32 : 240) : 0, transition: !isDesktop ? 'padding-top 0.3s ease' : 'none' }}
       >
           {(tab === 'whyavena' || (!user && tab === 'deals')) && (
             <div className="px-4 md:px-8 py-8 border-b border-[#1a1a24]">
