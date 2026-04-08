@@ -864,6 +864,12 @@ export default function Explorer() {
 
                     {/* INFO */}
                     <SectionHeader label="INFO" />
+                    <a href="/blog" className="flex items-center gap-3 w-full transition-all min-h-[40px] px-3 relative group" style={{ color: '#cccccc', background: 'transparent', borderLeft: '3px solid transparent', cursor: 'pointer', textDecoration: 'none' }} onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#ffffff08'; }} onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}>
+                      <span className="text-base flex-shrink-0 w-5 text-center leading-none">📰</span>
+                      {(!sidebarCollapsed || mobileSidebarOpen) && (
+                        <span className="text-[12px] font-medium tracking-wide whitespace-nowrap overflow-hidden flex-1 text-left">Blog</span>
+                      )}
+                    </a>
                     <NavItem icon="ℹ️" label="Why Avena" isActive={tab === 'whyavena'} onClick={() => go('whyavena')} />
                     <NavItem icon="⚖️" label="Legal and Security" isActive={tab === 'legal'} onClick={() => go('legal')} />
                     <NavItem icon="✉️" label="Contact" isActive={tab === 'contact'} onClick={() => go('contact')} />

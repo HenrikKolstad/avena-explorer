@@ -3,8 +3,8 @@ import { MetadataRoute } from 'next';
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      { userAgent: '*', allow: '/', disallow: ['/admin', '/developer', '/api/'] },
+      { userAgent: '*', allow: '/', disallow: ['/api/', '/admin/'] },
     ],
-    sitemap: 'https://www.avena-estate.com/sitemap.xml',
+    sitemap: 'https://avena-estate.com/sitemap.xml',
   };
 }
