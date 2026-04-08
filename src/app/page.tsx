@@ -457,8 +457,11 @@ export default function Explorer() {
             <div className="text-[9px] text-gray-400 leading-relaxed">
               <div>{t.hero_scanner}</div>
               <div className="text-[10px] italic text-[#c9a84c] tracking-wide mt-0.5">The Bloomberg of European property investment</div>
-              <div className="text-gray-500 mt-0.5">Costa Del Sol properties coming soon ⏳</div>
-              <div className="text-gray-600 mt-0.5">⏳ Building ⏳</div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {['Costa Blanca North','Costa Blanca South','Costa Cálida','Costa del Sol'].map(r => (
+                  <span key={r} className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[#1a1a24] text-[#c9a84c] border border-[#c9a84c]/20">{r}</span>
+                ))}
+              </div>
             </div>
             <p className="text-[9px] text-gray-500 mt-1 flex items-center gap-1 flex-wrap">
               <span>In partnership with</span>
@@ -484,8 +487,11 @@ export default function Explorer() {
             </a>
             <div className="text-[10px] text-gray-400 mt-2 leading-relaxed">
               <div>{t.hero_scanner}</div>
-              <div className="text-[9px] text-gray-500 mt-0.5">Costa Del Sol properties coming soon ⏳</div>
-              <div className="text-[9px] text-gray-600 mt-0.5">⏳ Building ⏳</div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {['Costa Blanca North','Costa Blanca South','Costa Cálida','Costa del Sol'].map(r => (
+                  <span key={r} className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[#1a1a24] text-[#c9a84c] border border-[#c9a84c]/20">{r}</span>
+                ))}
+              </div>
             </div>
             <p className="text-[9px] text-gray-500 mt-1.5 flex items-center gap-1 flex-wrap">
               <span>In partnership with</span>
