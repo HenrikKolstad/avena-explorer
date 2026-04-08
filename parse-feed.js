@@ -868,9 +868,13 @@ async function main() {
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   let prevAddedMap = {};
+  let prevPropsByRef = {};
   try {
     const prev = JSON.parse(fs.readFileSync(OUTPUT, 'utf8'));
-    prev.forEach(p => { if (p.ref && p._added) prevAddedMap[p.ref] = p._added; });
+    prev.forEach(p => {
+      if (p.ref && p._added) prevAddedMap[p.ref] = p._added;
+      if (p.ref) prevPropsByRef[p.ref] = p;
+    });
     console.log(`Loaded ${Object.keys(prevAddedMap).length} previous _added dates`);
   } catch { /* file doesn't exist yet */ }
 
@@ -886,6 +890,89 @@ async function main() {
   const newThisWeek = unique.filter(p => p._added >= sevenDaysAgo).length;
   console.log(`New this week: ${newThisWeek}`);
   // --------------------------------
+
+  // ─── SOLD DETECTION ──────────────────────────────────────────────────────────
+  // Properties in previous data.json but not in current feed = likely sold
+  const today_sd = new Date().toISOString().slice(0, 10);
+  try {
+    const currentRefs = new Set(unique.map(p => p.ref).filter(Boolean));
+    const soldProps = Object.values(prevPropsByRef).filter(p => p.ref && !currentRefs.has(p.ref));
+
+    if (soldProps.length > 0) {
+      console.log(`\n🏠 SOLD DETECTION: ${soldProps.length} properties gone from feed`);
+
+      const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (sbUrl && sbKey) {
+        const { createClient } = require('@supabase/supabase-js');
+        const sb = createClient(sbUrl, sbKey);
+        const rows = soldProps.map(p => ({
+          ref: p.ref,
+          property_name: p.p,
+          town: (p.l || '').split(',')[0].trim(),
+          region: p.r,
+          type: p.t,
+          last_price: p.pf,
+          last_pm2: p.pm2,
+          last_seen_date: today_sd,
+          beds: p.bd,
+          built_m2: p.bm,
+        }));
+        const { error } = await sb.from('sold_properties').upsert(rows, { onConflict: 'ref' });
+        if (error) console.error('Supabase sold_properties error:', error.message);
+        else console.log(`  Stored ${rows.length} sold comps in Supabase`);
+      } else {
+        console.log('  Supabase not configured — skipping sold storage');
+      }
+
+      soldProps.slice(0, 10).forEach(p => {
+        console.log(`  SOLD: ${(p.p || '').substring(0, 45).padEnd(45)} | ${((p.l || '').split(',')[0]).padEnd(20)} | €${Math.round((p.pf || 0) / 1000)}k`);
+      });
+    } else {
+      console.log('Sold detection: 0 new sold properties');
+    }
+  } catch (e) {
+    console.log('Sold detection skipped (first run or error):', e.message);
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // ─── DAILY PRICE SNAPSHOTS ───────────────────────────────────────────────────
+  try {
+    const sbUrl2 = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const sbKey2 = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (sbUrl2 && sbKey2) {
+      const { createClient: createClientSnap } = require('@supabase/supabase-js');
+      const sb2 = createClientSnap(sbUrl2, sbKey2);
+      const snapshot_date = new Date().toISOString().slice(0, 10);
+
+      const snapRows = unique
+        .filter(p => p.ref && p.pf > 0)
+        .map(p => ({
+          ref: p.ref,
+          snapshot_date,
+          price: p.pf,
+          pm2: p.pm2 || null,
+          mm2: p.mm2 || null,
+          region: p.r,
+          type: p.t,
+          town: (p.l || '').split(',')[0].trim(),
+        }));
+
+      const { error: snapErr } = await sb2
+        .from('price_snapshots')
+        .upsert(snapRows, { onConflict: 'ref,snapshot_date' });
+
+      if (snapErr) console.error('Snapshot error:', snapErr.message);
+      else console.log(`📸 Stored ${snapRows.length} price snapshots for ${snapshot_date}`);
+    } else {
+      console.log('Supabase not configured — skipping price snapshots');
+    }
+  } catch (e) {
+    console.error('Snapshot storage failed:', e.message);
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
 
   fs.writeFileSync(OUTPUT, JSON.stringify(unique, null, 0));
   console.log(`Wrote ${OUTPUT} (${(fs.statSync(OUTPUT).size / 1024).toFixed(0)}KB)`);
