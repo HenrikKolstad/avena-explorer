@@ -134,6 +134,8 @@ export default function Explorer() {
   const [emailInput, setEmailInput] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [alertedRefs, setAlertedRefs] = useState<Set<string>>(new Set());
+  const [alertLoading, setAlertLoading] = useState(false);
 
   // Measure header height after paint via ResizeObserver
   const [headerH, setHeaderH] = useState(280);
@@ -182,6 +184,18 @@ export default function Explorer() {
     return () => clearTimeout(timer);
   }, [user]);
 
+  useEffect(() => {
+    if (!user) { setAlertedRefs(new Set()); return; }
+    fetch('/api/price-alerts')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAlertedRefs(new Set(data.map((a: {property_ref: string}) => a.property_ref)));
+        }
+      })
+      .catch(() => {});
+  }, [user]);
+
   const handleEmailSubmit = async () => {
     if (!emailInput.includes('@')) return;
     setEmailLoading(true);
@@ -218,6 +232,25 @@ export default function Explorer() {
     });
   }, []);
 
+  const togglePriceAlert = async (ref: string) => {
+    if (!user) { setShowAuthModal(true); return; }
+    setAlertLoading(true);
+    try {
+      if (alertedRefs.has(ref)) {
+        await fetch(`/api/price-alerts?ref=${encodeURIComponent(ref)}`, { method: 'DELETE' });
+        setAlertedRefs(prev => { const n = new Set(prev); n.delete(ref); return n; });
+      } else {
+        await fetch('/api/price-alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ property_ref: ref }),
+        });
+        setAlertedRefs(prev => new Set(prev).add(ref));
+      }
+    } finally {
+      setAlertLoading(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     let result = properties.filter(d => {
@@ -1603,6 +1636,21 @@ export default function Explorer() {
                   {portfolio.includes(previewProp.ref || previewProp.p) ? 'In Portfolio' : '+ Portfolio'}
                 </button>
               </div>
+
+              {previewProp && (
+                <button
+                  onClick={() => togglePriceAlert(previewProp.ref || previewProp.p)}
+                  disabled={alertLoading}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-medium transition-all mb-3 ${
+                    alertedRefs.has(previewProp.ref || previewProp.p)
+                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                      : 'border-[#2a2a30] text-gray-400 hover:border-amber-500/40 hover:text-amber-400'
+                  }`}
+                  title="Get emailed if this property's price drops by 2%+">
+                  <span>{alertedRefs.has(previewProp.ref || previewProp.p) ? '🔔' : '🔕'}</span>
+                  <span>{alertedRefs.has(previewProp.ref || previewProp.p) ? 'Alert set' : 'Price alert'}</span>
+                </button>
+              )}
 
               <a href={previewProp.u} target="_blank" rel="noopener noreferrer"
                 onClick={() => {
