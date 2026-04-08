@@ -125,14 +125,13 @@ export default function Explorer() {
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
 
-  // Measure header height synchronously before paint (useLayoutEffect) + keep updated via ResizeObserver
-  const [headerH, setHeaderH] = useState(100);
+  // Measure header height — use getBoundingClientRect since element is position:fixed
+  const [headerH, setHeaderH] = useState(220);
   useLayoutEffect(() => {
     if (!headerRef.current) return;
-    const update = (el: HTMLElement) => {
-      const h = el.offsetHeight;
-      setHeaderH(h);
-      document.documentElement.style.setProperty('--header-h', h + 'px');
+    const update = (el: HTMLDivElement) => {
+      const h = el.getBoundingClientRect().height;
+      if (h > 0) setHeaderH(h);
     };
     update(headerRef.current);
     const ro = new ResizeObserver(() => { if (headerRef.current) update(headerRef.current); });
