@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const ADMIN_EMAIL = 'henrik@xaviaestate.com';
+const ADMIN_USER_ID = '05facda5-23e1-4345-a754-ab584635784e';
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
 
-  // Only allowed for the admin account
   if (!email || email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
     return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
   }
@@ -14,21 +14,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
   }
 
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  // Find the user
-  const { data: { users }, error: listErr } = await supabaseAdmin.auth.admin.listUsers();
-  if (listErr) return NextResponse.json({ error: listErr.message }, { status: 500 });
+  if (!url || !key) {
+    return NextResponse.json({ error: 'Server config missing' }, { status: 500 });
+  }
 
-  const user = users.find(u => u.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase());
-  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  const supabaseAdmin = createClient(url, key);
 
-  // Set the password directly via admin API
-  const { error: updateErr } = await supabaseAdmin.auth.admin.updateUserById(user.id, { password });
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(ADMIN_USER_ID, { password });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }
