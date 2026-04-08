@@ -57,6 +57,7 @@ export interface Property {
 
 export interface YieldResult {
   gross: number;
+  net: number;
   annual: number;
   rate: number;
   weeks: number;

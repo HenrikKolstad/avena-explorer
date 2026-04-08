@@ -97,13 +97,13 @@ export function calcValueScore(d: Property): number {
 }
 
 export function calcYieldScore(d: Property): number {
-  if (d._yield && d._yield.gross > 0) {
-    const g = d._yield.gross;
-    if (g >= 8) return 100;
-    if (g >= 6) return 75;
-    if (g >= 4) return 50;
-    if (g >= 2) return 25;
-    return 0;
+  if (d._yield && d._yield.net > 0) {
+    const n = d._yield.net;
+    if (n >= 7) return 100;
+    if (n >= 5) return 80;
+    if (n >= 4) return 60;
+    if (n >= 3) return 40;
+    return 20;
   }
   // Estimate from beach distance
   if (d.bk !== null) {
@@ -244,7 +244,21 @@ export function calcYield(d: Property): YieldResult {
   const rate = Math.min(rawRate, maxRate);
   const annual = rate * baseWk * 7;
   const src = match ? match.src : 'Estimated';
-  return { gross: +(annual / avgP * 100).toFixed(1), annual: Math.round(annual), rate: Math.round(rate), weeks: baseWk, src };
+  const gross = +(annual / avgP * 100).toFixed(1);
+
+  // Net yield: deduct Spanish ownership costs
+  const grossIncome = annual;
+  const afterVacancy = grossIncome * 0.90;
+  const managementFee = afterVacancy * 0.15;
+  const communityFees = Math.max(800, grossIncome * 0.03);
+  const insurance = 400;
+  const ibi = avgP * 0.003;
+  const netBeforeTax = afterVacancy - managementFee - communityFees - insurance - ibi;
+  const tax = Math.max(0, netBeforeTax * 0.19);
+  const netIncome = netBeforeTax - tax;
+  const net = +(netIncome / avgP * 100).toFixed(1);
+
+  return { gross, net, annual: Math.round(annual), rate: Math.round(rate), weeks: baseWk, src };
 }
 
 // Hard cap on displayed discount percentage — luxury market allows wider swings; 40 is a generous backstop
