@@ -2,7 +2,7 @@ const fs = require('fs');
 const { XMLParser } = require('fast-xml-parser');
 require('dotenv').config({ path: '.env.production' });
 
-const FEED_URL = 'https://xml.redsp.net/files/915/89215pmi61h/ella-properties-spain-redsp_v4.xml';
+const FEED_URL = process.env.FEED_URL || 'https://xml.redsp.net/files/915/89215pmi61h/ella-properties-spain-redsp_v4.xml';
 const OUTPUT = 'public/data.json';
 
 // Xavia Estate location IDs — maps town name → search URL

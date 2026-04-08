@@ -11,7 +11,7 @@ const ADMIN_EMAILS = ['henrik@xaviaestate.com'];
 // but we fall back to anon key gracefully)
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !serviceKey) return null;
   return createClient(url, serviceKey);
 }
