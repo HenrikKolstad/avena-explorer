@@ -1104,7 +1104,7 @@ export default function Explorer() {
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${dc >= 15 ? 'bg-emerald-500/15 text-emerald-400' : dc >= 5 ? 'bg-emerald-500/10 text-emerald-300' : 'bg-emerald-500/5 text-emerald-200'}`}>
                                   -{dc.toFixed(0)}%{d._capped ? <span className="ml-0.5 text-amber-400" title="Under review — benchmark may need adjustment">⚠</span> : null}
                                 </span>
-                                {de > 0 && <div className="text-[9px] text-emerald-500/70 mt-0.5">-€{(de/1000).toFixed(0)}k{d._capped && d._capReason !== 'luxury_review' ? ' (cap)' : ''}</div>}
+                                {de > 0 && <div className="text-[9px] text-emerald-500/70 mt-0.5">{d._capReason === 'luxury_review' ? '~' : ''}-€{(de/1000).toFixed(0)}k{d._capped && d._capReason !== 'luxury_review' ? ' (cap)' : ''}</div>}
                                 <div className="text-[9px] text-[#c9a84c]/80 mt-0.5 font-semibold">+€{(profit5yr(d.pf, d.r)/1000).toFixed(0)}k 5yr</div>
                               </div>
                             ) : (
@@ -1112,7 +1112,7 @@ export default function Explorer() {
                                 <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/15 text-red-400">
                                   +{Math.abs(dc).toFixed(0)}%{d._capped ? <span className="ml-0.5 text-amber-400" title="Under review">⚠</span> : null}
                                 </span>
-                                {de < 0 && <div className="text-[9px] text-red-500/70 mt-0.5">+€{(Math.abs(de)/1000).toFixed(0)}k{d._capped && d._capReason !== 'luxury_review' ? ' (cap)' : ''}</div>}
+                                {de < 0 && <div className="text-[9px] text-red-500/70 mt-0.5">{d._capReason === 'luxury_review' ? '~' : ''}+€{(Math.abs(de)/1000).toFixed(0)}k{d._capped && d._capReason !== 'luxury_review' ? ' (cap)' : ''}</div>}
                                 <div className="text-[9px] text-[#c9a84c]/80 mt-0.5 font-semibold">+€{(profit5yr(d.pf, d.r)/1000).toFixed(0)}k 5yr</div>
                               </div>
                             );

@@ -311,7 +311,8 @@ export function getGrowthRate(d: Property): number {
 export function discountEuroCap(pf: number): number {
   if (pf < 500000) return 200000;
   if (pf < 1000000) return 250000;
-  return Infinity; // luxury: no hard cap, only % flag
+  // Luxury: cap at 30% of price — benchmark is less reliable at high end
+  return Math.round(pf * 0.30);
 }
 
 // Returns the capped discount euros for display (positive = discount, negative = overpriced)
@@ -319,7 +320,6 @@ export function cappedDiscountEuros(d: Property): number {
   const raw = discountEuros(d);
   if (!raw) return 0;
   const cap = discountEuroCap(d.pf);
-  if (cap === Infinity) return raw;
   return raw > 0 ? Math.min(raw, cap) : Math.max(raw, -cap);
 }
 
