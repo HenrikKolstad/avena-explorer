@@ -267,7 +267,8 @@ export default function AdminPage() {
     }
 
     fetchAll();
-  }, [user, isAdmin, authLoading]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, authLoading]);
 
   // Loading state
   if (authLoading || (user && isAdmin && loading)) {
