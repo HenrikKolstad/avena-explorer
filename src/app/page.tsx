@@ -378,9 +378,9 @@ export default function Explorer() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070709] overflow-x-hidden">
+    <div className="h-screen flex flex-col bg-[#070709] overflow-hidden">
       {/* TOP BAR */}
-      <header ref={headerRef} className="relative sticky top-0 z-50 border-b border-[#1a1a24] px-4 md:px-8 py-3 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
+      <header ref={headerRef} className="relative flex-shrink-0 z-50 border-b border-[#1a1a24] px-4 md:px-8 py-3 md:py-6 shadow-2xl" style={{ background: 'linear-gradient(180deg, #0f0e18 0%, #0a0a12 100%)' }}>
         <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, #c9a84c 30%, #e8c96a 50%, #c9a84c 70%, transparent 100%)' }} />
 
         {/* MOBILE HEADER */}
@@ -744,15 +744,14 @@ export default function Explorer() {
 
         return (
           <>
-            {/* ── DESKTOP SIDEBAR (sticky — sits naturally below sticky header) ── */}
+            {/* ── DESKTOP SIDEBAR ── */}
             <div
-              className="hidden md:flex flex-col sticky top-0 self-start z-40 border-r border-[#1a1a24] flex-shrink-0"
+              className="hidden md:flex flex-col flex-shrink-0 z-40 border-r border-[#1a1a24] overflow-y-auto"
               style={{
                 background: '#0d0d14',
                 width: sidebarWidth,
                 transition: 'width 0.2s ease',
-                height: '100vh',
-                overflowY: 'auto',
+                height: '100%',
               }}
             >
               {/* Collapse toggle button */}
@@ -772,15 +771,14 @@ export default function Explorer() {
               <SidebarContent />
             </div>
 
-            {/* ── TABLET hover expand (768–1023px) ── */}
+            {/* ── TABLET SIDEBAR ── */}
             <div
-              className="hidden md:[@media(min-width:768px)_and_(max-width:1023px)]:flex flex-col sticky top-0 self-start z-40 border-r border-[#1a1a24] flex-shrink-0"
+              className="hidden md:[@media(min-width:768px)_and_(max-width:1023px)]:flex flex-col flex-shrink-0 z-40 border-r border-[#1a1a24] overflow-y-auto"
               style={{
                 background: '#0d0d14',
                 width: 60,
                 transition: 'width 0.2s ease',
-                height: '100vh',
-                overflowY: 'auto',
+                height: '100%',
               }}
             />
 
@@ -849,11 +847,10 @@ export default function Explorer() {
         function go(t: TabKey) { setTab(t); }
       })()}
 
-      {/* CONTENT */}
-      <div className="flex overflow-x-hidden items-start">
+      {/* CONTENT — app shell: sidebar + main both scroll independently */}
+      <div className="flex flex-1 overflow-hidden">
         <div
-          className={`flex-1 overflow-x-hidden min-w-0 ${preview !== null ? 'md:mr-[480px]' : ''}`}
-          style={{}}
+          className={`flex-1 overflow-y-auto overflow-x-hidden min-w-0 ${preview !== null ? 'md:mr-[480px]' : ''}`}
         >
           {(tab === 'whyavena' || (!user && tab === 'deals')) && (
             <div className="px-4 md:px-8 py-8 border-b border-[#1a1a24]">
