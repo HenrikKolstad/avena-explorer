@@ -10,3 +10,6 @@ feed.xml
 .env.production
 tsconfig.tsbuildinfo
 audit-output.txt
+*.pdf
+THE-SECRET-FORMULA.pdf
+AVENA-TERMINAL-FINAL.pdf

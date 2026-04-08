@@ -46,6 +46,13 @@ export interface Property {
   _capped?: boolean;        // discount/overpriced amount was sanity-capped
   _capReason?: string;      // 'discount_cap' | 'overprice_cap' | 'luxury_review'
   _rawDiscEuros?: number;   // original uncapped value (for logging)
+  _scores?: {
+    value: number;    // 0-100
+    yield: number;    // 0-100
+    location: number; // 0-100
+    quality: number;  // 0-100
+    risk: number;     // 0-100
+  };
 }
 
 export interface YieldResult {

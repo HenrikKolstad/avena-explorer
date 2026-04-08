@@ -78,74 +78,151 @@ const growthRates = [
   {a:"Mazarrón",v:6},{a:"La Manga",v:7},
 ];
 
-export function calcScore(d: Property): number {
-  let s = 0;
-
-  // 1. DISCOUNT vs NB market (40 points max)
-  // If capped, the benchmark may be unreliable — score conservatively
+export function calcValueScore(d: Property): number {
   if (d._capped && d._capReason !== 'luxury_review') {
-    s += 15; // treat as "at market" — fair but not inflated
-  } else if (d.mm2 > 0 && d.pm2 && d.pm2 > 0) {
-    const df = (d.mm2 - d.pm2) / d.mm2; // positive = below NB market
-    if (df >= 0.25) s += 40;
-    else if (df >= 0.20) s += 35;
-    else if (df >= 0.15) s += 30;
-    else if (df >= 0.10) s += 25;
-    else if (df >= 0.05) s += 20;
-    else if (df >= 0.0)  s += 15;  // at market = still good
-    else if (df >= -0.10) s += 8;  // up to 10% above = ok
-    else if (df >= -0.20) s += 3;  // 10-20% above = expensive
-    else s += 0;                    // 20%+ above = overpriced
+    return 35; // at-market, uncertain
   }
-
-  // 2. RENTAL YIELD potential (25 points max) — via bm and location proxy
-  if (d.pl && d.pl > 0) {
-    const pp = d.pf / d.pl;
-    if (pp < 500) s += 25; else if (pp < 700) s += 20; else if (pp < 1000) s += 15; else if (pp < 1500) s += 10; else s += 5;
-  } else if (d.bm && d.pf) {
-    const rt = d.bm / (d.pf / 100000); // built m² per €100k
-    if (rt > 55) s += 22; else if (rt > 40) s += 18; else if (rt > 28) s += 14; else if (rt > 18) s += 10; else s += 6;
+  if (d.mm2 > 0 && d.pm2 && d.pm2 > 0) {
+    const df = (d.mm2 - d.pm2) / d.mm2;
+    if (df >= 0.20) return 100;
+    if (df >= 0.15) return 85;
+    if (df >= 0.10) return 70;
+    if (df >= 0.05) return 55;
+    if (df >= 0) return 40;
+    if (df >= -0.05) return 25;
+    if (df >= -0.15) return 12;
+    return 0;
   }
+  return 35;
+}
 
-  // 3. BEACH DISTANCE (15 points max)
+export function calcYieldScore(d: Property): number {
+  if (d._yield && d._yield.gross > 0) {
+    const g = d._yield.gross;
+    if (g >= 8) return 100;
+    if (g >= 6) return 75;
+    if (g >= 4) return 50;
+    if (g >= 2) return 25;
+    return 0;
+  }
+  // Estimate from beach distance
   if (d.bk !== null) {
-    if (d.bk <= 0.5) s += 15;
-    else if (d.bk <= 1) s += 12;
-    else if (d.bk <= 2) s += 9;
-    else if (d.bk <= 5) s += 6;
-    else s += 3;
+    if (d.bk <= 0.5) return 65;
+    if (d.bk <= 1) return 55;
+    if (d.bk <= 2) return 45;
+  }
+  return 30;
+}
+
+export function calcLocationScore(d: Property): number {
+  let pts = 0;
+
+  // Beach (0-30pts)
+  if (d.bk !== null) {
+    if (d.bk <= 0.5) pts += 30;
+    else if (d.bk <= 1) pts += 24;
+    else if (d.bk <= 2) pts += 18;
+    else if (d.bk <= 5) pts += 12;
+    else pts += 5;
   } else {
-    s += 3; // unknown
+    pts += 8;
   }
 
-  // 4. BUILD STATUS (10 points max)
-  // Key-ready = bird in hand, off-plan = wait + risk
-  if (d.s === 'ready') s += 10;
-  else if (d.s === 'under-construction') s += 7;
-  else if (d.s === 'off-plan') {
-    s += 5;
-    if (d.c?.includes('2025') || d.c?.includes('2026')) s += 3; // near-term
-    else if (d.c?.includes('2027')) s += 2;
+  // Views (0-20pts)
+  const views = d.views || [];
+  const cats = d.cats || [];
+  if (views.includes('sea') || cats.includes('sea-views')) pts += 20;
+  else if (views.includes('mountain')) pts += 10;
+  else if (views.includes('open')) pts += 5;
+
+  // Golf (0-15pts)
+  if (cats.includes('golf')) pts += 15;
+
+  // Urban/amenities (0-15pts)
+  if (cats.includes('urban')) pts += 15;
+  else if (cats.includes('frontline')) pts += 12;
+  else pts += 5;
+
+  // Region/airport (0-10pts)
+  if (d.r === 'cb-south') pts += 9;
+  else if (d.r === 'cb-north') pts += 8;
+  else pts += 6; // costa-calida
+
+  // Climate (0-10pts)
+  if (d.r === 'cb-north') pts += 9;
+  else pts += 8; // all southern Spain baseline
+
+  return Math.min(100, pts);
+}
+
+export function calcQualityScore(d: Property): number {
+  let pts = 40; // baseline
+
+  // Energy rating
+  if (d.energy === 'A') pts += 30;
+  else if (d.energy === 'B') pts += 20;
+  else if (d.energy === 'C') pts += 10;
+  else if (d.energy === 'D') pts += 5;
+
+  // Pool
+  if (d.pool === 'private') pts += 15;
+  else if (d.pool === 'communal' || d.pool === 'yes') pts += 8;
+
+  // Parking
+  if (d.parking !== undefined && d.parking >= 2) pts += 10;
+  else if (d.parking !== undefined && d.parking >= 1) pts += 7;
+
+  // Build status
+  if (d.s === 'ready') pts += 15;
+  else if (d.s === 'under-construction') pts += 5;
+  // off-plan = 0
+
+  // Plot/built ratio for villas
+  if (d.pl && d.bm) {
+    const ratio = d.pl / d.bm;
+    if (ratio >= 5) pts += 10;
+    else if (ratio >= 3) pts += 7;
+    else if (ratio >= 2) pts += 4;
   }
 
-  // 5. PLOT/BUILT RATIO for villas (10 points max) — larger plot = bonus
-  if (d.t === 'Villa' || d.t === 'Townhouse') {
-    if (d.pl && d.bm) {
-      const ratio = d.pl / d.bm;
-      if (ratio >= 5) s += 10;
-      else if (ratio >= 3) s += 8;
-      else if (ratio >= 2) s += 6;
-      else if (ratio >= 1) s += 4;
-      else s += 2;
-    } else if (d.pl && d.pl > 300) {
-      s += 5;
+  return Math.min(100, pts);
+}
+
+export function calcRiskScore(d: Property): number {
+  let pts: number;
+
+  if (d.s === 'ready') {
+    pts = 85;
+  } else if (d.s === 'under-construction') {
+    pts = (d._mths !== undefined && d._mths <= 12) ? 70 : 55;
+  } else {
+    // off-plan
+    pts = (d.c?.includes('2025') || d.c?.includes('2026')) ? 45 : 35;
+  }
+
+  // Very small unit penalty
+  if (d.bm < 50) pts -= 10;
+
+  // High supply / tourist license restricted areas
+  const loc = (d.l || '').toLowerCase();
+  if (loc.includes('torrevieja') || loc.includes('benidorm')) {
+    pts -= 5;
+    if (loc.includes('torrevieja') || loc.includes('benidorm')) {
+      pts -= 10;
     }
-  } else {
-    // For apartments: developer track record proxy via dy
-    if (d.dy >= 20) s += 8; else if (d.dy >= 10) s += 6; else if (d.dy >= 5) s += 4; else s += 3;
   }
 
-  return Math.min(100, Math.round(s));
+  return Math.min(100, Math.max(0, pts));
+}
+
+export function calcScore(d: Property): number {
+  const v = calcValueScore(d);
+  const y = calcYieldScore(d);
+  const l = calcLocationScore(d);
+  const q = calcQualityScore(d);
+  const r = calcRiskScore(d);
+  d._scores = { value: v, yield: y, location: l, quality: q, risk: r };
+  return Math.min(100, Math.round(v * 0.40 + y * 0.25 + l * 0.20 + q * 0.10 + r * 0.05));
 }
 
 export function calcYield(d: Property): YieldResult {
