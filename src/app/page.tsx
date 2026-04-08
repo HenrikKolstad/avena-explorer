@@ -120,6 +120,8 @@ export default function Explorer() {
     }
     return [];
   });
+  // Pagination — reset when filters change
+  const [displayLimit, setDisplayLimit] = useState(100);
   // Email capture popup state
   const [showEmailCapture, setShowEmailCapture] = useState(false);
   // Header ref for CSS var (points to sticky top zone wrapper div)
@@ -282,7 +284,11 @@ export default function Explorer() {
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDir('desc'); }
+    setDisplayLimit(100);
   };
+
+  // Reset pagination when filters change
+  useEffect(() => { setDisplayLimit(100); }, [filters, quickFilter]);
 
   const stats = useMemo(() => {
     if (!filtered.length) return { count: 0, avgDisc: 0, bestScore: 0, newThisWeek: 0 };
@@ -995,7 +1001,7 @@ export default function Explorer() {
             <>
             {/* MOBILE CARD LIST */}
             <div className="md:hidden px-3 pb-6 space-y-2 pt-2">
-              {filtered.map((d, i) => {
+              {filtered.slice(0, displayLimit).map((d, i) => {
                 const dc = displayDiscount(d);
                 const rank = i + 1;
                 const isLocked = !isPaid && rank > FREE_DEALS_LIMIT;
@@ -1058,6 +1064,14 @@ export default function Explorer() {
                   </button>
                 </div>
               )}
+              {isPaid && filtered.length > displayLimit && (
+                <div className="text-center py-4">
+                  <button onClick={() => setDisplayLimit(l => l + 100)}
+                    className="px-6 py-2 rounded-lg border border-[#2a2a30] text-[11px] text-gray-400 hover:text-[#c9a84c] hover:border-[#c9a84c]/40 transition-colors">
+                    Show more ({filtered.length - displayLimit} remaining)
+                  </button>
+                </div>
+              )}
             </div>
             <div className="hidden md:block overflow-x-auto px-4 pb-6">
               <table className="w-full border-collapse min-w-[1100px]">
@@ -1074,7 +1088,7 @@ export default function Explorer() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((d, i) => {
+                  {filtered.slice(0, displayLimit).map((d, i) => {
                     const dc = displayDiscount(d);
                     const rank = i + 1;
                     const isTop3 = rank <= 3;
@@ -1206,6 +1220,14 @@ export default function Explorer() {
                   )}
                 </tbody>
               </table>
+              {isPaid && filtered.length > displayLimit && (
+                <div className="text-center py-6">
+                  <button onClick={() => setDisplayLimit(l => l + 100)}
+                    className="px-8 py-2.5 rounded-lg border border-[#2a2a30] text-[11px] text-gray-400 hover:text-[#c9a84c] hover:border-[#c9a84c]/40 transition-colors">
+                    Show more — {filtered.length - displayLimit} remaining
+                  </button>
+                </div>
+              )}
             </div>
             </>
           )}
