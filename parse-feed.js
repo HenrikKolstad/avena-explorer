@@ -597,6 +597,21 @@ async function main() {
     return [1, log_bm, beach, sea_view, golf, beds, is_villa, r_north, r_calida, ...townDummies];
   }
 
+  // Tier-level row: core features only (no town dummies) — avoids singularity
+  // when a tier has few observations per town.
+  function buildRowTier(p) {
+    const bm = p.bm > 0 ? p.bm : 80;
+    const log_bm = Math.log(bm);
+    const beach = p.bk !== null ? Math.min(p.bk, 10) : 5;
+    const sea_view = (p.views && p.views.includes('sea')) ? 1 : 0;
+    const golf = (p.cats && p.cats.includes('golf')) ? 1 : 0;
+    const beds = Math.min(Math.max(p.bd || 1, 1), 6);
+    const is_villa = isVilType(p.t) ? 1 : 0;
+    const r_north = p.r === 'cb-north' ? 1 : 0;
+    const r_calida = p.r === 'costa-calida' ? 1 : 0;
+    return [1, log_bm, beach, sea_view, golf, beds, is_villa, r_north, r_calida];
+  }
+
   // --- Collect training data (properties with valid pm2) ---
   const trainProps = unique.filter(p => p.pm2 && p.pm2 > 0 && p.bm > 0);
   const X = trainProps.map(p => buildRow(p));
@@ -604,31 +619,83 @@ async function main() {
 
   console.log(`Training hedonic model on ${trainProps.length} properties with ${featureNames.length} features...`);
 
-  let beta;
-  let regressionOk = false;
-  try {
-    beta = ols(X, y);
-    regressionOk = true;
-  } catch (e) {
-    console.error('Regression failed:', e.message, '— falling back to town median');
+  // --- Helper: fit OLS and compute diagnostics ---
+  function fitModel(props, rowBuilder) {
+    const builder = rowBuilder || buildRow;
+    const Xm = props.map(p => builder(p));
+    const ym = props.map(p => p.pm2);
+    const betaM = ols(Xm, ym);
+    const yHatM = Xm.map(row => row.reduce((s, v, i) => s + v * betaM[i], 0));
+    const yMeanM = ym.reduce((s, v) => s + v, 0) / ym.length;
+    const ssTotM = ym.reduce((s, v) => s + (v - yMeanM) ** 2, 0);
+    const ssResM = ym.reduce((s, v, i) => s + (v - yHatM[i]) ** 2, 0);
+    const r2M = 1 - ssResM / ssTotM;
+    const rmseM = Math.sqrt(ssResM / ym.length);
+    return { beta: betaM, r2: r2M, rmse: rmseM, n: props.length, useTierRow: rowBuilder === buildRowTier };
   }
 
+  // --- Global model ---
+  let globalModel = null;
+  let regressionOk = false;
+  try {
+    globalModel = fitModel(trainProps);
+    regressionOk = true;
+  } catch (e) {
+    console.error('Global regression failed:', e.message, '— falling back to town median');
+  }
+
+  // --- Price-tier type multipliers ---
+  const typeMultiplier = {
+    'Apartment':  1.00,
+    'Villa':      1.15,
+    'Townhouse':  1.05,
+    'Penthouse':  1.20,
+    'Bungalow':   0.95,
+    'Studio':     1.00,
+  };
+
+  // --- Price tier definitions ---
+  const tiers = [
+    { name: 'Budget',  label: '<200k',     min: 0,       max: 200000 },
+    { name: 'Mid',     label: '200-500k',  min: 200000,  max: 500000 },
+    { name: 'Premium', label: '500k-1M',   min: 500000,  max: 1000000 },
+    { name: 'Luxury',  label: '1M+',       min: 1000000, max: Infinity },
+  ];
+
+  // Split train props into tiers
+  const tierTrainProps = tiers.map(tier =>
+    trainProps.filter(p => p.pf >= tier.min && p.pf < tier.max)
+  );
+
+  // Fit tier models using core features only (no town dummies) to avoid singularity.
+  // Fall back to global if < 30 props.
+  const tierModels = tiers.map((tier, i) => {
+    const props = tierTrainProps[i];
+    if (props.length < 30) {
+      console.log(`  ${tier.name} tier: N=${props.length} < 30 — will use global model`);
+      return null;
+    }
+    try {
+      const m = fitModel(props, buildRowTier);
+      console.log(`  ${tier.name} tier: N=${props.length}  R²=${m.r2.toFixed(3)}  RMSE=€${Math.round(m.rmse)}/m²`);
+      return m;
+    } catch (e) {
+      console.warn(`  ${tier.name} tier regression failed: ${e.message} — using global`);
+      return null;
+    }
+  });
+
   if (regressionOk) {
-    // --- Diagnostics ---
-    const yHat = X.map(row => row.reduce((s, v, i) => s + v * beta[i], 0));
-    const yMean = y.reduce((s, v) => s + v, 0) / y.length;
-    const ssTot = y.reduce((s, v) => s + (v - yMean) ** 2, 0);
-    const ssRes = y.reduce((s, v, i) => s + (v - yHat[i]) ** 2, 0);
-    const r2 = 1 - ssRes / ssTot;
-    const rmse = Math.sqrt(ssRes / y.length);
-    console.log(`\nHedonic model diagnostics:`);
+    // --- Global model diagnostics ---
+    const { beta, r2, rmse } = globalModel;
+    console.log(`\nHedonic model diagnostics (global):`);
     console.log(`  R² = ${r2.toFixed(3)}  RMSE = €${Math.round(rmse)}/m²`);
 
     if (r2 < 0.3) {
       console.warn('  WARNING: R² < 0.3 — regression may be unreliable, check feature matrix');
     }
 
-    // Top 5 positive & negative coefficients
+    // Top 5 positive & negative coefficients (global)
     const coefPairs = featureNames.map((name, i) => ({ name, coef: beta[i] }));
     const sorted = [...coefPairs].sort((a, b) => b.coef - a.coef);
     console.log('  Top 5 positive coefficients:');
@@ -636,12 +703,26 @@ async function main() {
     console.log('  Top 5 negative coefficients:');
     sorted.slice(-5).reverse().forEach(c => console.log(`    ${c.name.padEnd(20)} ${c.coef > 0 ? '+' : ''}${c.coef.toFixed(1)}`));
 
-    // --- Apply regression to all properties ---
+    // --- Apply segmented regression to all properties ---
+    // Each property uses its price-tier model if available, otherwise global.
+    // After OLS prediction, apply type multiplier.
     let clampLow = 0, clampHigh = 0, regApplied = 0;
     unique.forEach(p => {
       if (!p.bm || p.bm <= 0) return; // no area — keep existing mm2
-      const row = buildRow(p);
-      const predicted = row.reduce((s, v, i) => s + v * beta[i], 0);
+
+      // Pick the appropriate tier model
+      const tierIdx = tiers.findIndex(tier => p.pf >= tier.min && p.pf < tier.max);
+      const model = (tierIdx >= 0 && tierModels[tierIdx]) ? tierModels[tierIdx] : globalModel;
+      const betaUse = model.beta;
+
+      // Use matching row builder: tier models use core features only
+      const row = model.useTierRow ? buildRowTier(p) : buildRow(p);
+      let predicted = row.reduce((s, v, i) => s + v * betaUse[i], 0);
+
+      // Apply type multiplier
+      const mult = typeMultiplier[p.t] || 1.0;
+      predicted *= mult;
+
       let mm2 = Math.round(predicted);
       if (predicted < 1500) { mm2 = 1500; clampLow++; }
       else if (predicted > 15000) { mm2 = 15000; clampHigh++; }
@@ -784,6 +865,27 @@ async function main() {
     if (cappedProps.length > 20) console.log(`  ... and ${cappedProps.length - 20} more`);
   } else {
     console.log('\n✓ No capped properties — all discounts within sanity limits');
+  }
+
+  // --- SEGMENTED REGRESSION SUMMARY ---
+  console.log('\nSEGMENTED REGRESSION SUMMARY:');
+  const tierLabels = [
+    { name: 'Budget',  label: '<200k',     padLabel: '(<200k)    ' },
+    { name: 'Mid',     label: '200-500k',  padLabel: '(200-500k) ' },
+    { name: 'Premium', label: '500k-1M',   padLabel: '(500k-1M)  ' },
+    { name: 'Luxury',  label: '1M+',       padLabel: '(1M+)      ' },
+  ];
+  tierLabels.forEach((tl, i) => {
+    const m = tierModels[i];
+    const n = tierTrainProps[i].length;
+    if (m) {
+      console.log(`  ${tl.name.padEnd(7)} ${tl.padLabel}  N=${String(n).padStart(4)}  R²=${m.r2.toFixed(2)}  RMSE=€${String(Math.round(m.rmse)).padStart(4)}/m²`);
+    } else {
+      console.log(`  ${tl.name.padEnd(7)} ${tl.padLabel}  N=${String(n).padStart(4)}  (fallback to global — N<30)`);
+    }
+  });
+  if (globalModel) {
+    console.log(`  Global  (fallback):    N=${String(globalModel.n).padStart(4)}  R²=${globalModel.r2.toFixed(2)}  RMSE=€${String(Math.round(globalModel.rmse)).padStart(4)}/m²`);
   }
 }
 
