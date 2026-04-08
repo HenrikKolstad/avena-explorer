@@ -1781,7 +1781,7 @@ export default function Explorer() {
                   View on Xavia Estate →
                 </a>
               ) : (
-                <a href="mailto:henrik@xaviaestate.com"
+                <a href={`mailto:henrik@xaviaestate.com?subject=${encodeURIComponent(`Inquiry: ${previewProp.p}`)}&body=${encodeURIComponent(`Hi Avena,\n\nI'm interested in the following property:\n\n${previewProp.p}\nLocation: ${previewProp.l}\nPrice: €${previewProp.pf?.toLocaleString()}\nRef: ${previewProp.ref || ''}\n\nPlease send me more details.\n\nBest regards`)}`}
                   onClick={() => logLead(previewProp, 'contact_avena')}
                   className="block text-center py-3 bg-gradient-to-r from-amber-600 to-amber-400 text-black font-bold text-sm rounded-lg hover:from-amber-500 hover:to-amber-300 transition-all tracking-wide">
                   Contact Avena →
