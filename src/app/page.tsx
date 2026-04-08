@@ -147,10 +147,12 @@ export default function Explorer() {
     };
     measure();
     setTimeout(measure, 100); // second attempt after full render
+    setTimeout(measure, 500); // extra pass for late renders (filter bar + quick chips)
     const ro = new ResizeObserver(measure);
     if (headerRef.current) ro.observe(headerRef.current);
     return () => ro.disconnect();
   }, []);
+
 
   // Track desktop vs mobile for sidebar-aware layout
   const [isDesktop, setIsDesktop] = useState(false);
@@ -1116,7 +1118,7 @@ export default function Explorer() {
                     {([['#','',''],['score',t.col_score,''],['developer',t.col_developer,''],['project',t.col_project,''],['',t.col_region,''],['',t.col_type,''],['price',t.col_price,''],['priceM2',t.col_pm2,'Price per m² asked'],['marketM2',t.col_market,'Market benchmark €/m²'],['discount',t.col_discount,'vs market benchmark'],['built',t.col_built,''],['plot',t.col_plot,''],['beds',t.col_beds,''],['beach',t.lbl_beach,''],['','Status',''],['','Completion',''],['','+','']] as [SortKey|'', string, string][]).map(([key, label, tip], i) => (
                       <th key={i} onClick={() => key && handleSort(key as SortKey)}
                         title={tip || undefined}
-                        style={{ position: 'sticky', top: 0, background: '#0a0a10' }}
+                        style={{ position: 'sticky', top: headerH, background: '#0a0a10' }}
                         className={`px-3 py-2 text-[10px] uppercase tracking-widest text-left border-b border-t border-[#1a1a24] cursor-pointer hover:text-[#c9a84c] whitespace-nowrap z-10 select-none ${sortKey === key ? 'text-[#c9a84c] font-bold' : 'text-gray-400'}`}>
                         {label}{sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
                       </th>
@@ -2127,7 +2129,7 @@ function YieldTab({ properties, isPaid, onUpgrade, onCurrencyChange }: { propert
   });
 
   return (
-    <div className="p-3 md:p-6">
+    <div className="pt-4 px-3 pb-3 md:p-6">
       {/* Three info boxes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-5">
         <div className="bg-[#111118] border border-[#2a2a30] rounded-lg p-4">
@@ -2316,7 +2318,7 @@ function MarketTab({ properties }: { properties: Property[] }) {
   const medianPrice = properties.length ? [...properties].sort((a, b) => a.pf - b.pf)[Math.floor(properties.length / 2)].pf : 0;
 
   return (
-    <div className="p-3 md:p-6 space-y-3 md:space-y-4">
+    <div className="pt-4 px-3 pb-3 md:p-6 space-y-3 md:space-y-4">
       <h2 className="font-serif text-lg md:text-xl text-amber-400">Market Overview</h2>
 
       {/* Summary stats */}
