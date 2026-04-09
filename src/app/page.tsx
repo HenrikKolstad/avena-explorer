@@ -195,12 +195,21 @@ export default function Explorer() {
             setMobileHeaderHidden(true);
           }
         } else {
-          // Reveal header when at top for 0.8s
-          if (y <= 15 && !topTimer.current) {
-            topTimer.current = setTimeout(() => {
-              if (window.scrollY <= 15) setMobileHeaderHidden(false);
-              topTimer.current = null;
-            }, 800);
+          if (isDesktop) {
+            // PC: scroll up 300px to reveal
+            scrollUpAccum.current += Math.abs(delta);
+            if (scrollUpAccum.current > 300) {
+              setMobileHeaderHidden(false);
+              scrollUpAccum.current = 0;
+            }
+          } else {
+            // Mobile: stay at top for 0.8s
+            if (y <= 15 && !topTimer.current) {
+              topTimer.current = setTimeout(() => {
+                if (window.scrollY <= 15) setMobileHeaderHidden(false);
+                topTimer.current = null;
+              }, 800);
+            }
           }
         }
         lastScrollY.current = y;
