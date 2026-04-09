@@ -2384,17 +2384,11 @@ function YieldTab({ properties, isPaid, onUpgrade, onCurrencyChange }: { propert
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <a href="https://wise.com/invite/u/henrikk" target="_blank" rel="noopener noreferrer"
-            className="text-xs font-semibold hover:underline transition-opacity hover:opacity-80"
-            style={{ color: '#D4AF37' }}>
-            Transfer your investment funds fee-free with Wise →
-          </a>
-          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
-            <span className="text-amber-400 text-sm">💰</span>
-            <span className="text-amber-300 text-xs font-medium">Tap any card to open the loan &amp; investment calculator</span>
-          </div>
-        </div>
+        <a href="https://wise.com/invite/u/henrikk" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+          style={{ background: '#9fe870', color: '#163300' }}>
+          💸 Transfer your investment funds fee-free with Wise →
+        </a>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sorted.slice(0, isPaid ? 30 : FREE_YIELD_LIMIT).map((d, i) => (
