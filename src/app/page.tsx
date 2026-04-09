@@ -616,7 +616,7 @@ export default function Explorer() {
             </div>
           </div>
           {/* Social proof */}
-          <p className="text-[9px] text-gray-400 text-center">Join 430+ investors already tracking deals</p>
+          <p className="text-[9px] text-gray-400 text-center">Join 45+ investors already tracking deals</p>
           {/* Row 2: tagline + partnership */}
           <div className="border-t border-[#1c2333] pt-2">
             <div className="text-[9px] text-gray-400 leading-relaxed">
@@ -714,7 +714,7 @@ export default function Explorer() {
               <div className="text-[9px] uppercase tracking-widest text-gray-500">New/Week</div>
             </div>
             <div className="text-center border-l border-[#1c2333] pl-4">
-              <div className="text-[10px] text-gray-400 leading-tight">Join 430+ investors<br />already tracking deals</div>
+              <div className="text-[10px] text-gray-400 leading-tight">Join 45+ investors<br />already tracking deals</div>
             </div>
             {sidebarCollapsed && (
               <a href="https://instagram.com/avenaestate" target="_blank" rel="noopener noreferrer"
