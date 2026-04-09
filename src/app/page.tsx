@@ -2363,7 +2363,7 @@ function YieldTab({ properties, isPaid, onUpgrade, onCurrencyChange }: { propert
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 w-fit"
             style={{ background: '#9fe870', color: '#163300' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12.5 2L6.5 22h3l2-7h5l-1.5 7h3L22 8.5 12.5 2zm1 11h-3.5l2-7L17 10.5 13.5 13z" fill="#163300"/></svg>
-            Transfer your investment funds fee-free with Wise →
+            Transfer your funds fee-free with worldwide trusted Wise →
           </a>
         </div>
         <div className="flex items-center gap-2">
