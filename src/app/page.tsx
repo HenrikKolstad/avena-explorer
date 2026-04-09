@@ -1440,7 +1440,7 @@ export default function Explorer() {
             <button onClick={() => { setPreview(null); setPreviewLuxScore(null); }} className="absolute top-4 right-4 w-8 h-8 rounded-full border border-[#1c2333] text-gray-400 hover:text-emerald-400 hover:border-emerald-400 flex items-center justify-center z-10 bg-black/50">×</button>
             {/* IMAGE GALLERY */}
             {previewProp.imgs && previewProp.imgs.length > 0 ? (
-              <div className="relative w-full h-60 bg-[#0f1419]">
+              <div className="relative w-full h-44 md:h-60 bg-[#0f1419]">
                 <img src={previewProp.imgs[imgIdx] || previewProp.imgs[0]} alt={previewProp.p}
                   className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 {previewProp.imgs.length > 1 && (
@@ -1458,13 +1458,13 @@ export default function Explorer() {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-60 bg-[#0f1419] flex items-center justify-center">
+              <div className="w-full h-44 md:h-60 bg-[#0f1419] flex items-center justify-center">
                 <div className="text-gray-500 text-sm">{previewProp.t} in {previewProp.l}</div>
               </div>
             )}
             {/* Image thumbnails */}
             {previewProp.imgs && previewProp.imgs.length > 1 && (
-              <div className="flex gap-1 px-4 py-2 overflow-x-auto bg-[#0f1419] border-b border-[#1c2333]">
+              <div className="hidden md:flex gap-1 px-4 py-2 overflow-x-auto bg-[#0f1419] border-b border-[#1c2333]">
                 {previewProp.imgs.slice(0, 10).map((img, i) => (
                   <button key={i} onClick={() => setImgIdx(i)}
                     className={`w-14 h-10 rounded overflow-hidden flex-shrink-0 border-2 transition-all ${imgIdx === i ? 'border-emerald-400 opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}>
@@ -1473,11 +1473,11 @@ export default function Explorer() {
                 ))}
               </div>
             )}
-            <div className="p-4 md:p-6">
-              <h2 className="font-serif text-lg md:text-xl text-emerald-300 mb-1 pr-8">{previewProp.p}</h2>
-              <p className="text-gray-500 text-sm mb-4">{previewProp.l}</p>
+            <div className="p-3 md:p-6">
+              <h2 className="font-serif text-base md:text-xl text-emerald-300 mb-0.5 pr-8">{previewProp.p}</h2>
+              <p className="text-gray-500 text-xs md:text-sm mb-3">{previewProp.l}</p>
 
-              <div className="flex items-center gap-4 mb-5 p-4 bg-[#0f1419] rounded-lg border border-[#1c2333]">
+              <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-5 p-3 md:p-4 bg-[#0f1419] rounded-lg border border-[#1c2333]">
                 {(() => {
                   const displayScore = Math.round(previewLuxScore !== null ? previewLuxScore : (previewProp._sc || 0));
                   const label = previewLuxScore !== null ? 'Luxury Score' : 'Deal Score';
