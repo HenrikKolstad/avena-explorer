@@ -64,16 +64,19 @@ const PRO_GATE_DESCRIPTIONS: Record<string, string> = {
 function ProGate({ onUpgrade, feature }: { onUpgrade: () => void; feature: string }) {
   const description = PRO_GATE_DESCRIPTIONS[feature] || 'Unlock full access to all analysis tools and data on Avena Terminal PRO.';
   return (
-    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6 py-16">
-      <div className="mb-4"><Lock size={40} className="text-emerald-400 mx-auto" /></div>
-      <h2 className="text-xl font-bold text-white mb-2">Unlock {feature}</h2>
-      <p className="text-gray-400 text-sm mb-6 max-w-sm">{description}</p>
-      <button onClick={onUpgrade}
-        className="px-8 py-3 rounded-xl font-bold text-black text-sm shadow-lg"
-        style={{ background: 'linear-gradient(135deg, #10B981, #34d399)' }}>
-        Upgrade to PRO →
-      </button>
-      <p className="text-[11px] text-gray-600 mt-3">Cancel anytime · €79/month</p>
+    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6 py-16 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 50% 40%, #00b9ff 0%, transparent 70%)' }} />
+      <div className="relative z-10">
+        <div className="mb-4"><Lock size={40} className="mx-auto" style={{ color: '#00b9ff' }} /></div>
+        <h2 className="text-xl font-bold text-white mb-2">Unlock {feature}</h2>
+        <p className="text-gray-400 text-sm mb-6 max-w-sm">{description}</p>
+        <button onClick={onUpgrade}
+          className="px-8 py-3.5 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] transition-all"
+          style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
+          Upgrade to PRO →
+        </button>
+        <p className="text-[11px] text-gray-600 mt-3">Cancel anytime · €79/month</p>
+      </div>
     </div>
   );
 }
@@ -637,9 +640,9 @@ export default function Explorer() {
           {/* CENTER — hero punchlines — only when sidebar collapsed */}
           {sidebarCollapsed && (
             <div className="hidden lg:flex flex-col gap-2 flex-1 max-w-md mx-auto text-center">
-              <div className="text-lg xl:text-xl font-bold leading-snug bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-500 bg-clip-text text-transparent">{t.hero_line1}</div>
-              <div className="h-px w-16 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #10B981, transparent)' }} />
-              <div className="text-lg xl:text-xl font-bold leading-snug bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-500 bg-clip-text text-transparent">{t.hero_line2}</div>
+              <div className="text-lg xl:text-xl font-bold leading-snug" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{t.hero_line1}</div>
+              <div className="h-px w-16 mx-auto" style={{ background: 'linear-gradient(90deg, transparent, #00b9ff, transparent)' }} />
+              <div className="text-lg xl:text-xl font-bold leading-snug" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{t.hero_line2}</div>
               <p className="text-[11px] mt-1 italic tracking-wide font-semibold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Bloomberg of European property investment</p>
             </div>
           )}
@@ -883,7 +886,8 @@ export default function Explorer() {
                   {!isPaid && user && (
                     <div className="px-3 py-3 mt-2 border-t border-[#1c2333]">
                       <button onClick={() => setShowPaywall(true)}
-                        className="w-full py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-semibold hover:bg-emerald-500/20 transition-all">
+                        className="w-full py-2 rounded-lg text-[10px] font-bold hover:opacity-90 transition-all"
+                        style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                         Upgrade to PRO — €79/mo
                       </button>
                     </div>
@@ -1124,8 +1128,8 @@ export default function Explorer() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                   <button
                     onClick={() => setShowPaywall(true)}
-                    className="px-8 py-3.5 rounded-xl font-bold text-black text-sm shadow-lg shadow-emerald-900/30 hover:scale-[1.02] transition-transform"
-                    style={{ background: 'linear-gradient(135deg, #10B981, #34d399)' }}>
+                    className="px-8 py-3.5 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] transition-transform"
+                    style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                     Start PRO — €79/month →
                   </button>
                   <button
@@ -1205,11 +1209,12 @@ export default function Explorer() {
                 );
               })}
               {!isPaid && filtered.length > FREE_DEALS_LIMIT && (
-                <div className="bg-emerald-900/20 border border-emerald-600/40 rounded-xl p-5 text-center">
-                  <div className="text-emerald-400 font-bold text-sm mb-1">{filtered.length - FREE_DEALS_LIMIT} more deals locked</div>
+                <div className="rounded-xl p-5 text-center border" style={{ background: 'rgba(0,185,255,0.05)', borderColor: 'rgba(0,185,255,0.2)' }}>
+                  <div className="font-bold text-sm mb-1" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{filtered.length - FREE_DEALS_LIMIT} more deals locked</div>
                   <div className="text-gray-400 text-xs mb-3">Subscribe to unlock all {filtered.length} properties</div>
                   <button onClick={() => user ? setShowPaywall(true) : setShowAuthModal(true)}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm">
+                    className="font-bold px-6 py-2.5 rounded-lg text-sm hover:opacity-90 transition-all"
+                    style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                     Subscribe — €79/month
                   </button>
                 </div>
@@ -1801,13 +1806,13 @@ export default function Explorer() {
               {previewProp.u?.includes('xaviaestate.com') ? (
                 <a href={previewProp.u} target="_blank" rel="noopener noreferrer"
                   onClick={() => logLead(previewProp, 'view_xavia')}
-                  className="block text-center py-3 bg-gradient-to-r from-emerald-600 to-emerald-400 text-black font-bold text-sm rounded-lg hover:from-emerald-500 hover:to-emerald-300 transition-all tracking-wide">
+                  className="block text-center py-3 text-sm rounded-lg hover:opacity-90 transition-all tracking-wide font-bold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                   View on Xavia Estate →
                 </a>
               ) : (
                 <a href={`mailto:henrik@xaviaestate.com?subject=${encodeURIComponent(`Inquiry: ${previewProp.p}`)}&body=${encodeURIComponent(`Hi Avena,\n\nI'm interested in the following property:\n\n${previewProp.p}\nLocation: ${previewProp.l}\nPrice: €${previewProp.pf?.toLocaleString()}\nRef: ${previewProp.ref || ''}\n\nPlease send me more details.\n\nBest regards`)}`}
                   onClick={() => logLead(previewProp, 'contact_avena')}
-                  className="block text-center py-3 bg-gradient-to-r from-emerald-600 to-emerald-400 text-black font-bold text-sm rounded-lg hover:from-emerald-500 hover:to-emerald-300 transition-all tracking-wide">
+                  className="block text-center py-3 text-sm rounded-lg hover:opacity-90 transition-all tracking-wide font-bold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                   Contact Avena →
                 </a>
               )}
@@ -1868,7 +1873,7 @@ export default function Explorer() {
                   onChange={e => setAuthEmail(e.target.value)}
                   className="w-full bg-[#08080d] border border-[#1c2333] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-emerald-500 mb-4" />
                 <button type="submit" disabled={authLoading2}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-400 text-black font-bold py-3 rounded-lg hover:from-emerald-500 hover:to-emerald-300 transition-all text-sm disabled:opacity-50">
+                  className="w-full py-3 rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-50 font-bold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                   {authLoading2 ? 'Sending…' : 'Send Magic Link →'}
                 </button>
               </form>
@@ -1904,7 +1909,7 @@ export default function Explorer() {
                   onChange={e => setAuthPassword(e.target.value)}
                   className="w-full bg-[#08080d] border border-[#1c2333] text-gray-100 px-4 py-3 rounded-lg text-sm outline-none focus:border-emerald-500 mb-4" />
                 <button type="submit" disabled={authLoading2}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-400 text-black font-bold py-3 rounded-lg hover:from-emerald-500 hover:to-emerald-300 transition-all text-sm disabled:opacity-50">
+                  className="w-full py-3 rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-50 font-bold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                   {authLoading2 ? 'Signing in…' : 'Sign In →'}
                 </button>
               </form>
@@ -1916,27 +1921,29 @@ export default function Explorer() {
       {/* PAYWALL MODAL */}
       {showPaywall && (
         <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
-          <div className="relative bg-[#0f1419] border-2 border-[#10B981]/50 rounded-t-2xl md:rounded-2xl p-5 md:p-8 w-full max-w-md md:mx-4 shadow-2xl shadow-emerald-900/20 max-h-[92vh] overflow-y-auto overscroll-contain" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowPaywall(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white text-xl">×</button>
+          <div className="relative rounded-t-2xl md:rounded-2xl p-5 md:p-8 w-full max-w-md md:mx-4 shadow-2xl max-h-[92vh] overflow-y-auto overscroll-contain" style={{ background: 'linear-gradient(180deg, #0a1628 0%, #0d1117 100%)', border: '1px solid rgba(0,185,255,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div className="absolute inset-0 rounded-t-2xl md:rounded-2xl opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 50% 0%, #00b9ff 0%, transparent 60%)' }} />
+            <div className="relative z-10">
+            <button onClick={() => setShowPaywall(false)} className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white text-xl">×</button>
             <div className="text-center mb-4 md:mb-6">
-              <div className="mb-2"><Lock size={28} className="mx-auto text-emerald-400" /></div>
-              <div className="text-gray-400 text-xs uppercase tracking-widest mb-1">You&apos;re viewing 5 of 1,800+ scored properties</div>
-              <div className="font-serif text-xl md:text-2xl text-emerald-400 mb-1">Unlock 1,800+ Investment Deals</div>
+              <div className="mb-3"><Sparkles size={28} className="mx-auto" style={{ color: '#00b9ff' }} /></div>
+              <div className="text-gray-400 text-[10px] uppercase tracking-[3px] mb-2">You&apos;re viewing 5 of 1,800+ scored properties</div>
+              <div className="font-serif text-xl md:text-2xl font-bold mb-1" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Unlock 1,800+ Investment Deals</div>
               <div className="font-serif text-lg md:text-xl text-white mb-0.5">Avena Terminal PRO</div>
               <div className="text-3xl md:text-4xl font-bold text-white mb-1">€79<span className="text-base md:text-lg text-gray-400 font-normal">/month</span></div>
               <p className="text-gray-500 text-xs">Just €2.63/day · Cancel anytime</p>
             </div>
-            <ul className="space-y-2 mb-6">
+            <ul className="space-y-2.5 mb-6">
               {[
-                ['✓', 'All 1,800+ properties unlocked'],
-                ['✓', 'Save up to 30% vs market price'],
-                ['✓', 'Full rental yield analysis for every property'],
-                ['✓', 'Cash-on-cash return & mortgage calculator'],
-                ['✓', 'Luxury €1M+ segment analysis'],
-                ['✓', 'Daily updates — new listings every morning'],
-              ].map(([icon, text]) => (
-                <li key={text} className="flex items-center gap-2 text-sm text-gray-300">
-                  <span className="text-emerald-400 font-bold">{icon}</span> {text}
+                'All 1,800+ properties unlocked',
+                'Save up to 30% vs market price',
+                'Full rental yield analysis for every property',
+                'Cash-on-cash return & mortgage calculator',
+                'Luxury €1M+ segment analysis',
+                'Daily updates — new listings every morning',
+              ].map((text) => (
+                <li key={text} className="flex items-center gap-2.5 text-sm text-gray-300">
+                  <Check size={14} style={{ color: '#00b9ff', flexShrink: 0 }} /> {text}
                 </li>
               ))}
             </ul>
@@ -1944,7 +1951,7 @@ export default function Explorer() {
               <>
                 <button onClick={startCheckout} disabled={paywallLoading}
                   className="w-full font-bold py-3.5 rounded-lg transition-all text-sm tracking-wide disabled:opacity-50 text-black"
-                  style={{ background: 'linear-gradient(135deg, #10B981, #34d399, #10B981)' }}>
+                  style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                   {paywallLoading ? 'Redirecting…' : 'Subscribe — €79/month →'}
                 </button>
                 <p className="text-center text-gray-600 text-[10px] mt-2">Just €2.63/day for institutional-grade property intelligence</p>
@@ -1977,7 +1984,7 @@ export default function Explorer() {
                 />
                 <button type="submit" disabled={paywallLoading}
                   className="w-full font-bold py-3.5 rounded-lg transition-all text-sm tracking-wide disabled:opacity-50 text-black"
-                  style={{ background: 'linear-gradient(135deg, #10B981, #34d399, #10B981)' }}>
+                  style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                   {paywallLoading ? 'Redirecting to Stripe…' : 'Subscribe — €79/month →'}
                 </button>
                 <p className="text-center text-gray-600 text-[10px] mt-2">Just €2.63/day for institutional-grade property intelligence</p>
@@ -1998,6 +2005,7 @@ export default function Explorer() {
               </div>
               <p className="text-center text-gray-600 text-[10px]">Cancel anytime · Secured by Stripe</p>
             </div>
+            </div>{/* end z-10 */}
           </div>
         </div>
       )}
@@ -2428,7 +2436,7 @@ function YieldTab({ properties, isPaid, onUpgrade, onCurrencyChange }: { propert
             Subscribe to see full rental yield data, cash-on-cash returns, and investment calculator for all {sorted.length} properties.
           </p>
           <button onClick={onUpgrade}
-            className="bg-gradient-to-r from-emerald-600 to-emerald-400 text-black font-bold px-8 py-3 rounded-lg hover:from-emerald-500 hover:to-emerald-300 transition-all text-sm tracking-wide">
+            className="px-8 py-3 rounded-lg hover:opacity-90 transition-all text-sm tracking-wide font-bold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
             Subscribe — €79/month
           </button>
         </div>
@@ -3160,7 +3168,7 @@ function LuxuryTab({ properties, isPaid, onUpgrade, onPreview }: {
                 {p.u && (
                   <a href={p.u} target="_blank" rel="noopener noreferrer"
                     onClick={e => e.stopPropagation()}
-                    className="mt-3 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-400 text-black font-bold text-xs rounded-xl hover:from-emerald-500 hover:to-emerald-300 transition-all tracking-wide">
+                    className="mt-3 flex items-center justify-center gap-2 py-2.5 text-xs rounded-xl hover:opacity-90 transition-all tracking-wide font-bold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                     View on Xavia Estate ↗
                   </a>
                 )}
@@ -3174,7 +3182,7 @@ function LuxuryTab({ properties, isPaid, onUpgrade, onPreview }: {
         <div className="mt-4 p-6 bg-[#0f1419] border border-emerald-500/30 rounded-xl text-center">
           <div className="text-emerald-400 font-serif text-lg mb-1">PRO feature</div>
           <p className="text-gray-400 text-sm mb-4">Subscribe to unlock full luxury portfolio access, investment calculator, and rental yield data.</p>
-          <button onClick={onUpgrade} className="bg-gradient-to-r from-emerald-600 to-emerald-400 text-black font-bold px-8 py-3 rounded-lg text-sm tracking-wide">
+          <button onClick={onUpgrade} className="px-8 py-3 rounded-lg text-sm tracking-wide font-bold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
             Subscribe — €79/month
           </button>
         </div>
@@ -3300,7 +3308,7 @@ function ContactTab() {
             <div className="flex justify-center mb-6">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-extrabold font-serif text-black shadow-xl shadow-[#10B981]/30"
-                  style={{ background: 'linear-gradient(135deg, #10B981, #34d399, #10B981)' }}>
+                  style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                   HK
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 border-[#0f0d15] flex items-center justify-center text-sm"
