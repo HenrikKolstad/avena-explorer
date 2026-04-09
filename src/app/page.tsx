@@ -195,12 +195,12 @@ export default function Explorer() {
             setMobileHeaderHidden(true);
           }
         } else {
-          // Must stay at top for 1.5s to reveal header
-          if (y <= 5 && !topTimer.current && mobileHeaderHidden) {
+          // Must stay at top for 0.8s to reveal header
+          if (y <= 15 && !topTimer.current) {
             topTimer.current = setTimeout(() => {
-              if (window.scrollY <= 5) setMobileHeaderHidden(false);
+              if (window.scrollY <= 15) setMobileHeaderHidden(false);
               topTimer.current = null;
-            }, 1500);
+            }, 800);
           }
         }
         lastScrollY.current = y;
