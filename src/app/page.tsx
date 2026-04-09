@@ -1059,7 +1059,7 @@ export default function Explorer() {
               <button onClick={() => !isDesktop && setWhyOpen(!whyOpen)} className="w-full text-center group" style={{ cursor: isDesktop ? 'default' : 'pointer' }}>
                 <h2 className="text-xl md:text-2xl font-bold font-serif text-white mb-1 inline-flex items-center gap-2">
                   Every question answered before you invest
-                  <ChevronRight size={18} className={`text-gray-500 transition-transform duration-200 md:hidden ${whyOpen ? 'rotate-90' : ''}`} />
+                  <ChevronRight size={18} className={`transition-transform duration-200 md:hidden ${whyOpen ? 'rotate-90' : ''}`} style={{ color: '#60a5fa' }} />
                 </h2>
                 <p className="text-gray-500 text-xs md:text-sm max-w-2xl mx-auto">
                   Avena Terminal analyses 1,800+ new builds using institutional-grade scoring.
