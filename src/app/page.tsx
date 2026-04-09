@@ -3885,7 +3885,7 @@ function CryptoTab({ properties }: { properties: Property[] }) {
 
         {/* Text below orb */}
         <div className="mt-8 text-center relative z-10">
-          <h2 className="text-white tracking-[0.4em] mb-2" style={{ fontSize: '2rem', fontWeight: 300 }}>AVENA</h2>
+          <h2 className="tracking-[0.4em] mb-2" style={{ fontSize: '2rem', fontWeight: 300, background: 'linear-gradient(135deg, #93c5fd, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AVENA VAULT</h2>
           <div className="tracking-[0.15em] text-sm mb-4" style={{ color: '#10B981' }}>&euro;0 / &euro;450,000</div>
 
           {/* Progress bar */}
