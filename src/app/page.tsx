@@ -3561,8 +3561,39 @@ function MarketIndexTab({ properties }: { properties: Property[] }) {
   const highestYieldRegion = regions.reduce((best, r) => Number(r.avgYield) > Number(best.avgYield) ? r : best, regions[0]);
   const mostListingsRegion = regions.reduce((best, r) => r.count > best.count ? r : best, regions[0]);
 
+  // Best deal (highest discount)
+  const bestDeal = useMemo(() => {
+    let best = properties[0];
+    let bestDisc = 0;
+    for (const p of properties) {
+      const d = p.mm2 && p.pm2 ? ((p.mm2 - p.pm2) / p.mm2) * 100 : 0;
+      if (d > bestDisc) { bestDisc = d; best = p; }
+    }
+    return { name: best?.l?.split(',')[0] || '', disc: bestDisc.toFixed(1) };
+  }, [properties]);
+
+  // Ticker data — all towns sorted by score
+  const tickerTowns = useMemo(() => {
+    return sortedTowns.filter(t => t.avgScore > 0).slice(0, 50);
+  }, [sortedTowns]);
+
   return (
-    <div className="px-4 md:px-8 py-8 max-w-6xl mx-auto">
+    <div>
+      {/* ── LIVE MARKET STATUS BAR ── */}
+      <div className="w-full px-4 py-2 flex items-center gap-3 md:gap-6 text-[10px] md:text-xs overflow-x-auto scrollbar-none" style={{ background: '#080c11', borderBottom: '1px solid #1c2333', fontFamily: 'ui-monospace, monospace' }}>
+        <span className="flex items-center gap-1.5 flex-shrink-0">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-emerald-400 font-bold tracking-wider">MARKET OPEN</span>
+        </span>
+        <span className="text-gray-600 hidden md:inline">|</span>
+        <span className="text-gray-400 flex-shrink-0">{totalProps.toLocaleString()} properties tracked</span>
+        <span className="text-gray-600 hidden md:inline">|</span>
+        <span className="text-gray-400 flex-shrink-0 hidden md:inline">Last scan: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        <span className="text-gray-600 hidden md:inline">|</span>
+        <span className="text-gray-400 flex-shrink-0">Best deal today: <span className="text-emerald-400 font-semibold">{bestDeal.name} &mdash; {bestDeal.disc}% below market</span></span>
+      </div>
+
+      <div className="px-4 md:px-8 py-8 max-w-6xl mx-auto">
       {/* Title */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-4xl font-extralight tracking-[0.2em] mb-2" style={{ background: 'linear-gradient(135deg, #00b9ff, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SPAIN NEW BUILD PRICE INDEX</h1>
@@ -3583,6 +3614,69 @@ function MarketIndexTab({ properties }: { properties: Property[] }) {
             <div className="text-gray-500 text-[9px] md:text-[10px] uppercase tracking-wider">{s.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* ── SPAIN HEAT MAP ── */}
+      <div className="mb-8 rounded-xl overflow-hidden border" style={{ background: '#080c11', borderColor: '#1c2333' }}>
+        <div className="p-4 md:p-6">
+          <h2 className="text-sm font-bold uppercase tracking-[0.15em] mb-4" style={{ color: '#a78bfa' }}>Regional Heat Map</h2>
+          <div className="relative w-full" style={{ height: 280 }}>
+            {/* Spain outline — simplified SVG */}
+            <svg viewBox="0 0 600 400" className="w-full h-full" style={{ opacity: 0.15 }}>
+              <path d="M150,50 L450,30 L520,80 L550,180 L500,280 L420,350 L300,380 L180,350 L80,280 L50,180 L80,100 Z" fill="none" stroke="#4a5568" strokeWidth="1" />
+            </svg>
+            {/* Region zones */}
+            {regions.map(r => {
+              const score = Number(r.avgYield) || 3;
+              const intensity = Math.min(score / 10, 1);
+              const positions: Record<string, { x: number; y: number }> = {
+                'cb-north': { x: 72, y: 30 },
+                'cb-south': { x: 65, y: 52 },
+                'costa-calida': { x: 52, y: 62 },
+                'costa-del-sol': { x: 35, y: 75 },
+              };
+              const pos = positions[r.code] || { x: 50, y: 50 };
+              const size = 60 + r.count / 15;
+              const color = intensity > 0.6 ? '#10B981' : intensity > 0.4 ? '#00b9ff' : '#6366f1';
+              return (
+                <div key={r.code} className="absolute animate-region-pulse" style={{
+                  left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)',
+                  width: size, height: size, borderRadius: '50%',
+                  background: `radial-gradient(circle, ${color}40 0%, ${color}10 50%, transparent 70%)`,
+                  boxShadow: `0 0 ${20 + intensity * 40}px ${color}30`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationDuration: `${2.5 + Math.random()}s`,
+                }}>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-[8px] md:text-[10px] font-bold text-white whitespace-nowrap" style={{ textShadow: `0 0 10px ${color}` }}>{r.name.replace('Costa ', '')}</div>
+                      <div className="text-[7px] md:text-[9px] font-semibold" style={{ color }}>{r.avgYield}%</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── LIVE TICKER ── */}
+      <div className="mb-8 overflow-hidden rounded-lg border" style={{ background: '#080c11', borderColor: '#1c2333' }}>
+        <div className="py-2 overflow-hidden">
+          <div className="animate-ticker flex whitespace-nowrap" style={{ width: 'max-content' }}>
+            {[...tickerTowns, ...tickerTowns].map((t, i) => (
+              <span key={`${t.town}-${i}`} className="inline-flex items-center gap-1 mx-4 text-[10px] md:text-xs" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                <span className="text-white font-semibold">{t.town.split(',')[0]}</span>
+                <span className="text-emerald-400 font-bold">{t.avgScore}pts</span>
+                <span className="text-gray-500">&middot;</span>
+                <span style={{ color: '#a78bfa' }}>{t.avgDisc}% disc</span>
+                <span className="text-gray-500">&middot;</span>
+                <span className="text-emerald-400">{t.avgYield}% yield</span>
+                <span className="text-gray-700 mx-2">&middot;&middot;&middot;</span>
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Regional breakdown */}
@@ -3690,6 +3784,7 @@ function MarketIndexTab({ properties }: { properties: Property[] }) {
       </div>
 
       <p className="text-[9px] text-gray-600 text-right">Last updated: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+    </div>
     </div>
   );
 }

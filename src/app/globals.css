@@ -49,3 +49,23 @@
 .animate-core-breathe {
   animation: core-breathe 2.5s ease-in-out infinite;
 }
+
+/* Market ticker */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker-scroll 60s linear infinite;
+}
+
+/* Region pulse */
+@keyframes region-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+}
+
+.animate-region-pulse {
+  animation: region-pulse 3s ease-in-out infinite;
+}
