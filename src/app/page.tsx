@@ -171,25 +171,20 @@ export default function Explorer() {
       ticking = true;
       requestAnimationFrame(() => {
         const y = window.scrollY;
-        const isM = window.innerWidth < 768;
-        if (isM) {
-          const delta = y - lastScrollY.current;
-          if (delta > 0) {
-            // Scrolling DOWN — hide after passing header, reset up-accumulator
-            scrollUpAccum.current = 0;
-            if (y > headerH && delta > 5) {
-              setMobileHeaderHidden(true);
-            }
-          } else {
-            // Scrolling UP — accumulate distance, only show after 50px of upward scroll
-            scrollUpAccum.current += Math.abs(delta);
-            if (scrollUpAccum.current > 50 || y <= 10) {
-              setMobileHeaderHidden(false);
-              scrollUpAccum.current = 0;
-            }
+        const delta = y - lastScrollY.current;
+        if (delta > 0) {
+          // Scrolling DOWN — hide after passing header, reset up-accumulator
+          scrollUpAccum.current = 0;
+          if (y > headerH && delta > 5) {
+            setMobileHeaderHidden(true);
           }
         } else {
-          setMobileHeaderHidden(false);
+          // Scrolling UP — accumulate distance, only show after 50px of upward scroll
+          scrollUpAccum.current += Math.abs(delta);
+          if (scrollUpAccum.current > 50 || y <= 10) {
+            setMobileHeaderHidden(false);
+            scrollUpAccum.current = 0;
+          }
         }
         lastScrollY.current = y;
         ticking = false;
@@ -511,6 +506,8 @@ export default function Explorer() {
           marginLeft: sidebarCollapsed ? 32 : 240,
           left: 'auto',
           right: 0,
+          transform: mobileHeaderHidden ? `translateY(-${headerH}px)` : 'translateY(0)',
+          transition: 'transform 0.3s ease',
         } : {
           transform: mobileHeaderHidden ? `translateY(-${headerH}px)` : 'translateY(0)',
           transition: 'transform 0.3s ease',
@@ -1028,7 +1025,7 @@ export default function Explorer() {
       {/* CONTENT — padded top (header height) + left (sidebar width on desktop only) */}
       <div
         className={`overflow-x-hidden min-w-0 transition-[margin-right] duration-200 ${preview !== null ? 'md:mr-[480px]' : ''}`}
-        style={{ paddingTop: (!isDesktop && mobileHeaderHidden) ? 0 : headerH, paddingLeft: isDesktop ? (sidebarCollapsed ? 32 : 240) : 0, transition: !isDesktop ? 'padding-top 0.3s ease' : 'none' }}
+        style={{ paddingTop: mobileHeaderHidden ? 0 : headerH, paddingLeft: isDesktop ? (sidebarCollapsed ? 32 : 240) : 0, transition: 'padding-top 0.3s ease' }}
       >
           {(tab === 'whyavena' || (!user && tab === 'deals')) && (
             <div className="px-4 md:px-8 py-8 border-b border-[#1a1a24]">
@@ -3438,13 +3435,13 @@ function CryptoTab() {
   return (
     <div className="max-w-5xl mx-auto">
       {/* Hero — dark */}
-      <div className="px-4 md:px-10 pt-12 pb-14 text-center relative overflow-hidden">
+      <div className="px-4 md:px-10 pt-8 md:pt-12 pb-10 md:pb-14 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #00b9ff 0%, transparent 70%)' }} />
         <div className="relative z-10">
-          <div className="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[3px] mb-6 border" style={{ borderColor: 'rgba(0,185,255,0.3)', color: '#00b9ff', background: 'rgba(0,185,255,0.06)' }}>
+          <div className="inline-block px-3 py-1 rounded-full text-[8px] md:text-[9px] font-bold uppercase tracking-[3px] mb-4 md:mb-6 border" style={{ borderColor: 'rgba(0,185,255,0.3)', color: '#00b9ff', background: 'rgba(0,185,255,0.06)' }}>
             Coming 2026
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 leading-tight">
             <span className="text-white">Tokenized Real Estate</span>
             <br />
             <span style={gradientText}>on Avena Terminal</span>
@@ -3484,7 +3481,7 @@ function CryptoTab() {
       {/* How it works — dark */}
       <div className="px-4 md:px-10 py-12">
         <h3 className="text-lg font-bold mb-8 text-center" style={gradientText}>How Tokenized Property Works</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {[
             { step: '01', title: 'Property Selection', desc: 'Avena scores and selects high-yield Spanish new builds using institutional-grade analysis.' },
             { step: '02', title: 'Legal Wrapper', desc: 'Each property is held by an EU-regulated SPV. Tokens represent shares in the SPV under MiCA compliance.' },
@@ -3492,9 +3489,9 @@ function CryptoTab() {
             { step: '04', title: 'Yield Distribution', desc: 'Rental income is collected, deducted for costs, and distributed to token holders in EURC stablecoin.' },
           ].map((item) => (
             <div key={item.step} className="text-center">
-              <div className="text-3xl font-bold mb-2" style={gradientText}>{item.step}</div>
-              <h4 className="text-white font-semibold text-sm mb-2">{item.title}</h4>
-              <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
+              <div className="text-2xl md:text-3xl font-bold mb-2" style={gradientText}>{item.step}</div>
+              <h4 className="text-white font-semibold text-[11px] md:text-sm mb-1 md:mb-2">{item.title}</h4>
+              <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -3513,8 +3510,8 @@ function CryptoTab() {
             { value: 'MiCA', label: 'EU Compliant' },
           ].map((stat) => (
             <div key={stat.label}>
-              <div className="text-2xl md:text-3xl font-bold mb-1" style={gradientText}>{stat.value}</div>
-              <div className="text-gray-500 text-xs uppercase tracking-wider">{stat.label}</div>
+              <div className="text-xl md:text-3xl font-bold mb-1" style={gradientText}>{stat.value}</div>
+              <div className="text-gray-500 text-[10px] md:text-xs uppercase tracking-wider">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -3526,9 +3523,9 @@ function CryptoTab() {
       {/* Tech stack */}
       <div className="px-4 md:px-10 py-12">
         <h3 className="text-lg font-bold mb-6 text-center" style={gradientText}>Infrastructure</h3>
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-2 md:gap-3">
           {['Polygon PoS', 'ERC-1400 Security Tokens', 'Chainlink Oracles', 'EURC Stablecoin', 'MiCA Framework', 'Spanish SPV Structure', 'KYC/AML Verified'].map((tag) => (
-            <span key={tag} className="px-4 py-2 rounded-full text-xs font-medium border" style={{ borderColor: 'rgba(0,185,255,0.2)', color: '#9CA3AF', background: 'rgba(0,185,255,0.04)' }}>
+            <span key={tag} className="px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-medium border" style={{ borderColor: 'rgba(0,185,255,0.2)', color: '#9CA3AF', background: 'rgba(0,185,255,0.04)' }}>
               {tag}
             </span>
           ))}
@@ -3545,7 +3542,7 @@ function CryptoTab() {
         {submitted ? (
           <div className="text-sm font-bold" style={gradientText}>You&apos;re on the list. We&apos;ll be in touch.</div>
         ) : (
-          <div className="flex gap-2 max-w-md mx-auto">
+          <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
             <input
               type="email"
               placeholder="your@email.com"
