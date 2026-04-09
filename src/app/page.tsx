@@ -3419,7 +3419,7 @@ function CryptoTab() {
       {/* ── THE CORE ── */}
       <div className="flex flex-col items-center justify-center py-12 md:py-20 relative max-w-5xl mx-auto">
         {/* Sonar rings */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: '-2rem' }}>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {[0, 0.8, 1.6].map((delay, i) => (
             <div key={i} className="absolute rounded-full" style={{
               width: 280, height: 280,
