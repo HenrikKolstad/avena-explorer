@@ -1418,7 +1418,17 @@ export default function Explorer() {
           {tab === 'about' && <AboutTab />}
           {tab === 'legal' && <LegalTab />}
           {tab === 'contact' && <ContactTab />}
-          {tab === 'crypto' && <CryptoTab />}
+          {tab === 'crypto' && (
+            <div className="relative">
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center backdrop-blur-md" style={{ background: 'rgba(9,13,18,0.85)' }}>
+                <div className="text-2xl md:text-3xl font-extralight tracking-[0.3em] text-white mb-3">COMING SOON</div>
+                <p className="text-gray-500 text-sm tracking-wide">The Avena Experiment is being prepared.</p>
+              </div>
+              <div className="pointer-events-none select-none">
+                <CryptoTab />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* PREVIEW PANEL */}
