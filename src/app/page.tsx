@@ -3596,7 +3596,7 @@ function MarketIndexTab({ properties }: { properties: Property[] }) {
               <ChevronRight size={14} className={`text-gray-500 transition-transform ${expandedRegion === r.code ? 'rotate-90' : ''}`} />
               <span className="text-white font-medium text-sm flex-1">{r.name}</span>
               <span className="text-gray-400 text-xs">{r.count} props</span>
-              <span className="text-emerald-400 text-xs font-semibold">{r.avgPm2 ? `\u20AC${r.avgPm2.toLocaleString()}/m\u00B2` : ''}</span>
+              <span className="text-emerald-400 text-xs font-semibold">{r.avgPm2 ? <>&euro;{r.avgPm2.toLocaleString()}/m&sup2;</> : ''}</span>
               <span className="text-emerald-400 text-xs font-semibold">{r.avgDisc}% disc</span>
               <span className="text-emerald-400 text-xs font-semibold">{r.avgYield}% yield</span>
               <span className="text-gray-400 text-xs hidden md:inline">{r.bestTown?.split(',')[0]}</span>
@@ -3664,7 +3664,7 @@ function MarketIndexTab({ properties }: { properties: Property[] }) {
                 <td className="px-3 py-2 text-xs"><a href={`/towns/${t.town.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`} className="text-white hover:text-emerald-400 transition-colors">{t.town}</a></td>
                 <td className="px-3 py-2 text-xs text-gray-400">{t.region}</td>
                 <td className="px-3 py-2 text-xs text-gray-400">{t.count}</td>
-                <td className="px-3 py-2 text-xs text-white">\u20AC{t.avgPrice.toLocaleString()}</td>
+                <td className="px-3 py-2 text-xs text-white">&euro;{t.avgPrice.toLocaleString()}</td>
                 <td className="px-3 py-2 text-xs text-emerald-400 font-semibold">{t.avgDisc}%</td>
                 <td className="px-3 py-2 text-xs text-emerald-400 font-semibold">{t.avgYield}%</td>
                 <td className="px-3 py-2 text-xs text-white font-bold">{t.avgScore}</td>
