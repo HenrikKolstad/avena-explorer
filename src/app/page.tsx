@@ -563,17 +563,17 @@ export default function Explorer() {
           {/* Stats strip — row between logo and tagline */}
           <div className="flex items-center justify-between border-t border-[#1c2333] pt-2">
             <div className="text-center">
-              <div className="text-sm font-bold text-emerald-400 font-serif leading-none">{stats.count.toLocaleString()}</div>
+              <div className="text-sm font-bold font-serif leading-none" style={{ color: '#60a5fa' }}>{stats.count.toLocaleString()}</div>
               <div className="text-[7px] uppercase tracking-widest text-gray-600">Properties</div>
             </div>
             <div className="text-center border-l border-[#1c2333] pl-3">
-              <div className="text-sm font-bold text-emerald-400 font-serif leading-none">{stats.avgDisc}%</div>
+              <div className="text-sm font-bold font-serif leading-none" style={{ color: '#60a5fa' }}>{stats.avgDisc}%</div>
               <div className="text-[7px] uppercase tracking-widest text-gray-600">Avg Discount</div>
             </div>
             <div className="text-center border-l border-[#1c2333] pl-3">
               <div className="flex items-center gap-0.5">
                 <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-                <div className="text-sm font-bold text-emerald-400 font-serif leading-none">{stats.newThisWeek}</div>
+                <div className="text-sm font-bold font-serif leading-none" style={{ color: '#60a5fa' }}>{stats.newThisWeek}</div>
               </div>
               <div className="text-[7px] uppercase tracking-widest text-gray-600">New This Week</div>
             </div>
@@ -650,21 +650,21 @@ export default function Explorer() {
           {/* RIGHT — stats + auth — compact when sidebar expanded */}
           <div className={`flex items-center flex-shrink-0 ${sidebarCollapsed ? 'gap-5' : 'gap-2'}`}>
             <div className="text-center">
-              <div className={`font-bold text-emerald-400 font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`}>{stats.count.toLocaleString()}</div>
+              <div className={`font-bold font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`} style={{ color: '#60a5fa' }}>{stats.count.toLocaleString()}</div>
               <div className="text-[9px] uppercase tracking-widest text-gray-500">Properties</div>
             </div>
             <div className={`text-center border-l border-[#1c2333] ${sidebarCollapsed ? 'pl-6' : 'pl-2'}`}>
-              <div className={`font-bold text-emerald-400 font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`}>{stats.avgDisc}%</div>
+              <div className={`font-bold font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`} style={{ color: '#60a5fa' }}>{stats.avgDisc}%</div>
               <div className="text-[9px] uppercase tracking-widest text-gray-500">Avg Disc</div>
             </div>
             <div className={`text-center border-l border-[#1c2333] ${sidebarCollapsed ? 'pl-6' : 'pl-2'}`}>
-              <div className={`font-bold text-emerald-400 font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`}>{Math.round(stats.bestScore)}</div>
+              <div className={`font-bold font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`} style={{ color: '#60a5fa' }}>{Math.round(stats.bestScore)}</div>
               <div className="text-[9px] uppercase tracking-widest text-gray-500">Best Score</div>
             </div>
             <div className={`text-center border-l border-[#1c2333] ${sidebarCollapsed ? 'pl-6' : 'pl-2'}`}>
               <div className="flex items-center justify-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-                <div className={`font-bold text-emerald-400 font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`}>{stats.newThisWeek}</div>
+                <div className={`font-bold font-serif ${sidebarCollapsed ? 'text-3xl' : 'text-base'}`} style={{ color: '#60a5fa' }}>{stats.newThisWeek}</div>
               </div>
               <div className="text-[9px] uppercase tracking-widest text-gray-500">New/Week</div>
             </div>
