@@ -1051,84 +1051,90 @@ export default function Explorer() {
         className={`overflow-x-hidden min-w-0 transition-[margin-right] duration-200 ${preview !== null ? 'md:mr-[480px]' : ''}`}
         style={{ paddingTop: mobileHeaderHidden ? 0 : headerH, paddingLeft: isDesktop ? (sidebarCollapsed ? 32 : 240) : 0, transition: 'padding-top 0.3s ease' }}
       >
-          {(tab === 'whyavena' || (!user && tab === 'deals')) && (
-            <div className="px-4 md:px-8 py-8 border-b border-[#1c2333]">
-              {/* Headline */}
-              <div className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold font-serif text-white mb-2">
+          {(tab === 'whyavena' || (!user && tab === 'deals')) && (() => {
+            const [whyOpen, setWhyOpen] = [showWelcomePro, setShowWelcomePro]; // reuse existing state
+            return (
+            <div className="px-4 md:px-8 py-6 border-b border-[#1c2333]">
+              {/* Collapsible headline — only collapses on mobile */}
+              <button onClick={() => !isDesktop && setWhyOpen(!whyOpen)} className="w-full text-center group" style={{ cursor: isDesktop ? 'default' : 'pointer' }}>
+                <h2 className="text-xl md:text-2xl font-bold font-serif text-white mb-1 inline-flex items-center gap-2">
                   Every question answered before you invest
+                  <ChevronRight size={18} className={`text-gray-500 transition-transform duration-200 md:hidden ${whyOpen ? 'rotate-90' : ''}`} />
                 </h2>
-                <p className="text-gray-500 text-sm md:text-base max-w-2xl mx-auto">
+                <p className="text-gray-500 text-xs md:text-sm max-w-2xl mx-auto">
                   Avena Terminal analyses 1,800+ new builds using institutional-grade scoring.
-                  Here&apos;s what you get access to.
+                  {!whyOpen && !isDesktop && <span className="text-gray-600 ml-1">Tap to learn more.</span>}
                 </p>
-              </div>
+              </button>
 
-              {/* 8 Questions Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-                {([
-                  { q: 'Is this a good deal?', a: 'Deal scores powered by hedonic regression — the same pricing model used by institutional investors.', icon: <BarChart3 size={22} />, color: '#10b981' },
-                  { q: 'Will it make money?', a: 'Rental yields from real Airbnb & Booking.com data. Gross and net, not guesses.', icon: <Coins size={22} />, color: '#3b82f6' },
-                  { q: 'Can I afford it?', a: 'Mortgage simulator with live Spanish rates. See monthly payments, cashflow, and cash-on-cash return.', icon: <Calculator size={22} />, color: '#8b5cf6' },
-                  { q: 'What should I know?', a: 'AI investment memo per property — strengths, risks, 5-year price prediction, comparable position.', icon: <Sparkles size={22} />, color: '#f59e0b' },
-                  { q: 'What are the costs?', a: 'Full Spanish purchase cost breakdown. IVA, notary, legal, ITP. No surprises.', icon: <FileText size={22} />, color: '#ef4444' },
-                  { q: 'Which area suits me?', a: 'Interactive map with color-coded deal scores. Find your ideal location fast.', icon: <Map size={22} />, color: '#06b6d4' },
-                  { q: 'How liquid is it?', a: 'Risk scoring includes developer track record, off-plan exposure, and market velocity.', icon: <Zap size={22} />, color: '#84cc16' },
-                  { q: 'Who do I trust?', a: 'One platform. One contact. Avena routes your inquiry to the right agency behind the scenes.', icon: <ArrowUpRight size={22} />, color: '#10B981' },
-                ] as { q: string; a: string; icon: React.ReactNode; color: string }[]).map(({ q, a, icon, color }) => (
-                  <div key={q} className="bg-[#0d1117] border border-[#1c2333] rounded-xl p-4 hover:border-[#1c2333] transition-all">
-                    <div className="mb-3" style={{ color }}>{icon}</div>
-                    <div className="font-semibold text-white text-sm mb-1.5" style={{ color }}>{q}</div>
-                    <div className="text-gray-500 text-[11px] leading-relaxed">{a}</div>
+              {/* Expandable on mobile, always open on desktop */}
+              {(whyOpen || isDesktop) && (
+                <div className="mt-6 animate-slide-up">
+                  {/* 8 Questions Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    {([
+                      { q: 'Is this a good deal?', a: 'Deal scores powered by hedonic regression — the same pricing model used by institutional investors.', icon: <BarChart3 size={20} />, color: '#10b981' },
+                      { q: 'Will it make money?', a: 'Rental yields from real Airbnb & Booking.com data. Gross and net, not guesses.', icon: <Coins size={20} />, color: '#3b82f6' },
+                      { q: 'Can I afford it?', a: 'Mortgage simulator with live Spanish rates. See monthly payments, cashflow, and cash-on-cash return.', icon: <Calculator size={20} />, color: '#8b5cf6' },
+                      { q: 'What should I know?', a: 'AI investment memo per property — strengths, risks, 5-year price prediction, comparable position.', icon: <Sparkles size={20} />, color: '#f59e0b' },
+                      { q: 'What are the costs?', a: 'Full Spanish purchase cost breakdown. IVA, notary, legal, ITP. No surprises.', icon: <FileText size={20} />, color: '#ef4444' },
+                      { q: 'Which area suits me?', a: 'Interactive map with color-coded deal scores. Find your ideal location fast.', icon: <Map size={20} />, color: '#06b6d4' },
+                      { q: 'How liquid is it?', a: 'Risk scoring includes developer track record, off-plan exposure, and market velocity.', icon: <Zap size={20} />, color: '#84cc16' },
+                      { q: 'Who do I trust?', a: 'One platform. One contact. Avena routes your inquiry to the right agency behind the scenes.', icon: <ArrowUpRight size={20} />, color: '#10B981' },
+                    ] as { q: string; a: string; icon: React.ReactNode; color: string }[]).map(({ q, a, icon, color }) => (
+                      <div key={q} className="bg-[#0d1117] border border-[#1c2333] rounded-xl p-3.5 hover:border-[#1c2333] transition-all">
+                        <div className="mb-2" style={{ color }}>{icon}</div>
+                        <div className="font-semibold text-sm mb-1" style={{ color }}>{q}</div>
+                        <div className="text-gray-500 text-[10px] leading-relaxed">{a}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              {/* Stats bar */}
-              <div className="flex flex-wrap justify-center gap-6 md:gap-12 py-6 border-y border-[#1c2333] mb-8">
-                {[
-                  { label: 'New Builds Scored', value: '1,800+' },
-                  { label: 'Data Sources', value: '6+' },
-                  { label: 'Scoring Factors', value: '25+' },
-                  { label: 'Avg Time Saved', value: '40hrs' },
-                ].map(({ label, value }) => (
-                  <div key={label} className="text-center">
-                    <div className="text-2xl md:text-3xl font-bold text-emerald-400 font-serif">{value}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-gray-600 mt-0.5">{label}</div>
+                  {/* Stats bar */}
+                  <div className="flex flex-wrap justify-center gap-6 md:gap-12 py-5 border-y border-[#1c2333] mb-6">
+                    {[
+                      { label: 'New Builds Scored', value: '1,800+' },
+                      { label: 'Data Sources', value: '6+' },
+                      { label: 'Scoring Factors', value: '25+' },
+                      { label: 'Avg Time Saved', value: '40hrs' },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="text-center">
+                        <div className="text-xl md:text-2xl font-bold text-white font-serif">{value}</div>
+                        <div className="text-[9px] uppercase tracking-widest text-gray-600 mt-0.5">{label}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
 
-              {/* CTA */}
-              <div className="text-center">
-                <p className="text-gray-500 text-sm mb-4">
-                  Join investors from Norway, UK, Sweden, Netherlands and Germany already using Avena Terminal.
-                </p>
+              {/* CTA — always visible */}
+              <div className="text-center mt-4">
                 <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                   <button
                     onClick={() => setShowPaywall(true)}
-                    className="px-8 py-3.5 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] transition-transform"
+                    className="px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] transition-transform"
                     style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
                     Start PRO — €149/month →
                   </button>
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className="px-8 py-3.5 rounded-xl font-semibold text-emerald-400 text-sm border border-[#10B981]/30 hover:border-[#10B981]/60 transition-all">
+                    className="px-8 py-3 rounded-xl font-semibold text-emerald-400 text-sm border border-[#10B981]/30 hover:border-[#10B981]/60 transition-all">
                     Sign In
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-700 mt-3">Cancel anytime · Secured by Stripe · First 5 deals free without account</p>
+                <p className="text-[10px] text-gray-700 mt-2">Cancel anytime · Secured by Stripe · First 5 deals free without account</p>
               </div>
 
               {/* Blurred preview hint */}
-              <div className="mt-8 text-center">
+              <div className="mt-4 text-center">
                 <div className="inline-flex items-center gap-2 text-[11px] text-gray-600 border border-[#1c2333] rounded-full px-4 py-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
                   {stats.count} properties live · Scroll down for a free preview
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {tab === 'deals' && (
             <>
