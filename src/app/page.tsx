@@ -179,9 +179,9 @@ export default function Explorer() {
             setMobileHeaderHidden(true);
           }
         } else {
-          // Scrolling UP — accumulate distance, only show after 50px of upward scroll
+          // Scrolling UP — accumulate distance, only show after 200px of deliberate upward scroll
           scrollUpAccum.current += Math.abs(delta);
-          if (scrollUpAccum.current > 50 || y <= 10) {
+          if (scrollUpAccum.current > 200 || y <= 10) {
             setMobileHeaderHidden(false);
             scrollUpAccum.current = 0;
           }
@@ -846,6 +846,7 @@ export default function Explorer() {
                     <NavItem icon="💎" label="Luxury 1M+" isActive={tab === 'luxury'} onClick={() => go('luxury')} badge="PRO" />
                     <NavItem icon="🗺️" label="Map" isActive={tab === 'map'} onClick={() => go('map')} badge="PRO" />
                     <NavItem icon="📁" label="Portfolio" isActive={tab === 'portfolio'} onClick={() => go('portfolio')} badge="PRO" />
+                    <NavItem icon="🪙" label="Crypto" isActive={tab === 'crypto'} onClick={() => go('crypto')} badge="Soon" />
 
                     {/* MARKET */}
                     <SectionHeader label="MARKET" />
@@ -875,7 +876,6 @@ export default function Explorer() {
                     <NavItem icon="⚖️" label="Legal and Security" isActive={tab === 'legal'} onClick={() => go('legal')} />
                     <NavItem icon="✉️" label="Contact" isActive={tab === 'contact'} onClick={() => go('contact')} />
                     <NavItem icon="📖" label="About" isActive={tab === 'about'} onClick={() => go('about')} />
-                    <NavItem icon="🪙" label="Crypto" isActive={tab === 'crypto'} onClick={() => go('crypto')} badge="Soon" />
                   </div>
 
                   {/* Upgrade CTA for non-paid logged-in users */}
@@ -3383,6 +3383,7 @@ function CryptoTab() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!email.includes('@') || submitting) return;
@@ -3398,98 +3399,88 @@ function CryptoTab() {
     setSubmitting(false);
   };
 
-  const gradientText = { background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } as React.CSSProperties;
-  const gradientBg = 'linear-gradient(135deg, #00b9ff, #9fe870)';
+  const gt = { background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } as React.CSSProperties;
+  const gBg = 'linear-gradient(135deg, #00b9ff, #9fe870)';
+  const divider = <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #00b9ff40, #9fe87040, transparent)' }} />;
 
-  const cards = [
-    {
-      title: 'Fractional Ownership',
-      desc: 'Own a piece of premium Spanish real estate from as little as \u20AC100. Diversify across multiple properties without the full capital outlay.',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <defs><linearGradient id="cg" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stopColor="#00b9ff"/><stop offset="100%" stopColor="#9fe870"/></linearGradient></defs>
-          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-        </svg>
-      ),
-    },
-    {
-      title: 'Property-Backed Tokens',
-      desc: 'Each token represents verified ownership in a real, income-generating Spanish property. Trade 24/7 on secondary markets.',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 010 4H9.5"/><path d="M9 13.5h5a2 2 0 010 0"/>
-        </svg>
-      ),
-    },
-    {
-      title: 'On-Chain Yield',
-      desc: 'Earn rental income distributed automatically via smart contracts. Transparent, auditable, and paid in your preferred stablecoin.',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
-        </svg>
-      ),
-    },
-  ];
+  const svgGrad = <defs><linearGradient id="cg" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stopColor="#00b9ff"/><stop offset="100%" stopColor="#9fe870"/></linearGradient></defs>;
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Hero — dark */}
-      <div className="px-4 md:px-10 pt-8 md:pt-12 pb-10 md:pb-14 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #00b9ff 0%, transparent 70%)' }} />
+      {/* Hero */}
+      <div className="px-4 md:px-10 pt-8 md:pt-14 pb-10 md:pb-16 text-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 50% 30%, #00b9ff 0%, transparent 70%)' }} />
         <div className="relative z-10">
           <div className="inline-block px-3 py-1 rounded-full text-[8px] md:text-[9px] font-bold uppercase tracking-[3px] mb-4 md:mb-6 border" style={{ borderColor: 'rgba(0,185,255,0.3)', color: '#00b9ff', background: 'rgba(0,185,255,0.06)' }}>
             Coming 2026
           </div>
           <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 leading-tight">
-            <span className="text-white">Tokenized Real Estate</span>
-            <br />
-            <span style={gradientText}>on Avena Terminal</span>
+            <span className="text-white">Tokenized Real Estate</span><br />
+            <span style={gt}>on Avena Terminal</span>
           </h2>
-          <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-            Fractional ownership of scored Spanish new builds. Property-backed security tokens.
-            Rental yield distributed on-chain. Built for the MiCA era.
+          <p className="text-gray-400 text-xs md:text-base max-w-2xl mx-auto leading-relaxed">
+            Fractional ownership of scored Spanish new builds. Property-backed ERC-3643 security tokens
+            on Polygon. Rental yield distributed in EURC stablecoin. Built for the MiCA era.
           </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3 text-[10px] md:text-[11px] text-gray-500">
+            <span>Deloitte projects <span className="text-white font-semibold">$4T</span> tokenized RE by 2035</span>
+            <span className="text-gray-700">|</span>
+            <span>Spain&apos;s digital RE market: <span className="text-white font-semibold">$1.6B</span></span>
+          </div>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #00b9ff40, #9fe87040, transparent)' }} />
+      {divider}
 
-      {/* Cards — light section */}
-      <div className="px-4 md:px-10 py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #111118 100%)' }}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {cards.map((card) => (
-            <div key={card.title} className="group relative rounded-2xl p-6 border border-[#1f1f2a] hover:border-[#00b9ff30] transition-all duration-300" style={{ background: 'linear-gradient(145deg, #13131d 0%, #0e0e16 100%)' }}>
+      {/* Three pillars */}
+      <div className="px-4 md:px-10 py-10 md:py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #111118 100%)' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+          {[
+            {
+              title: 'Fractional Ownership',
+              desc: 'Invest from \u20AC100 in scored Spanish new builds. Each token represents shares in a Sociedad Limitada (S.L.) that holds legal title in the Registro de la Propiedad.',
+              icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{svgGrad}<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+            },
+            {
+              title: 'Security Tokens',
+              desc: 'ERC-3643 compliant tokens on Polygon with on-chain identity (ONCHAINID), KYC/AML verification, and automated transfer restrictions. The standard behind $32B+ in tokenized assets.',
+              icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{svgGrad}<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+            },
+            {
+              title: 'On-Chain Yield',
+              desc: 'Rental income collected, costs deducted, and net yield distributed automatically to token holders in EURC (Circle) stablecoin. Transparent, auditable, MiCA-compliant.',
+              icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{svgGrad}<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+            },
+          ].map((card) => (
+            <div key={card.title} className="group relative rounded-2xl p-5 md:p-6 border border-[#1f1f2a] hover:border-[#00b9ff30] transition-all duration-300" style={{ background: 'linear-gradient(145deg, #13131d 0%, #0e0e16 100%)' }}>
               <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(0,185,255,0.04) 0%, transparent 70%)' }} />
               <div className="relative z-10">
-                <div className="mb-4">{card.icon}</div>
-                <div className="flex items-center gap-2 mb-3">
-                  <h3 className="font-bold text-base text-white">{card.title}</h3>
-                  <span className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,185,255,0.1)', color: '#00b9ff', border: '1px solid rgba(0,185,255,0.25)' }}>In Development</span>
+                <div className="mb-3">{card.icon}</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="font-bold text-sm md:text-base text-white">{card.title}</h3>
+                  <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(0,185,255,0.1)', color: '#00b9ff', border: '1px solid rgba(0,185,255,0.25)' }}>In Development</span>
                 </div>
-                <p className="text-gray-400 text-sm leading-relaxed">{card.desc}</p>
+                <p className="text-gray-400 text-xs md:text-sm leading-relaxed">{card.desc}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #00b9ff40, #9fe87040, transparent)' }} />
+      {divider}
 
-      {/* How it works — dark */}
-      <div className="px-4 md:px-10 py-12">
-        <h3 className="text-lg font-bold mb-8 text-center" style={gradientText}>How Tokenized Property Works</h3>
+      {/* How it works — 4 steps */}
+      <div className="px-4 md:px-10 py-10 md:py-12">
+        <h3 className="text-base md:text-lg font-bold mb-8 text-center" style={gt}>How Tokenized Property Works</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {[
-            { step: '01', title: 'Property Selection', desc: 'Avena scores and selects high-yield Spanish new builds using institutional-grade analysis.' },
-            { step: '02', title: 'Legal Wrapper', desc: 'Each property is held by an EU-regulated SPV. Tokens represent shares in the SPV under MiCA compliance.' },
-            { step: '03', title: 'Token Issuance', desc: 'ERC-1400 security tokens are issued on Polygon. Each token represents fractional ownership with full KYC/AML.' },
-            { step: '04', title: 'Yield Distribution', desc: 'Rental income is collected, deducted for costs, and distributed to token holders in EURC stablecoin.' },
+            { step: '01', title: 'Score & Select', desc: 'Avena\'s algorithm scores 1,867+ new builds on value, yield, location, quality, and risk. Only top properties qualify for tokenization.' },
+            { step: '02', title: 'SPV & Legal', desc: 'A Spanish S.L. is created per property. Title registered at the Registro de la Propiedad. Tokens represent shares in the S.L. under EU securities law.' },
+            { step: '03', title: 'Token Issuance', desc: 'ERC-3643 security tokens issued on Polygon. Identity verified via ONCHAINID. Full KYC/AML through SEPBLAC-compliant providers.' },
+            { step: '04', title: 'Yield Payout', desc: 'Rental income collected monthly. Costs deducted (management, IBI, insurance, community). Net yield distributed in EURC to token holder wallets.' },
           ].map((item) => (
             <div key={item.step} className="text-center">
-              <div className="text-2xl md:text-3xl font-bold mb-2" style={gradientText}>{item.step}</div>
+              <div className="text-2xl md:text-3xl font-bold mb-2" style={gt}>{item.step}</div>
               <h4 className="text-white font-semibold text-[11px] md:text-sm mb-1 md:mb-2">{item.title}</h4>
               <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{item.desc}</p>
             </div>
@@ -3497,50 +3488,139 @@ function CryptoTab() {
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #00b9ff40, #9fe87040, transparent)' }} />
+      {divider}
 
-      {/* Stats — light */}
-      <div className="px-4 md:px-10 py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #111118 100%)' }}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      {/* Key metrics */}
+      <div className="px-4 md:px-10 py-10 md:py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #111118 100%)' }}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
           {[
-            { value: '1,867', label: 'Properties Scored' },
-            { value: '6.2%', label: 'Avg. Gross Yield' },
-            { value: 'ERC-1400', label: 'Token Standard' },
-            { value: 'MiCA', label: 'EU Compliant' },
+            { value: '$4T', label: 'Projected Market 2035', sub: 'Deloitte forecast' },
+            { value: '1,867', label: 'Properties Scored', sub: 'Avena pipeline' },
+            { value: '5\u20138%', label: 'Gross Yield Range', sub: 'Spanish coastal' },
+            { value: '$32B+', label: 'ERC-3643 Assets', sub: 'Global standard' },
           ].map((stat) => (
             <div key={stat.label}>
-              <div className="text-xl md:text-3xl font-bold mb-1" style={gradientText}>{stat.value}</div>
-              <div className="text-gray-500 text-[10px] md:text-xs uppercase tracking-wider">{stat.label}</div>
+              <div className="text-xl md:text-3xl font-bold mb-0.5" style={gt}>{stat.value}</div>
+              <div className="text-white text-[10px] md:text-xs font-medium">{stat.label}</div>
+              <div className="text-gray-600 text-[9px] md:text-[10px]">{stat.sub}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #00b9ff40, #9fe87040, transparent)' }} />
+      {divider}
 
-      {/* Tech stack */}
-      <div className="px-4 md:px-10 py-12">
-        <h3 className="text-lg font-bold mb-6 text-center" style={gradientText}>Infrastructure</h3>
-        <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-          {['Polygon PoS', 'ERC-1400 Security Tokens', 'Chainlink Oracles', 'EURC Stablecoin', 'MiCA Framework', 'Spanish SPV Structure', 'KYC/AML Verified'].map((tag) => (
-            <span key={tag} className="px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-medium border" style={{ borderColor: 'rgba(0,185,255,0.2)', color: '#9CA3AF', background: 'rgba(0,185,255,0.04)' }}>
-              {tag}
-            </span>
+      {/* Regulatory & Legal */}
+      <div className="px-4 md:px-10 py-10 md:py-12">
+        <h3 className="text-base md:text-lg font-bold mb-6 text-center" style={gt}>EU Regulatory Framework</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+          {[
+            { title: 'MiCA Regulation', desc: 'Fully applicable since December 2024. Property tokens classified as securities under MiFID II. Stablecoin distributions (EURC) regulated as e-money tokens under MiCA.' },
+            { title: 'Spanish Securities Law', desc: 'CNMV authorization required for token issuance. Prospectus exemption available for offers under \u20AC8M per property per year. DLT securities issued under LMVSI (2023).' },
+            { title: 'SPV Structure', desc: 'Each property held by a Sociedad Limitada (S.L.). Token holders own shares in the S.L. Legal title stays in the Registro de la Propiedad under the SPV name.' },
+            { title: 'KYC/AML Compliance', desc: 'Regulated by SEPBLAC under Law 10/2010. All token holders complete identity verification before purchase. Ongoing transaction monitoring and suspicious activity reporting.' },
+          ].map((item) => (
+            <div key={item.title} className="rounded-xl p-4 md:p-5 border border-[#1f1f2a]" style={{ background: '#0e0e16' }}>
+              <h4 className="text-white font-semibold text-xs md:text-sm mb-2">{item.title}</h4>
+              <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{item.desc}</p>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #00b9ff40, #9fe87040, transparent)' }} />
+      {divider}
 
-      {/* Email capture — light */}
-      <div className="px-4 md:px-10 py-14 text-center" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #111118 100%)' }}>
+      {/* Market landscape */}
+      <div className="px-4 md:px-10 py-10 md:py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #111118 100%)' }}>
+        <h3 className="text-base md:text-lg font-bold mb-6 text-center" style={gt}>Market Landscape</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+          {[
+            { name: 'RealT', region: 'United States', stat: '970+ properties tokenized', detail: '65,000+ investors. $50 minimum. Weekly yield in USDC on Gnosis Chain. Delaware Series LLC per property.' },
+            { name: 'Blocksquare', region: 'Europe', stat: '$200M+ tokenized', detail: 'White-label SaaS for marketplace operators. EU-compliant Luxembourg framework. Integrated with land registries.' },
+            { name: 'OpenBrick', region: 'Spain', stat: 'BME/SIX-backed', detail: 'Founded by Grupo Lar + Renta 4 Banco. Will operate under EU DLT Pilot Regime via Iberclear. Madrid rental focus.' },
+            { name: 'Brickken', region: 'Barcelona', stat: '$500M+ tokenized', detail: '150+ clients across 30 countries. Token Suite platform. 280% revenue growth 2025. EBITDA-positive.' },
+          ].map((p) => (
+            <div key={p.name} className="rounded-xl p-4 md:p-5 border border-[#1f1f2a] flex flex-col" style={{ background: '#0e0e16' }}>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-white font-bold text-sm">{p.name}</h4>
+                <span className="text-[8px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,185,255,0.08)', color: '#00b9ff', border: '1px solid rgba(0,185,255,0.2)' }}>{p.region}</span>
+              </div>
+              <div className="text-xs font-semibold mb-1" style={gt}>{p.stat}</div>
+              <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{p.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {divider}
+
+      {/* Tech stack */}
+      <div className="px-4 md:px-10 py-10 md:py-12">
+        <h3 className="text-base md:text-lg font-bold mb-6 text-center" style={gt}>Infrastructure Stack</h3>
+        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8">
+          {['Polygon PoS', 'ERC-3643 / T-REX', 'ONCHAINID', 'Chainlink Oracles', 'EURC (Circle)', 'Fireblocks Custody', 'SEPBLAC KYC/AML', 'Spanish S.L. SPV', 'CNMV Authorized'].map((tag) => (
+            <span key={tag} className="px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-xs font-medium border" style={{ borderColor: 'rgba(0,185,255,0.2)', color: '#9CA3AF', background: 'rgba(0,185,255,0.04)' }}>
+              {tag}
+            </span>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+          {[
+            { label: 'Token Standard', value: 'ERC-3643', desc: 'Modular compliance. Identity layer. Transfer restrictions. $32B+ deployed globally.' },
+            { label: 'Network', value: 'Polygon', desc: 'Sub-cent gas fees. 420+ enterprise deployments. Ethereum security via checkpoints.' },
+            { label: 'Yield Currency', value: 'EURC', desc: 'Circle\'s MiCA-compliant euro stablecoin. 41% euro stablecoin market share. No FX conversion.' },
+          ].map((item) => (
+            <div key={item.label} className="rounded-xl p-4 border border-[#1f1f2a]" style={{ background: '#0e0e16' }}>
+              <div className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">{item.label}</div>
+              <div className="text-lg font-bold mb-1" style={gt}>{item.value}</div>
+              <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {divider}
+
+      {/* Avena advantage */}
+      <div className="px-4 md:px-10 py-10 md:py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #111118 100%)' }}>
+        <h3 className="text-base md:text-lg font-bold mb-6 text-center" style={gt}>The Avena Advantage</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+          <div className="rounded-xl p-5 border border-[#1f1f2a]" style={{ background: '#0e0e16' }}>
+            <h4 className="text-white font-bold text-sm mb-3">Pre-Scored Pipeline</h4>
+            <p className="text-gray-400 text-xs leading-relaxed mb-3">
+              No other Spanish tokenization platform has a ready pipeline of 1,867 investment-scored properties with rental yield data, sub-scores, and market benchmarks.
+            </p>
+            <p className="text-gray-400 text-xs leading-relaxed">
+              Current Spanish projects are one-off deals. Avena can tokenize at scale from day one, selecting only top-scoring assets for maximum investor returns.
+            </p>
+          </div>
+          <div className="rounded-xl p-5 border border-[#1f1f2a]" style={{ background: '#0e0e16' }}>
+            <h4 className="text-white font-bold text-sm mb-3">Revenue Model</h4>
+            <div className="space-y-2">
+              {[
+                ['Token issuance', '1\u20133% of property value'],
+                ['Transaction fee', '0.5\u20132% per trade'],
+                ['Management fee', '2\u20135% of gross rental'],
+                ['Yield distribution', 'Automated via smart contract'],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between text-xs">
+                  <span className="text-gray-500">{label}</span>
+                  <span className="text-white font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {divider}
+
+      {/* Email capture */}
+      <div className="px-4 md:px-10 py-12 md:py-14 text-center">
         <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Get Early Access</h3>
-        <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">Be the first to invest in tokenized Spanish real estate when we launch.</p>
+        <p className="text-gray-500 text-xs md:text-sm mb-6 max-w-md mx-auto">Be the first to invest in tokenized Spanish real estate when we launch.</p>
         {submitted ? (
-          <div className="text-sm font-bold" style={gradientText}>You&apos;re on the list. We&apos;ll be in touch.</div>
+          <div className="text-sm font-bold" style={gt}>You&apos;re on the list. We&apos;ll be in touch.</div>
         ) : (
           <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
             <input
@@ -3558,7 +3638,7 @@ function CryptoTab() {
               onClick={handleSubmit}
               disabled={submitting}
               className="px-6 py-3 rounded-lg font-bold text-sm transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ background: gradientBg, color: '#0a0a10' }}
+              style={{ background: gBg, color: '#0a0a10' }}
             >
               {submitting ? '...' : 'Notify Me'}
             </button>
@@ -3568,7 +3648,7 @@ function CryptoTab() {
 
       {/* Footer */}
       <div className="px-4 md:px-10 py-6 text-center">
-        <p className="text-[10px] text-gray-600 tracking-wide">Built on MiCA-compliant infrastructure &middot; EU regulated &middot; Avena Estate</p>
+        <p className="text-[9px] md:text-[10px] text-gray-600 tracking-wide">Built on MiCA-compliant infrastructure &middot; EU regulated &middot; CNMV framework &middot; Avena Estate</p>
       </div>
     </div>
   );
