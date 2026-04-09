@@ -3825,14 +3825,14 @@ function CryptoTab() {
     <div className="w-full" style={{ background: '#090d12' }}>
 
       {/* ── TITLE BAR ── */}
-      <div className="text-center pt-12 md:pt-16 pb-8 max-w-5xl mx-auto px-4">
+      <div className="text-center pt-12 md:pt-16 pb-8 px-4">
         <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.3em] mb-3" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>THE AVENA EXPERIMENT</h1>
         <p className="text-gray-500 text-xs md:text-sm tracking-[0.15em]">One property. One raise. One outcome.</p>
         <div className="h-px w-full mt-8" style={{ background: '#1a2332' }} />
       </div>
 
       {/* ── THE CORE ── */}
-      <div className="flex flex-col items-center justify-center py-12 md:py-20 relative max-w-5xl mx-auto">
+      <div className="flex flex-col items-center justify-center py-12 md:py-20 relative">
         {/* Sonar rings */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {[0, 0.8, 1.6].map((delay, i) => (
