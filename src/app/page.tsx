@@ -3372,332 +3372,171 @@ function ContactTab() {
   );
 }
 
+
 function CryptoTab() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [walletModal, setWalletModal] = useState(false);
 
   const handleSubmit = async () => {
     if (!email.includes('@') || submitting) return;
     setSubmitting(true);
     try {
-      await fetch('/api/email-capture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'crypto' }),
-      });
+      if (supabase) {
+        await supabase.from('email_captures').upsert({ email: email.toLowerCase().trim(), source: 'crypto' }, { onConflict: 'email' });
+      }
       setSubmitted(true);
-    } catch { /* ignore */ }
+    } catch { /* silent */ }
     setSubmitting(false);
   };
 
-  const gt = { background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } as React.CSSProperties;
-  const gBg = 'linear-gradient(135deg, #00b9ff, #9fe870)';
-  const divider = <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #00b9ff40, #9fe87040, transparent)' }} />;
-
-  const svgGrad = <defs><linearGradient id="cg" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stopColor="#00b9ff"/><stop offset="100%" stopColor="#9fe870"/></linearGradient></defs>;
+  const fillPct = 40;
+  const fillY = 100 - fillPct;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* The Core — animated orb hero */}
-      {(() => {
-        const fillPct = 34;
-        const fillY = 100 - fillPct;
-        return (
-          <div className="flex flex-col items-center justify-center py-16 md:py-24 relative" style={{ background: '#090d12' }}>
-            {/* Sonar rings */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              {[0, 0.8, 1.6].map((delay, i) => (
-                <div key={i} className="absolute rounded-full border" style={{
-                  width: 220, height: 220,
-                  borderColor: 'rgba(16,185,129,0.25)',
-                  animation: `core-sonar 3s ease-out ${delay}s infinite`,
-                }} />
-              ))}
-            </div>
+    <div style={{ background: '#090d12' }}>
 
-            {/* Orb */}
-            <div className="relative animate-core-breathe animate-core-glow" style={{ width: 200, height: 200 }}>
-              <svg viewBox="0 0 200 200" className="w-full h-full">
-                <defs>
-                  <clipPath id="orbClip"><circle cx="100" cy="100" r="95" /></clipPath>
-                  <radialGradient id="orbGlow" cx="50%" cy="40%" r="50%">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
-                  </radialGradient>
-                  <linearGradient id="fillGrad" x1="0" y1="1" x2="0" y2="0">
-                    <stop offset="0%" stopColor="#10B981" />
-                    <stop offset="100%" stopColor="#059669" />
-                  </linearGradient>
-                </defs>
+      {/* ── TITLE BAR ── */}
+      <div className="text-center pt-12 md:pt-16 pb-8">
+        <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.3em] mb-3" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>THE AVENA EXPERIMENT</h1>
+        <p className="text-gray-500 text-xs md:text-sm tracking-[0.15em]">One property. One raise. One outcome.</p>
+        <div className="h-px w-full mt-8" style={{ background: '#1a2332' }} />
+      </div>
 
-                {/* Outer ring */}
-                <circle cx="100" cy="100" r="97" fill="none" stroke="#10B981" strokeWidth="1" opacity="0.2" />
+      {/* ── THE CORE ── */}
+      <div className="flex flex-col items-center justify-center py-12 md:py-20 relative">
+        {/* Sonar rings */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: '-2rem' }}>
+          {[0, 0.8, 1.6].map((delay, i) => (
+            <div key={i} className="absolute rounded-full" style={{
+              width: 280, height: 280,
+              border: '1px solid rgba(16,185,129,0.2)',
+              animation: `core-sonar 3.5s ease-out ${delay}s infinite`,
+            }} />
+          ))}
+        </div>
 
-                {/* Dark unfilled background */}
-                <circle cx="100" cy="100" r="95" fill="#0d1117" clipPath="url(#orbClip)" />
+        {/* Orb container */}
+        <div className="relative animate-core-breathe" style={{
+          width: 280, height: 280,
+          boxShadow: '0 0 40px #10B98155, 0 0 80px #10B98133, 0 0 120px #10B98122',
+          borderRadius: '50%',
+        }}>
+          <svg viewBox="0 0 200 200" className="w-full h-full">
+            <defs>
+              <clipPath id="orbClip"><circle cx="100" cy="100" r="98" /></clipPath>
+              <linearGradient id="fillGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stopColor="#10B981" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#059669" stopOpacity="0.7" />
+              </linearGradient>
+              <radialGradient id="orbSheen" cx="40%" cy="35%" r="50%">
+                <stop offset="0%" stopColor="white" stopOpacity="0.06" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </radialGradient>
+            </defs>
 
-                {/* Liquid fill */}
-                <g clipPath="url(#orbClip)">
-                  <rect x="0" y={fillY * 2} width="200" height={200 - fillY * 2 + 10} fill="url(#fillGrad)" opacity="0.85" />
-                  {/* Wave effect on top of fill */}
-                  <path
-                    d={`M 0,${fillY * 2} Q 50,${fillY * 2 - 6} 100,${fillY * 2} Q 150,${fillY * 2 + 6} 200,${fillY * 2} L 200,${fillY * 2 + 2} Q 150,${fillY * 2 + 8} 100,${fillY * 2 + 2} Q 50,${fillY * 2 - 4} 0,${fillY * 2 + 2} Z`}
-                    fill="url(#fillGrad)" opacity="0.5">
-                    <animate attributeName="d"
-                      values={`M 0,${fillY * 2} Q 50,${fillY * 2 - 6} 100,${fillY * 2} Q 150,${fillY * 2 + 6} 200,${fillY * 2};M 0,${fillY * 2} Q 50,${fillY * 2 + 6} 100,${fillY * 2} Q 150,${fillY * 2 - 6} 200,${fillY * 2};M 0,${fillY * 2} Q 50,${fillY * 2 - 6} 100,${fillY * 2} Q 150,${fillY * 2 + 6} 200,${fillY * 2}`}
-                      dur="3s" repeatCount="indefinite" />
-                  </path>
-                </g>
+            {/* Dark base */}
+            <circle cx="100" cy="100" r="98" fill="#0d1117" />
 
-                {/* Inner glow */}
-                <circle cx="100" cy="100" r="95" fill="url(#orbGlow)" clipPath="url(#orbClip)" />
+            {/* Liquid fill */}
+            <g clipPath="url(#orbClip)">
+              <rect x="0" y={fillY * 2} width="200" height={200 - fillY * 2 + 4} fill="url(#fillGrad)" />
+              {/* Animated wave */}
+              <path fill="#10B981" opacity="0.35">
+                <animate
+                  attributeName="d"
+                  values={`M0,${fillY * 2} Q50,${fillY * 2 - 5} 100,${fillY * 2} Q150,${fillY * 2 + 5} 200,${fillY * 2} L200,${fillY * 2 + 8} Q150,${fillY * 2 + 3} 100,${fillY * 2 + 8} Q50,${fillY * 2 + 13} 0,${fillY * 2 + 8} Z;M0,${fillY * 2} Q50,${fillY * 2 + 5} 100,${fillY * 2} Q150,${fillY * 2 - 5} 200,${fillY * 2} L200,${fillY * 2 + 8} Q150,${fillY * 2 + 13} 100,${fillY * 2 + 8} Q50,${fillY * 2 + 3} 0,${fillY * 2 + 8} Z;M0,${fillY * 2} Q50,${fillY * 2 - 5} 100,${fillY * 2} Q150,${fillY * 2 + 5} 200,${fillY * 2} L200,${fillY * 2 + 8} Q150,${fillY * 2 + 3} 100,${fillY * 2 + 8} Q50,${fillY * 2 + 13} 0,${fillY * 2 + 8} Z`}
+                  dur="3s" repeatCount="indefinite"
+                />
+              </path>
+            </g>
 
-                {/* Specular highlight */}
-                <ellipse cx="80" cy="65" rx="30" ry="20" fill="white" opacity="0.04" />
-              </svg>
+            {/* Sheen overlay */}
+            <circle cx="100" cy="100" r="98" fill="url(#orbSheen)" />
 
-              {/* Percentage text inside orb */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white" style={{ textShadow: '0 0 20px rgba(16,185,129,0.5)' }}>{fillPct}%</span>
-              </div>
-            </div>
+            {/* Outer ring */}
+            <circle cx="100" cy="100" r="99" fill="none" stroke="#10B981" strokeWidth="0.5" opacity="0.3" />
+          </svg>
 
-            {/* Text below orb */}
-            <div className="mt-8 text-center relative z-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-[0.25em] mb-2">AVENA</h2>
-              <div className="text-sm font-semibold mb-6" style={{ color: '#10B981' }}>&euro;85,000 / &euro;250,000</div>
-              <button className="px-8 py-3 rounded-xl text-sm font-bold border transition-all hover:text-black" style={{ borderColor: '#10B981', color: '#10B981', background: 'transparent' }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.color = '#0d1117'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#10B981'; }}>
-                Connect Wallet
-              </button>
-            </div>
-
-            {/* Market stats below */}
-            <div className="mt-8 flex flex-wrap justify-center gap-3 text-[10px] md:text-[11px] text-gray-500 relative z-10">
-              <span>Deloitte projects <span className="text-white font-semibold">$4T</span> tokenized RE by 2035</span>
-              <span className="text-gray-700">|</span>
-              <span>Spain&apos;s digital RE market: <span className="text-white font-semibold">$1.6B</span></span>
-            </div>
+          {/* Percentage inside orb */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-4xl font-light text-white tracking-wider" style={{ textShadow: '0 0 30px rgba(16,185,129,0.6)' }}>{fillPct}%</span>
           </div>
-        );
-      })()}
+        </div>
 
-      {divider}
+        {/* Text below orb */}
+        <div className="mt-8 text-center relative z-10">
+          <h2 className="text-white tracking-[0.4em] mb-2" style={{ fontSize: '2rem', fontWeight: 300 }}>AVENA</h2>
+          <div className="tracking-[0.15em] text-sm mb-4" style={{ color: '#10B981' }}>&euro;182,000 / &euro;450,000</div>
 
-      {/* Three pillars */}
-      <div className="px-4 md:px-10 py-10 md:py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #0f1419 100%)' }}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+          {/* Progress bar */}
+          <div className="mx-auto rounded-full overflow-hidden mb-6" style={{ width: 280, height: 4, background: '#1a2332' }}>
+            <div className="h-full rounded-full" style={{ width: `${fillPct}%`, background: '#10B981' }} />
+          </div>
+
+          <button
+            onClick={() => setWalletModal(true)}
+            className="px-8 py-3 rounded-lg text-sm font-bold border transition-all tracking-[0.1em]"
+            style={{ borderColor: '#10B981', color: '#10B981', background: 'transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.color = '#0d1117'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#10B981'; }}
+          >
+            Connect Wallet
+          </button>
+        </div>
+      </div>
+
+      {/* ── 3 INFO BLOCKS ── */}
+      <div className="px-4 md:px-10 pt-16 pb-12" style={{ background: '#0d1117' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {[
             {
-              title: 'Fractional Ownership',
-              desc: 'Invest from \u20AC100 in scored Spanish new builds. Each token represents shares in a Sociedad Limitada (S.L.) that holds legal title in the Registro de la Propiedad.',
-              icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{svgGrad}<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+              title: 'THE RAISE',
+              body: 'Hard cap \u20AC450,000 USDT \u00B7 Min buy-in \u20AC500 \u00B7 3 month window \u00B7 Full refund if target not met',
             },
             {
-              title: 'Security Tokens',
-              desc: 'ERC-3643 compliant tokens on Polygon with on-chain identity (ONCHAINID), KYC/AML verification, and automated transfer restrictions. The standard behind $32B+ in tokenized assets.',
-              icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{svgGrad}<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+              title: 'THE PROPERTY',
+              body: '1 property \u00B7 Highest scored on Avena engine \u00B7 Costa Blanca / Costa C\u00E1lida \u00B7 New build only',
             },
             {
-              title: 'On-Chain Yield',
-              desc: 'Rental income collected, costs deducted, and net yield distributed automatically to token holders in EURC (Circle) stablecoin. Transparent, auditable, MiCA-compliant.',
-              icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{svgGrad}<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+              title: 'THE YIELD',
+              body: 'Est. 6\u20138% gross \u00B7 Paid monthly in USDT \u00B7 Direct to your wallet \u00B7 Quarterly exit windows',
             },
           ].map((card) => (
-            <div key={card.title} className="group relative rounded-2xl p-5 md:p-6 border border-[#1f1f2a] hover:border-[#00b9ff30] transition-all duration-300" style={{ background: 'linear-gradient(145deg, #13131d 0%, #0e0e16 100%)' }}>
-              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(0,185,255,0.04) 0%, transparent 70%)' }} />
-              <div className="relative z-10">
-                <div className="mb-3">{card.icon}</div>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-bold text-sm md:text-base text-white">{card.title}</h3>
-                  <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(0,185,255,0.1)', color: '#00b9ff', border: '1px solid rgba(0,185,255,0.25)' }}>In Development</span>
-                </div>
-                <p className="text-gray-400 text-xs md:text-sm leading-relaxed">{card.desc}</p>
-              </div>
+            <div key={card.title} className="rounded-lg p-6" style={{ background: '#0d1117', border: '1px solid #1a2332', borderTop: '2px solid #10B981' }}>
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-3" style={{ color: '#10B981' }}>{card.title}</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">{card.body}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {divider}
-
-      {/* How it works — 4 steps */}
-      <div className="px-4 md:px-10 py-10 md:py-12">
-        <h3 className="text-base md:text-lg font-bold mb-8 text-center" style={gt}>How Tokenized Property Works</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {[
-            { step: '01', title: 'Score & Select', desc: 'Avena\'s algorithm scores 1,867+ new builds on value, yield, location, quality, and risk. Only top properties qualify for tokenization.' },
-            { step: '02', title: 'SPV & Legal', desc: 'A Spanish S.L. is created per property. Title registered at the Registro de la Propiedad. Tokens represent shares in the S.L. under EU securities law.' },
-            { step: '03', title: 'Token Issuance', desc: 'ERC-3643 security tokens issued on Polygon. Identity verified via ONCHAINID. Full KYC/AML through SEPBLAC-compliant providers.' },
-            { step: '04', title: 'Yield Payout', desc: 'Rental income collected monthly. Costs deducted (management, IBI, insurance, community). Net yield distributed in EURC to token holder wallets.' },
-          ].map((item) => (
-            <div key={item.step} className="text-center">
-              <div className="text-2xl md:text-3xl font-bold mb-2" style={gt}>{item.step}</div>
-              <h4 className="text-white font-semibold text-[11px] md:text-sm mb-1 md:mb-2">{item.title}</h4>
-              <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {divider}
-
-      {/* Key metrics */}
-      <div className="px-4 md:px-10 py-10 md:py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #0f1419 100%)' }}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
-          {[
-            { value: '$4T', label: 'Projected Market 2035', sub: 'Deloitte forecast' },
-            { value: '1,867', label: 'Properties Scored', sub: 'Avena pipeline' },
-            { value: '5\u20138%', label: 'Gross Yield Range', sub: 'Spanish coastal' },
-            { value: '$32B+', label: 'ERC-3643 Assets', sub: 'Global standard' },
-          ].map((stat) => (
-            <div key={stat.label}>
-              <div className="text-xl md:text-3xl font-bold mb-0.5" style={gt}>{stat.value}</div>
-              <div className="text-white text-[10px] md:text-xs font-medium">{stat.label}</div>
-              <div className="text-gray-600 text-[9px] md:text-[10px]">{stat.sub}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {divider}
-
-      {/* Regulatory & Legal */}
-      <div className="px-4 md:px-10 py-10 md:py-12">
-        <h3 className="text-base md:text-lg font-bold mb-6 text-center" style={gt}>EU Regulatory Framework</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-          {[
-            { title: 'MiCA Regulation', desc: 'Fully applicable since December 2024. Property tokens classified as securities under MiFID II. Stablecoin distributions (EURC) regulated as e-money tokens under MiCA.' },
-            { title: 'Spanish Securities Law', desc: 'CNMV authorization required for token issuance. Prospectus exemption available for offers under \u20AC8M per property per year. DLT securities issued under LMVSI (2023).' },
-            { title: 'SPV Structure', desc: 'Each property held by a Sociedad Limitada (S.L.). Token holders own shares in the S.L. Legal title stays in the Registro de la Propiedad under the SPV name.' },
-            { title: 'KYC/AML Compliance', desc: 'Regulated by SEPBLAC under Law 10/2010. All token holders complete identity verification before purchase. Ongoing transaction monitoring and suspicious activity reporting.' },
-          ].map((item) => (
-            <div key={item.title} className="rounded-xl p-4 md:p-5 border border-[#1f1f2a]" style={{ background: '#0e0e16' }}>
-              <h4 className="text-white font-semibold text-xs md:text-sm mb-2">{item.title}</h4>
-              <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {divider}
-
-      {/* Market landscape */}
-      <div className="px-4 md:px-10 py-10 md:py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #0f1419 100%)' }}>
-        <h3 className="text-base md:text-lg font-bold mb-6 text-center" style={gt}>Market Landscape</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-          {[
-            { name: 'RealT', region: 'United States', stat: '970+ properties tokenized', detail: '65,000+ investors. $50 minimum. Weekly yield in USDC on Gnosis Chain. Delaware Series LLC per property.' },
-            { name: 'Blocksquare', region: 'Europe', stat: '$200M+ tokenized', detail: 'White-label SaaS for marketplace operators. EU-compliant Luxembourg framework. Integrated with land registries.' },
-            { name: 'OpenBrick', region: 'Spain', stat: 'BME/SIX-backed', detail: 'Founded by Grupo Lar + Renta 4 Banco. Will operate under EU DLT Pilot Regime via Iberclear. Madrid rental focus.' },
-            { name: 'Brickken', region: 'Barcelona', stat: '$500M+ tokenized', detail: '150+ clients across 30 countries. Token Suite platform. 280% revenue growth 2025. EBITDA-positive.' },
-          ].map((p) => (
-            <div key={p.name} className="rounded-xl p-4 md:p-5 border border-[#1f1f2a] flex flex-col" style={{ background: '#0e0e16' }}>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-white font-bold text-sm">{p.name}</h4>
-                <span className="text-[8px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,185,255,0.08)', color: '#00b9ff', border: '1px solid rgba(0,185,255,0.2)' }}>{p.region}</span>
-              </div>
-              <div className="text-xs font-semibold mb-1" style={gt}>{p.stat}</div>
-              <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{p.detail}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {divider}
-
-      {/* Tech stack */}
-      <div className="px-4 md:px-10 py-10 md:py-12">
-        <h3 className="text-base md:text-lg font-bold mb-6 text-center" style={gt}>Infrastructure Stack</h3>
-        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8">
-          {['Polygon PoS', 'ERC-3643 / T-REX', 'ONCHAINID', 'Chainlink Oracles', 'EURC (Circle)', 'Fireblocks Custody', 'SEPBLAC KYC/AML', 'Spanish S.L. SPV', 'CNMV Authorized'].map((tag) => (
-            <span key={tag} className="px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-xs font-medium border" style={{ borderColor: 'rgba(0,185,255,0.2)', color: '#9CA3AF', background: 'rgba(0,185,255,0.04)' }}>
-              {tag}
-            </span>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-          {[
-            { label: 'Token Standard', value: 'ERC-3643', desc: 'Modular compliance. Identity layer. Transfer restrictions. $32B+ deployed globally.' },
-            { label: 'Network', value: 'Polygon', desc: 'Sub-cent gas fees. 420+ enterprise deployments. Ethereum security via checkpoints.' },
-            { label: 'Yield Currency', value: 'EURC', desc: 'Circle\'s MiCA-compliant euro stablecoin. 41% euro stablecoin market share. No FX conversion.' },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl p-4 border border-[#1f1f2a]" style={{ background: '#0e0e16' }}>
-              <div className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">{item.label}</div>
-              <div className="text-lg font-bold mb-1" style={gt}>{item.value}</div>
-              <p className="text-gray-500 text-[10px] md:text-xs leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {divider}
-
-      {/* Avena advantage */}
-      <div className="px-4 md:px-10 py-10 md:py-12" style={{ background: 'linear-gradient(180deg, #0d0d14 0%, #0f1419 100%)' }}>
-        <h3 className="text-base md:text-lg font-bold mb-6 text-center" style={gt}>The Avena Advantage</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-          <div className="rounded-xl p-5 border border-[#1f1f2a]" style={{ background: '#0e0e16' }}>
-            <h4 className="text-white font-bold text-sm mb-3">Pre-Scored Pipeline</h4>
-            <p className="text-gray-400 text-xs leading-relaxed mb-3">
-              No other Spanish tokenization platform has a ready pipeline of 1,867 investment-scored properties with rental yield data, sub-scores, and market benchmarks.
-            </p>
-            <p className="text-gray-400 text-xs leading-relaxed">
-              Current Spanish projects are one-off deals. Avena can tokenize at scale from day one, selecting only top-scoring assets for maximum investor returns.
-            </p>
-          </div>
-          <div className="rounded-xl p-5 border border-[#1f1f2a]" style={{ background: '#0e0e16' }}>
-            <h4 className="text-white font-bold text-sm mb-3">Revenue Model</h4>
-            <div className="space-y-2">
-              {[
-                ['Token issuance', '1\u20133% of property value'],
-                ['Transaction fee', '0.5\u20132% per trade'],
-                ['Management fee', '2\u20135% of gross rental'],
-                ['Yield distribution', 'Automated via smart contract'],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between text-xs">
-                  <span className="text-gray-500">{label}</span>
-                  <span className="text-white font-medium">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {divider}
-
-      {/* Email capture */}
-      <div className="px-4 md:px-10 py-12 md:py-14 text-center">
-        <div className="mb-6">
-          <div className="text-3xl md:text-4xl font-bold" style={{ color: '#10B981' }}>847</div>
-          <div className="text-gray-500 text-xs uppercase tracking-wider">investors on the waitlist</div>
-        </div>
-        <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Get Early Access</h3>
-        <p className="text-gray-500 text-xs md:text-sm mb-6 max-w-md mx-auto">Be the first to invest in tokenized Spanish real estate when we launch.</p>
+      {/* ── EMAIL CAPTURE ── */}
+      <div className="px-4 md:px-10 py-12 text-center" style={{ background: '#0d1117' }}>
+        <p className="text-gray-500 text-sm italic mb-6">Round 1 opens when The Core is ready. Get notified.</p>
         {submitted ? (
-          <div className="text-sm font-bold" style={gt}>You&apos;re on the list. We&apos;ll be in touch.</div>
+          <p className="text-sm font-semibold" style={{ color: '#10B981' }}>You&apos;re on the list.</p>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
+          <div className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
             <input
               type="email"
               placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              className="flex-1 border rounded-lg px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none transition-all"
-              style={{ background: '#0a0a10', borderColor: '#1c2333' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = '#00b9ff50'; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = '#1c2333'; }}
+              className="flex-1 px-4 py-3 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-colors"
+              style={{ background: '#090d12', border: '1px solid #1a2332' }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#10B981'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = '#1a2332'; }}
             />
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="px-6 py-3 rounded-lg font-bold text-sm transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ background: gBg, color: '#0a0a10' }}
+              className="px-6 py-3 rounded-lg text-sm font-bold border transition-all disabled:opacity-50 tracking-[0.05em]"
+              style={{ borderColor: '#10B981', color: '#10B981', background: 'transparent' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.color = '#0d1117'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#10B981'; }}
             >
               {submitting ? '...' : 'Notify Me'}
             </button>
@@ -3705,10 +3544,28 @@ function CryptoTab() {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="px-4 md:px-10 py-6 text-center">
-        <p className="text-[9px] md:text-[10px] text-gray-600 tracking-wide">Built on MiCA-compliant infrastructure &middot; EU regulated &middot; CNMV framework &middot; Avena Estate</p>
-      </div>
+      {/* ── WALLET MODAL ── */}
+      {walletModal && (
+        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setWalletModal(false)}>
+          <div className="relative rounded-2xl p-6 md:p-8 w-full max-w-sm mx-4" style={{ background: '#0d1117', border: '1px solid #1a2332' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setWalletModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white text-lg">×</button>
+            <h3 className="text-white font-bold text-lg mb-6 text-center">Connect Wallet</h3>
+            <div className="space-y-3">
+              {[
+                { name: 'MetaMask', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21.3 2L13 8.2l1.5-3.6L21.3 2z" fill="#E17726"/><path d="M2.7 2l8.2 6.3-1.4-3.7L2.7 2z" fill="#E27625"/><path d="M18.3 16.8l-2.2 3.4 4.7 1.3 1.3-4.6-3.8-.1z" fill="#E27625"/><path d="M1.9 16.9l1.3 4.6 4.7-1.3-2.2-3.4-3.8.1z" fill="#E27625"/></svg> },
+                { name: 'Trust Wallet', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 3c1.7 0 3.2.7 4.3 1.8L12 10.6 7.7 6.8C8.8 5.7 10.3 5 12 5z" fill="#3375BB"/></svg> },
+                { name: 'WalletConnect', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6.1 8.8c3.3-3.2 8.5-3.2 11.8 0l.4.4c.2.2.2.4 0 .5l-1.3 1.2c-.1.1-.2.1-.3 0l-.5-.5c-2.3-2.2-5.9-2.2-8.2 0l-.6.5c-.1.1-.2.1-.3 0L5.8 9.7c-.2-.1-.2-.4 0-.5l.3-.4z" fill="#3B99FC"/><path d="M19.8 11.2l1.1 1.1c.2.2.2.4 0 .5l-5.1 5c-.2.2-.4.2-.6 0l-3.6-3.5c0-.1-.1-.1-.1 0l-3.6 3.5c-.2.2-.4.2-.6 0l-5.1-5c-.2-.1-.2-.4 0-.5l1.1-1.1c.2-.2.4-.2.6 0l3.6 3.5c0 .1.1.1.1 0l3.6-3.5c.2-.2.4-.2.6 0l3.6 3.5c0 .1.1.1.1 0l3.6-3.5c.2-.2.5-.2.7 0z" fill="#3B99FC"/></svg> },
+              ].map((wallet) => (
+                <button key={wallet.name} className="w-full flex items-center gap-3 p-3 rounded-lg border transition-all hover:border-[#10B981]/40" style={{ background: '#090d12', borderColor: '#1a2332' }}>
+                  <span className="flex-shrink-0">{wallet.icon}</span>
+                  <span className="text-white text-sm font-medium flex-1 text-left">{wallet.name}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ color: '#10B981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>Coming Soon</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
