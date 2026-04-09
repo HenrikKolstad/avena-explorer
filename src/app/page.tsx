@@ -92,7 +92,7 @@ export default function Explorer() {
   const [preview, setPreview] = useState<number | null>(null);
   const [previewLuxScore, setPreviewLuxScore] = useState<number | null>(null);
   const [favs, setFavs] = useState<string[]>([]);
-  const [tab, setTab] = useState<'deals' | 'yield' | 'portfolio' | 'map' | 'market' | 'luxury' | 'about' | 'legal' | 'contact' | 'whyavena'>('deals');
+  const [tab, setTab] = useState<'deals' | 'yield' | 'portfolio' | 'map' | 'market' | 'luxury' | 'about' | 'legal' | 'contact' | 'whyavena' | 'crypto'>('deals');
   const [imgIdx, setImgIdx] = useState(0);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -874,6 +874,7 @@ export default function Explorer() {
                     <NavItem icon="⚖️" label="Legal and Security" isActive={tab === 'legal'} onClick={() => go('legal')} />
                     <NavItem icon="✉️" label="Contact" isActive={tab === 'contact'} onClick={() => go('contact')} />
                     <NavItem icon="📖" label="About" isActive={tab === 'about'} onClick={() => go('about')} />
+                    <NavItem icon="🪙" label="Crypto" isActive={tab === 'crypto'} onClick={() => go('crypto')} badge="Soon" />
                   </div>
 
                   {/* Upgrade CTA for non-paid logged-in users */}
@@ -1419,6 +1420,7 @@ export default function Explorer() {
           {tab === 'about' && <AboutTab />}
           {tab === 'legal' && <LegalTab />}
           {tab === 'contact' && <ContactTab />}
+          {tab === 'crypto' && <CryptoTab />}
         </div>
 
         {/* PREVIEW PANEL */}
@@ -2412,6 +2414,15 @@ function YieldTab({ properties, isPaid, onUpgrade, onCurrencyChange }: { propert
         ))}
       </div>
 
+      {/* Wise affiliate */}
+      <div className="mt-4 text-center">
+        <a href="https://wise.com/invite/u/henrikk" target="_blank" rel="noopener noreferrer"
+          className="inline-block text-sm font-semibold hover:underline transition-opacity hover:opacity-80"
+          style={{ color: '#D4AF37' }}>
+          Transfer your investment funds fee-free with Wise →
+        </a>
+      </div>
+
       {/* Paywall CTA */}
       {!isPaid && sorted.length > FREE_YIELD_LIMIT && (
         <div className="mt-6 p-6 bg-[#111118] border border-amber-500/30 rounded-xl text-center">
@@ -3369,6 +3380,99 @@ function ContactTab() {
           {/* Gold shimmer bottom bar */}
           <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #c9a84c, transparent)' }} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CryptoTab() {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!email.includes('@') || submitting) return;
+    setSubmitting(true);
+    try {
+      await fetch('/api/email-capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'crypto' }),
+      });
+      setSubmitted(true);
+    } catch { /* ignore */ }
+    setSubmitting(false);
+  };
+
+  const cards = [
+    {
+      title: 'Fractional Ownership',
+      desc: 'Own a piece of premium Spanish real estate from as little as €100. Diversify across multiple properties without the full capital outlay.',
+      icon: '🏗️',
+    },
+    {
+      title: 'Property-Backed Tokens',
+      desc: 'Each token represents verified ownership in a real, income-generating Spanish property. Trade 24/7 on secondary markets.',
+      icon: '🪙',
+    },
+    {
+      title: 'On-Chain Yield',
+      desc: 'Earn rental income distributed automatically via smart contracts. Transparent, auditable, and paid in your preferred currency.',
+      icon: '📈',
+    },
+  ];
+
+  return (
+    <div className="p-4 md:p-10 max-w-4xl mx-auto">
+      <div className="text-center mb-10">
+        <div className="text-5xl mb-4">🪙</div>
+        <h2 className="text-2xl md:text-3xl font-bold font-serif text-white mb-3">Crypto &amp; Tokenized Real Estate</h2>
+        <p className="text-gray-400 text-sm max-w-xl mx-auto">
+          The future of property investment — fractional ownership, property-backed tokens, and on-chain rental yield. Coming to Avena Terminal.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+        {cards.map((card) => (
+          <div key={card.title} className="bg-[#111118] border border-[#1f1f28] rounded-2xl p-6 relative">
+            <span className="absolute top-3 right-3 text-[8px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(212,175,55,0.12)', borderColor: 'rgba(212,175,55,0.4)', color: '#D4AF37' }}>In Development</span>
+            <div className="text-3xl mb-3">{card.icon}</div>
+            <h3 className="text-white font-bold text-base mb-2">{card.title}</h3>
+            <p className="text-gray-400 text-sm leading-relaxed">{card.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Email capture */}
+      <div className="bg-[#111118] border border-[#1f1f28] rounded-2xl p-8 text-center mb-8">
+        <h3 className="text-lg font-bold text-white mb-2">Get early access</h3>
+        <p className="text-gray-500 text-sm mb-5">Be the first to know when tokenized property investment launches on Avena.</p>
+        {submitted ? (
+          <div className="text-sm font-semibold" style={{ color: '#D4AF37' }}>You&apos;re on the list — we&apos;ll be in touch.</div>
+        ) : (
+          <div className="flex gap-2 max-w-md mx-auto">
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              className="flex-1 bg-[#0a0a10] border border-[#2a2a30] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-amber-500/50 focus:outline-none transition-colors"
+            />
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="px-6 py-2.5 rounded-lg font-bold text-black text-sm transition-all hover:opacity-90 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #D4AF37, #e8c96a)' }}
+            >
+              {submitting ? '...' : 'Notify Me'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="text-center">
+        <p className="text-[10px] text-gray-600 tracking-wide">Built on MiCA-compliant infrastructure · EU regulated</p>
       </div>
     </div>
   );
