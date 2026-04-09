@@ -1419,15 +1419,17 @@ export default function Explorer() {
           {tab === 'legal' && <LegalTab />}
           {tab === 'contact' && <ContactTab />}
           {tab === 'crypto' && (
-            <div className="relative">
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center backdrop-blur-md" style={{ background: 'rgba(9,13,18,0.85)' }}>
-                <div className="text-2xl md:text-3xl font-extralight tracking-[0.3em] mb-3" style={{ color: '#93c5fd' }}>COMING SOON</div>
-                <p className="text-sm tracking-wide" style={{ color: '#3b82f6' }}>The Avena Experiment is being prepared.</p>
+            isPaid ? <CryptoTab /> : (
+              <div className="relative">
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center backdrop-blur-md" style={{ background: 'rgba(9,13,18,0.85)' }}>
+                  <div className="text-2xl md:text-3xl font-extralight tracking-[0.3em] mb-3" style={{ color: '#93c5fd' }}>COMING SOON</div>
+                  <p className="text-sm tracking-wide" style={{ color: '#3b82f6' }}>The Avena Experiment is being prepared.</p>
+                </div>
+                <div className="pointer-events-none select-none">
+                  <CryptoTab />
+                </div>
               </div>
-              <div className="pointer-events-none select-none">
-                <CryptoTab />
-              </div>
-            </div>
+            )
           )}
         </div>
 
