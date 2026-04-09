@@ -3658,7 +3658,7 @@ function MarketIndexTab({ properties }: { properties: Property[] }) {
       {/* ── LIVE TICKER ── */}
       <div className="mb-8 overflow-hidden rounded-lg border" style={{ background: '#080c11', borderColor: '#1c2333' }}>
         <div className="py-2 overflow-hidden">
-          <div className="animate-ticker flex whitespace-nowrap" style={{ width: 'max-content' }}>
+          <div className="animate-ticker flex whitespace-nowrap hover:[animation-play-state:paused]" style={{ width: 'max-content' }}>
             {[...tickerTowns, ...tickerTowns].map((t, i) => (
               <span key={`${t.town}-${i}`} className="inline-flex items-center gap-1 mx-4 text-[10px] md:text-xs" style={{ fontFamily: 'ui-monospace, monospace' }}>
                 <span className="text-white font-semibold">{t.town.split(',')[0]}</span>
