@@ -118,6 +118,7 @@ export default function Explorer() {
   const [authError, setAuthError] = useState('');
   const [authLoading2, setAuthLoading2] = useState(false);
   const [showWelcomePro, setShowWelcomePro] = useState(false);
+  const [whyOpen, setWhyOpen] = useState(false);
   const [paywallEmail, setPaywallEmail] = useState('');
   const [paywallLoading, setPaywallLoading] = useState(false);
   // Yield tab currency state (lifted for tab label indicator)
@@ -1124,9 +1125,7 @@ export default function Explorer() {
         className={`overflow-x-hidden min-w-0 transition-[margin-right] duration-200 ${preview !== null ? 'md:mr-[480px]' : ''}`}
         style={{ paddingTop: mobileHeaderHidden ? 0 : headerH, paddingLeft: isDesktop ? (sidebarCollapsed ? 32 : 240) : 0, transition: 'padding-top 0.3s ease' }}
       >
-          {(tab === 'whyavena' || (!user && tab === 'deals')) && (() => {
-            const [whyOpen, setWhyOpen] = useState(false);
-            return (
+          {(tab === 'whyavena' || (!user && tab === 'deals')) && (
             <div className="px-4 md:px-8 py-6 border-b border-[#1c2333]">
               {/* Collapsible headline — only collapses on mobile */}
               <button onClick={() => setWhyOpen(!whyOpen)} className="w-full text-center group cursor-pointer">
@@ -1206,8 +1205,7 @@ export default function Explorer() {
                 </div>
               </div>
             </div>
-            );
-          })()}
+          )}
 
           {tab === 'deals' && (
             <>
