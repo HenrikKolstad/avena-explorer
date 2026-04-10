@@ -3872,6 +3872,8 @@ function AnalyzerTab({ isPaid, onUpgrade }: { isPaid: boolean; onUpgrade: () => 
   const [error, setError] = useState('');
   const [loadingText, setLoadingText] = useState('');
   const [scoreAnim, setScoreAnim] = useState(0);
+  const [manualMode, setManualMode] = useState(false);
+  const [manual, setManual] = useState({ price: '', location: '', type: 'Apartment', m2: '', beds: '', baths: '' });
 
   // Track free usage
   const [usedFree, setUsedFree] = useState(false);
@@ -3927,6 +3929,39 @@ function AnalyzerTab({ isPaid, onUpgrade }: { isPaid: boolean; onUpgrade: () => 
       clearInterval(interval);
       setError('Connection error. Try again.');
     }
+    setLoading(false);
+  };
+
+  const analyzeManual = async () => {
+    if (!manual.price || !manual.location || loading) return;
+    setLoading(true);
+    setResult(null);
+    setError('');
+    setScoreAnim(0);
+    const texts = ['Running hedonic regression...', 'Comparing to 1,881 properties...', 'Generating Avena score...'];
+    let i = 0;
+    setLoadingText(texts[0]);
+    const interval = setInterval(() => { i = (i + 1) % texts.length; setLoadingText(texts[i]); }, 1200);
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manual: { price: parseInt(manual.price.replace(/\D/g, '')), location: manual.location, type: manual.type, m2: parseInt(manual.m2) || 0, beds: parseInt(manual.beds) || 0, baths: parseInt(manual.baths) || 0 } }),
+      });
+      const data = await res.json();
+      clearInterval(interval);
+      if (data.success) {
+        setResult(data);
+        const target = data.analysis.avenaScore;
+        let current = 0;
+        const scoreInterval = setInterval(() => { current += 2; if (current >= target) { current = target; clearInterval(scoreInterval); } setScoreAnim(current); }, 20);
+        if (typeof window !== 'undefined') {
+          const count = parseInt(localStorage.getItem('avena_analyzer_count') || '0');
+          localStorage.setItem('avena_analyzer_count', String(count + 1));
+          if (count + 1 >= 1 && !isPaid) setUsedFree(true);
+        }
+      } else { setError(data.error || 'Analysis failed'); }
+    } catch { clearInterval(interval); setError('Connection error. Try again.'); }
     setLoading(false);
   };
 
@@ -3988,7 +4023,62 @@ function AnalyzerTab({ isPaid, onUpgrade }: { isPaid: boolean; onUpgrade: () => 
         {error && (
           <div className="rounded-xl p-6 mb-6 text-center" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)' }}>
             <AlertTriangle size={20} className="mx-auto mb-2" style={{ color: '#EF4444' }} />
-            <p className="text-sm" style={{ color: '#FCA5A5' }}>{error}</p>
+            <p className="text-sm mb-3" style={{ color: '#FCA5A5' }}>{error}</p>
+            {!manualMode && (
+              <button onClick={() => { setManualMode(true); setError(''); }} className="text-xs font-semibold px-4 py-2 rounded-lg border transition-all hover:opacity-90" style={{ borderColor: '#10B981', color: '#10B981' }}>
+                Enter details manually instead
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Manual input mode */}
+        {manualMode && !result && !loading && (
+          <div className="rounded-xl p-6 mb-6" style={{ background: '#0f1419', border: '1px solid #1c2333' }}>
+            <h3 className="text-sm font-bold text-white mb-4">Enter Property Details</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Price (€)</label>
+                <input type="text" placeholder="250000" value={manual.price} onChange={e => setManual({ ...manual, price: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none" style={{ background: '#0d1117', border: '1px solid #1c2333' }} />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Location / Town</label>
+                <input type="text" placeholder="Torrevieja" value={manual.location} onChange={e => setManual({ ...manual, location: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none" style={{ background: '#0d1117', border: '1px solid #1c2333' }} />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Type</label>
+                <select value={manual.type} onChange={e => setManual({ ...manual, type: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none" style={{ background: '#0d1117', border: '1px solid #1c2333' }}>
+                  <option>Apartment</option><option>Villa</option><option>Townhouse</option><option>Penthouse</option><option>Bungalow</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Built m²</label>
+                <input type="text" placeholder="85" value={manual.m2} onChange={e => setManual({ ...manual, m2: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none" style={{ background: '#0d1117', border: '1px solid #1c2333' }} />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Bedrooms</label>
+                <input type="text" placeholder="2" value={manual.beds} onChange={e => setManual({ ...manual, beds: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none" style={{ background: '#0d1117', border: '1px solid #1c2333' }} />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Bathrooms</label>
+                <input type="text" placeholder="2" value={manual.baths} onChange={e => setManual({ ...manual, baths: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none" style={{ background: '#0d1117', border: '1px solid #1c2333' }} />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={analyzeManual} disabled={!manual.price || !manual.location}
+                className="px-6 py-2.5 rounded-lg text-sm font-bold transition-all disabled:opacity-30" style={{ background: '#10B981', color: '#0d1117' }}>
+                Analyze
+              </button>
+              <button onClick={() => setManualMode(false)} className="px-4 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white transition-colors">
+                Back to URL
+              </button>
+            </div>
           </div>
         )}
 

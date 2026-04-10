@@ -5,7 +5,55 @@ export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {
-    const { url } = await req.json();
+    const body = await req.json();
+    const { url, manual } = body;
+
+    // Manual mode — user provides details directly
+    if (manual && manual.price) {
+      const allProps = getAllProperties();
+      const towns = getUniqueTowns();
+      const price = manual.price;
+      const m2 = manual.m2 || 0;
+      const location = manual.location || 'Spain';
+      const type = manual.type || 'Property';
+      const beds = manual.beds || 0;
+      const baths = manual.baths || 0;
+
+      const locLower = location.toLowerCase();
+      const matchedTown = towns.find(t => locLower.includes(t.town.split(',')[0].toLowerCase()));
+      const townAvgPrice = matchedTown?.avgPrice || Math.round(avg(allProps.map(p => p.pf)));
+      const townAvgYield = matchedTown?.avgYield || Number(avg(allProps.filter(p => p._yield).map(p => p._yield!.gross)).toFixed(1));
+      const townCount = matchedTown?.count || allProps.length;
+      const townName = matchedTown?.town || location;
+      const pricePerM2 = m2 > 0 ? Math.round(price / m2) : 0;
+      const annualRentEstimate = m2 > 0 ? Math.round(m2 * 10 * 12 * 0.65) : Math.round(price * 0.055);
+      const grossYield = Number(((annualRentEstimate / price) * 100).toFixed(1));
+      const netYield = Number((grossYield * 0.67).toFixed(1));
+      const priceScore = Math.max(0, Math.min(100, 50 + (townAvgPrice - price) / townAvgPrice * 100));
+      const yieldScore = Math.min(100, grossYield * 12);
+      const locationScore = matchedTown ? Math.min(100, matchedTown.avgScore * 1.2) : 50;
+      const sizeScore = m2 > 0 ? Math.min(100, m2 / 1.5) : 50;
+      const avenaScore = Math.max(15, Math.min(95, Math.round(priceScore * 0.35 + yieldScore * 0.30 + locationScore * 0.25 + sizeScore * 0.10)));
+      const dealTier = avenaScore >= 85 ? 'STRONG BUY' : avenaScore >= 70 ? 'BUY' : avenaScore >= 55 ? 'CONSIDER' : 'PASS';
+      const priceDiff = ((price - townAvgPrice) / townAvgPrice * 100).toFixed(1);
+      const marketComparison = Number(priceDiff) < 0 ? `${Math.abs(Number(priceDiff))}% below ${townName.split(',')[0]} average` : `${priceDiff}% above ${townName.split(',')[0]} average`;
+      const strengths: string[] = [];
+      const risks: string[] = [];
+      if (Number(priceDiff) < -10) strengths.push(`Priced ${Math.abs(Number(priceDiff)).toFixed(0)}% below local market average`);
+      if (grossYield > 6) strengths.push(`Strong estimated gross yield of ${grossYield}%`);
+      if (m2 > 80) strengths.push(`Good size at ${m2}m²`);
+      if (strengths.length === 0) strengths.push('Manually entered — verify all data with listing agent');
+      if (Number(priceDiff) > 10) risks.push(`Priced ${Number(priceDiff).toFixed(0)}% above local market average`);
+      if (grossYield < 4) risks.push(`Low estimated yield of ${grossYield}%`);
+      if (risks.length === 0) risks.push('Verify details with the listing agent');
+      const verdict = avenaScore >= 70 ? `Solid investment opportunity in ${townName.split(',')[0]}.` : avenaScore >= 55 ? `Worth investigating — verify yield potential.` : `Below average on key metrics.`;
+      return NextResponse.json({
+        success: true,
+        listing: { title: `${type} in ${location}`, price, location: townName, type, m2, beds, baths, description: 'Manually entered property details', url: '' },
+        analysis: { avenaScore, dealTier, estimatedGrossYield: grossYield, estimatedNetYield: netYield, pricePerM2, marketComparison, townProperties: townCount, verdict, strengths, risks, disclaimer: 'Analysis based on manually entered data and Avena pricing model. For informational purposes only.' }
+      });
+    }
+
     if (!url || typeof url !== 'string') return NextResponse.json({ success: false, error: 'URL required' }, { status: 400 });
 
     // Fetch the listing page with multiple fallback strategies
