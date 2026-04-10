@@ -197,11 +197,15 @@ export default function Explorer() {
           }
         } else {
           if (isDesktop) {
-            // PC: scroll up 300px to reveal
-            scrollUpAccum.current += Math.abs(delta);
-            if (scrollUpAccum.current > 300) {
-              setMobileHeaderHidden(false);
-              scrollUpAccum.current = 0;
+            // PC: only reveal at top after 0.5s
+            if (y <= 15 && !topTimer.current) {
+              topTimer.current = setTimeout(() => {
+                if (window.scrollY <= 15) setMobileHeaderHidden(false);
+                topTimer.current = null;
+              }, 500);
+            } else if (y > 15 && topTimer.current) {
+              clearTimeout(topTimer.current);
+              topTimer.current = null;
             }
           } else {
             // Mobile: stay at top for 0.8s
