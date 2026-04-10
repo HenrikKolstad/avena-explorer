@@ -158,6 +158,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${base}/insights/${topic}`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
   }
 
+  // Research pages
+  for (const topic of [
+    'spanish-new-build-property-market-2026', 'costa-blanca-property-investment-guide',
+    'rental-yield-spain-complete-analysis', 'spanish-property-tax-foreign-buyers',
+    'costa-del-sol-property-market-data', 'torrevieja-property-market-analysis',
+    'javea-property-investment-data', 'orihuela-costa-rental-market',
+    'new-build-vs-resale-spain-data', 'spanish-mortgage-non-residents-2026',
+    'costa-blanca-north-vs-south-comparison', 'marbella-property-market-statistics',
+    'spanish-property-buying-process-guide', 'ibi-irnr-spanish-property-taxes-explained',
+    'hedonic-regression-property-pricing-spain', 'airbnb-rental-income-spain-realistic-figures',
+    'spanish-property-market-forecast-2026-2027', 'costa-calida-murcia-property-investment',
+    'alicante-province-new-build-market', 'foreign-buyer-statistics-spain-2026',
+    'spanish-property-price-index-methodology', 'community-fees-spain-new-build-explained',
+    'spain-golden-visa-property-investment', 'off-plan-vs-key-ready-spain-comparison',
+    'best-areas-spain-rental-income-2026',
+  ]) {
+    entries.push({ url: `${base}/research/${topic}`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
+  }
+
   // Live feed
   entries.push({ url: `${base}/live`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
 
