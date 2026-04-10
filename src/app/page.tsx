@@ -2595,12 +2595,12 @@ function MarketTab({ properties }: { properties: Property[] }) {
 
   // Price bands
   const bands = [
-    { label: '< \u20AC150k', min: 0, max: 150000 },
-    { label: '\u20AC150\u2013250k', min: 150000, max: 250000 },
-    { label: '\u20AC250\u2013400k', min: 250000, max: 400000 },
-    { label: '\u20AC400\u2013600k', min: 400000, max: 600000 },
-    { label: '\u20AC600k\u20131M', min: 600000, max: 1000000 },
-    { label: '> \u20AC1M', min: 1000000, max: Infinity },
+    { label: '< \€150k', min: 0, max: 150000 },
+    { label: '\€150\–250k', min: 150000, max: 250000 },
+    { label: '\€250\–400k', min: 250000, max: 400000 },
+    { label: '\€400\–600k', min: 400000, max: 600000 },
+    { label: '\€600k\–1M', min: 600000, max: 1000000 },
+    { label: '> \€1M', min: 1000000, max: Infinity },
   ];
   const bandData = bands.map(b => ({ ...b, count: properties.filter(p => p.pf >= b.min && p.pf < b.max).length }));
   const maxBandCount = Math.max(...bandData.map(b => b.count));
@@ -2648,7 +2648,7 @@ function MarketTab({ properties }: { properties: Property[] }) {
           { label: 'TOTAL LISTINGS', value: totalListings.toLocaleString() },
           { label: 'AVG PRICE', value: formatPrice(overallAvgPrice) },
           { label: 'MEDIAN PRICE', value: formatPrice(medianPrice) },
-          { label: 'AVG \u20AC/M\u00B2', value: `\u20AC${overallAvgM2.toLocaleString()}` },
+          { label: 'AVG \€/M\²', value: `\€${overallAvgM2.toLocaleString()}` },
           { label: 'TOTAL REGIONS', value: String(uniqueRegions) },
           { label: 'TOTAL TOWNS', value: String(uniqueTowns) },
         ].map(s => (
@@ -2671,7 +2671,7 @@ function MarketTab({ properties }: { properties: Property[] }) {
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between"><span className="text-gray-500">Listings</span><span className="text-[#60a5fa] font-semibold">{r.count}</span></div>
                   <div className="flex justify-between"><span className="text-gray-500">Avg Price</span><span className="text-[#10B981] font-semibold">{formatPrice(r.avgPrice)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Avg \u20AC/m\u00B2</span><span className="text-[#10B981] font-semibold">\u20AC{r.avgM2.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Avg \€/m\²</span><span className="text-[#10B981] font-semibold">\€{r.avgM2.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-gray-500">Price Range</span><span className="text-gray-300 text-[11px]">{formatPrice(r.minPrice)} &ndash; {formatPrice(r.maxPrice)}</span></div>
                 </div>
                 {/* Proportion bar */}
@@ -2777,7 +2777,7 @@ function MarketTab({ properties }: { properties: Property[] }) {
                 <th className="text-left pb-3 font-medium">Town</th>
                 <th className="text-right pb-3 font-medium">Listings</th>
                 <th className="text-right pb-3 font-medium">Avg Price</th>
-                <th className="text-right pb-3 font-medium">Avg \u20AC/m\u00B2</th>
+                <th className="text-right pb-3 font-medium">Avg \€/m\²</th>
                 <th className="text-right pb-3 font-medium">Est. Yield</th>
               </tr>
             </thead>
@@ -2794,7 +2794,7 @@ function MarketTab({ properties }: { properties: Property[] }) {
                     </td>
                     <td className="py-2.5 text-right text-white font-semibold">{t.count}</td>
                     <td className="py-2.5 text-right text-[#10B981] font-semibold">{formatPrice(t.avgPrice)}</td>
-                    <td className="py-2.5 text-right text-[#10B981]">\u20AC{t.avgM2.toLocaleString()}</td>
+                    <td className="py-2.5 text-right text-[#10B981]">\€{t.avgM2.toLocaleString()}</td>
                     <td className="py-2.5 text-right text-[#60a5fa]">{estYield ? `${estYield}%` : '\u2014'}</td>
                   </tr>
                 );
@@ -2816,7 +2816,7 @@ function MarketTab({ properties }: { properties: Property[] }) {
               </div>
               <div className="text-right flex-shrink-0 ml-3">
                 <div className="text-[#10B981] text-xs font-bold">{formatPrice(t.avgPrice)}</div>
-                <div className="text-gray-500 text-[10px]">\u20AC{t.avgM2.toLocaleString()}/m\u00B2</div>
+                <div className="text-gray-500 text-[10px]">\€{t.avgM2.toLocaleString()}/m\²</div>
               </div>
             </Link>
           ))}
@@ -2904,7 +2904,7 @@ function MarketTab({ properties }: { properties: Property[] }) {
                   <div className="grid grid-cols-2 gap-2 text-center">
                     <div>
                       <div className="text-[9px] text-gray-600 uppercase tracking-wide">Avg Price</div>
-                      <div className="text-xs font-semibold text-white">{dev.avgPrice >= 1_000_000 ? `\u20AC${(dev.avgPrice/1_000_000).toFixed(1)}M` : `\u20AC${Math.round(dev.avgPrice/1000)}k`}</div>
+                      <div className="text-xs font-semibold text-white">{dev.avgPrice >= 1_000_000 ? `\€${(dev.avgPrice/1_000_000).toFixed(1)}M` : `\€${Math.round(dev.avgPrice/1000)}k`}</div>
                     </div>
                     {dev.avgDisc && (
                       <div>
@@ -3936,12 +3936,12 @@ function CryptoTab({ properties }: { properties: Property[] }) {
       <div className="px-4 md:px-10 pt-16 pb-12" style={{ background: '#0d1117' }}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-5xl mx-auto">
           {([
-            { id: 'raise', title: 'THE RAISE', stat: '\u20AC450,000', subtitle: 'Hard cap \u00B7 180 spots', amber: false },
+            { id: 'raise', title: 'THE RAISE', stat: '\€450,000', subtitle: 'Hard cap \u00B7 180 spots', amber: false },
             { id: 'property', title: 'THE PROPERTY', stat: '1 Villa', subtitle: 'Key-ready \u00B7 Highest scored', amber: false },
-            { id: 'yield', title: 'THE YIELD', stat: '6\u20138%', subtitle: 'Gross \u00B7 Paid in USDT', amber: false },
-            { id: 'market', title: 'THE MARKET', stat: '8\u201312%', subtitle: 'Annual appreciation \u00B7 Costa Blanca', amber: false },
+            { id: 'yield', title: 'THE YIELD', stat: '6\–8%', subtitle: 'Gross \u00B7 Paid in USDT', amber: false },
+            { id: 'market', title: 'THE MARKET', stat: '8\–12%', subtitle: 'Annual appreciation \u00B7 Costa Blanca', amber: false },
             { id: 'rules', title: 'THE RULES', stat: '12 months', subtitle: 'Minimum lock \u00B7 No exceptions', amber: false },
-            { id: 'numbers', title: 'THE NUMBERS', stat: '\u20AC2,500', subtitle: 'Minimum \u00B7 0.55% ownership', amber: false },
+            { id: 'numbers', title: 'THE NUMBERS', stat: '\€2,500', subtitle: 'Minimum \u00B7 0.55% ownership', amber: false },
             { id: 'token', title: 'THE TOKEN', stat: '$AVY', subtitle: 'BEP-20 \u00B7 BSC \u00B7 450,000 supply', amber: false },
             { id: 'vault', title: 'THE VAULT', stat: '2/3', subtitle: 'Signers required \u00B7 48hr timelock', amber: false },
             { id: 'risk', title: 'THE RISK', stat: '!', subtitle: 'Read this. Seriously.', amber: true },
