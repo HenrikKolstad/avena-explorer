@@ -24,11 +24,12 @@ async function stripeGet(path: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const { email, testMode } = await req.json();
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://avenaterminal.com';
     const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!;
+    const isTest = testMode === true;
 
     // Search for existing customer
     const search = await stripeGet(`/customers/search?query=email:'${encodeURIComponent(email)}'&limit=1`);
@@ -44,18 +45,30 @@ export async function POST(req: NextRequest) {
     }
 
     // Create checkout session
-    const session = await stripePost('/checkout/sessions', {
+    const sessionParams: Record<string, string> = {
       customer: customerId,
       mode: 'subscription',
       'payment_method_types[]': 'card',
-      'line_items[0][price]': priceId,
-      'line_items[0][quantity]': '1',
       success_url: `${appUrl}/?subscribed=true`,
       cancel_url: `${appUrl}/?cancelled=true`,
       'subscription_data[metadata][email]': email,
       'metadata[email]': email,
       allow_promotion_codes: 'true',
-    });
+    };
+
+    if (isTest) {
+      // Test mode: €1 ad-hoc price
+      sessionParams['line_items[0][price_data][currency]'] = 'eur';
+      sessionParams['line_items[0][price_data][unit_amount]'] = '100';
+      sessionParams['line_items[0][price_data][recurring][interval]'] = 'month';
+      sessionParams['line_items[0][price_data][product_data][name]'] = 'Avena Terminal PRO (Test)';
+      sessionParams['line_items[0][quantity]'] = '1';
+    } else {
+      sessionParams['line_items[0][price]'] = priceId;
+      sessionParams['line_items[0][quantity]'] = '1';
+    }
+
+    const session = await stripePost('/checkout/sessions', sessionParams);
 
     if (session.error) {
       console.error('Stripe session error:', JSON.stringify(session.error));
