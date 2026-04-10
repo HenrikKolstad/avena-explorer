@@ -62,12 +62,37 @@ export default function CryptoTab({ properties }: { properties: Property[] }) {
     } catch { /* silent */ }
   };
 
-  const connectWallet = async () => {
+  const connectWallet = async (wallet: 'metamask' | 'trust') => {
     setConnectError('');
     try {
       const w = window as any;
-      const eth = w.ethereum || w.trustwallet;
+      let eth: any = null;
+
+      // When multiple wallets installed, they put themselves in providers array
+      const providers = w.ethereum?.providers;
+
+      if (wallet === 'metamask') {
+        if (providers && Array.isArray(providers)) {
+          // Find MetaMask specifically — it has isMetaMask=true
+          // Trust also sets isMetaMask, so prefer the one WITHOUT isTrust
+          eth = providers.find((p: any) => p.isMetaMask && !p.isTrustWallet && !p.isTrust);
+          if (!eth) eth = providers.find((p: any) => p.isMetaMask);
+        }
+        if (!eth && w.ethereum?.isMetaMask && !w.ethereum?.isTrust && !w.ethereum?.isTrustWallet) {
+          eth = w.ethereum;
+        }
+      } else {
+        if (providers && Array.isArray(providers)) {
+          eth = providers.find((p: any) => p.isTrust || p.isTrustWallet);
+        }
+        if (!eth && w.trustwallet) eth = w.trustwallet;
+        if (!eth && (w.ethereum?.isTrust || w.ethereum?.isTrustWallet)) eth = w.ethereum;
+      }
+
+      // Final fallback — just use whatever is there
+      if (!eth) eth = w.ethereum;
       if (!eth) { setConnectError('no-wallet'); return; }
+
       const accounts = await eth.request({ method: 'eth_requestAccounts' });
       if (!accounts || !accounts[0]) { setConnectError('No account returned'); return; }
       setWalletAddress(accounts[0]);
@@ -165,10 +190,15 @@ export default function CryptoTab({ properties }: { properties: Property[] }) {
           ) : !walletAddress ? (
             <div className="flex flex-col items-center gap-3">
               <div className="flex gap-3">
-                <button onClick={connectWallet} className="px-6 py-3 rounded-lg text-sm font-bold border transition-all" style={{ borderColor: '#10B981', color: '#10B981' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.color = '#0d1117'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#10B981'; }}>
-                  Connect Wallet
+                <button onClick={() => connectWallet('metamask')} className="px-5 py-2.5 rounded-lg text-xs font-bold border transition-all" style={{ borderColor: '#F6851B', color: '#F6851B' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#F6851B'; e.currentTarget.style.color = '#0d1117'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#F6851B'; }}>
+                  MetaMask
+                </button>
+                <button onClick={() => connectWallet('trust')} className="px-5 py-2.5 rounded-lg text-xs font-bold border transition-all" style={{ borderColor: '#3375BB', color: '#3375BB' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#3375BB'; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#3375BB'; }}>
+                  Trust Wallet
                 </button>
               </div>
               {connectError === 'no-wallet' && (
