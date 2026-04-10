@@ -1478,17 +1478,20 @@ export default function Explorer() {
           {tab === 'legal' && <LegalTab />}
           {tab === 'contact' && <ContactTab />}
           {tab === 'crypto' && (
-            isPaid ? <CryptoTab properties={properties} /> : (
-              <div className="relative">
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center backdrop-blur-md" style={{ background: 'rgba(9,13,18,0.85)' }}>
-                  <div className="text-2xl md:text-3xl font-extralight tracking-[0.3em] mb-3" style={{ color: '#93c5fd' }}>COMING SOON</div>
-                  <p className="text-sm tracking-wide" style={{ color: '#3b82f6' }}>The Avena Experiment is being prepared.</p>
-                </div>
-                <div className="pointer-events-none select-none">
-                  <CryptoTab properties={properties} />
-                </div>
-              </div>
-            )
+            <div className="relative">
+              <CryptoTab properties={properties} />
+              {!isPaid && (
+                <>
+                  <div className="absolute z-20 left-0 right-0 flex flex-col items-center justify-center" style={{ top: '50%', bottom: 0, background: 'linear-gradient(to bottom, rgba(9,13,18,0) 0%, rgba(9,13,18,0.7) 15%, rgba(9,13,18,0.95) 40%)', backdropFilter: 'blur(4px)' }}>
+                    <div className="text-2xl md:text-3xl font-extralight tracking-[0.3em] mb-3" style={{ color: '#93c5fd' }}>COMING SOON</div>
+                    <p className="text-sm tracking-wide mb-4" style={{ color: '#3b82f6' }}>The Avena Experiment is being prepared.</p>
+                    <button onClick={() => setShowPaywall(true)} className="px-6 py-2.5 rounded-lg text-sm font-bold hover:opacity-90 transition-all" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
+                      Upgrade to PRO for full access
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
 
