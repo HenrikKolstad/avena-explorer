@@ -1117,7 +1117,7 @@ export default function Explorer() {
         style={{ paddingTop: mobileHeaderHidden ? 0 : headerH, paddingLeft: isDesktop ? (sidebarCollapsed ? 32 : 240) : 0, transition: 'padding-top 0.3s ease' }}
       >
           {(tab === 'whyavena' || (!user && tab === 'deals')) && (() => {
-            const [whyOpen, setWhyOpen] = [showWelcomePro, setShowWelcomePro]; // reuse existing state
+            const [whyOpen, setWhyOpen] = useState(false);
             return (
             <div className="px-4 md:px-8 py-6 border-b border-[#1c2333]">
               {/* Collapsible headline — only collapses on mobile */}
