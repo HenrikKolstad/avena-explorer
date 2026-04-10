@@ -26,6 +26,13 @@ export async function GET() {
     pubDate: isoNow,
   });
 
+  // Press release
+  entries.push({
+    loc: `${base}/press`,
+    title: 'Avena Terminal Data Reveals Spanish New Build Property Prices Average 19% Below Peak Valuations in 2026',
+    pubDate: '2026-04-01T09:00:00+02:00',
+  });
+
   // Include last 4 weekly snapshots (or fewer if early in the year)
   const startWeek = Math.max(1, currentWeek - 3);
   for (let w = startWeek; w <= Math.min(currentWeek, 52); w++) {
