@@ -69,10 +69,11 @@ export default function CryptoTab({ properties }: { properties: Property[] }) {
       const w = window as any;
 
       if (wallet === 'metamask') {
-        // MetaMask sets isMetaMask flag — find it specifically
-        if (w.ethereum?.providers) {
-          eth = w.ethereum.providers.find((p: any) => p.isMetaMask && !p.isTrust);
-        } else if (w.ethereum?.isMetaMask && !w.ethereum?.isTrust) {
+        // MetaMask — check providers array first, then fallback
+        if (w.ethereum?.providers?.length) {
+          eth = w.ethereum.providers.find((p: any) => p.isMetaMask);
+        }
+        if (!eth && w.ethereum?.isMetaMask) {
           eth = w.ethereum;
         }
         if (!eth) { setConnectError('MetaMask not found. Is the extension installed?'); return; }
