@@ -3865,6 +3865,7 @@ function CryptoTab({ properties }: { properties: Property[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [walletModal, setWalletModal] = useState(false);
   const [openModal, setOpenModal] = useState<string | null>(null);
+  const [faqOpen, setFaqOpen] = useState<number | null>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpenModal(null); };
@@ -4234,6 +4235,74 @@ function CryptoTab({ properties }: { properties: Property[] }) {
             })()}
           </div>
           <p className="text-[9px] text-gray-600 mt-3">Candidate list updates in real time as new key-ready properties are added. Final selection made by Avena engine at raise close.</p>
+        </div>
+      </div>
+
+      {/* ── ROUND STATUS ── */}
+      <div className="px-4 md:px-10 py-10 text-center" style={{ background: '#0d1117' }}>
+        <div className="h-px w-full mb-10" style={{ background: '#1a2332' }} />
+        <div className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 mb-2">Round 1 Status</div>
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-lg font-bold" style={{ color: '#00b9ff' }}>OPENING SOON</span>
+        </div>
+        <p className="text-gray-400 text-sm mb-2">Be first. When The Core opens — waitlist gets 24hr head start.</p>
+        <div className="h-px w-full mt-10" style={{ background: '#1a2332' }} />
+      </div>
+
+      {/* ── THE REVEAL ── */}
+      <div className="px-4 md:px-10 py-10" style={{ background: '#0d1117' }}>
+        <div className="max-w-[800px] mx-auto rounded-lg p-6 md:p-8" style={{ background: '#090d12', border: '1px solid #1a2332', borderTop: '2px solid #00b9ff' }}>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-4" style={{ color: '#00b9ff' }}>THE REVEAL</h3>
+          <div className="text-gray-300 text-sm leading-relaxed space-y-3">
+            <p>When The Core reaches €450,000 — everything stops.</p>
+            <p>The Avena engine runs one final scan across all key-ready properties in Spain. The highest scored property at that exact moment wins.</p>
+            <p>24 hours later — the property is revealed publicly on this page. Full address. Photos. Developer info. Avena score breakdown. Everything.</p>
+            <p>From that moment — Avena has 30 days to complete the purchase.</p>
+            <p className="text-white font-medium">This is not a fund picking deals behind closed doors. The algorithm decides. Publicly. Transparently. On-chain.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── THE FOUNDER ── */}
+      <div className="px-4 md:px-10 py-10" style={{ background: '#0d1117' }}>
+        <div className="max-w-[800px] mx-auto rounded-lg p-6 md:p-8" style={{ background: '#090d12', border: '1px solid #1a2332', borderTop: '2px solid #00b9ff' }}>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-4" style={{ color: '#00b9ff' }}>THE FOUNDER</h3>
+          <div className="text-gray-300 text-sm leading-relaxed space-y-3">
+            <p>Built by Henrik — Web3 builder, licensed property agent, and investor with 3 villas in Spain.</p>
+            <p>Frustrated by opaque markets, commission-hungry agents and portals that show listings but never tell you if they&apos;re actually good investments — he built the engine he wished existed.</p>
+            <p>Avena Terminal started as a personal tool. The Avena Experiment is the next chapter.</p>
+            <p className="text-white font-medium">Not anonymous. Not a VC. Not a fund. Just someone who knows the market better than most and wants to prove a more efficient system works.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── FAQ ── */}
+      <div className="px-4 md:px-10 py-10" style={{ background: '#0d1117' }}>
+        <div className="max-w-[800px] mx-auto">
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-6 text-center" style={{ color: '#00b9ff' }}>FREQUENTLY ASKED QUESTIONS</h3>
+          <div className="space-y-2">
+            {[
+              { q: 'Is this legal?', a: 'This is a private investment round, not a public token sale. Participants self-certify as experienced investors. We are exploring ECSP licensing for future public raises. Always consult your own legal and tax advisor before investing.' },
+              { q: 'What blockchain is this on?', a: 'Binance Smart Chain (BSC). Contributions are made in USDT (BEP-20). The multisig vault address is publicly visible on BSCScan.' },
+              { q: 'What if the property loses value?', a: 'Property values can fall as well as rise. In the event of a significant market downturn, the multisig committee will determine the best course of action for all contributors — including holding, renting or selling the asset. This is a real estate investment, not a guaranteed return product.' },
+              { q: 'How do I get my money back?', a: 'If the hard cap is not reached in 90 days — 100% of your USDT is returned automatically via smart contract. After the lock period, quarterly exit windows open where you can request redemption.' },
+              { q: 'What if Avena Terminal shuts down?', a: 'The property is owned via a legal structure independent of Avena Terminal. The multisig wallet requires 2 of 3 signers — the founder cannot act alone. In a worst case scenario, the property would be sold and proceeds distributed pro-rata to all contributors.' },
+              { q: 'When does Round 1 open?', a: 'Round 1 opens when the infrastructure is fully audited and legal structure is confirmed. Join the waitlist to be notified first.' },
+              { q: 'What is the minimum contribution?', a: '€2,500 USDT minimum. Maximum 180 contributors. First come first served.' },
+              { q: 'Do I need crypto experience?', a: 'You need a BSC-compatible wallet (MetaMask or Trust Wallet) and USDT on BSC. If you\'re not familiar with crypto wallets we recommend doing your research before participating.' },
+            ].map((item, i) => (
+              <div key={i} className="rounded-lg overflow-hidden" style={{ background: '#090d12', border: '1px solid #1a2332' }}>
+                <button onClick={() => setFaqOpen(faqOpen === i ? null : i)} className="w-full flex items-center justify-between px-5 py-4 text-left">
+                  <span className="text-sm text-white font-medium">{item.q}</span>
+                  <span className="text-gray-500 flex-shrink-0 ml-3 transition-transform duration-200" style={{ transform: faqOpen === i ? 'rotate(180deg)' : 'rotate(0deg)' }}>&#9662;</span>
+                </button>
+                <div className="overflow-hidden transition-all duration-300" style={{ maxHeight: faqOpen === i ? '500px' : '0', opacity: faqOpen === i ? 1 : 0 }}>
+                  <p className="px-5 pb-4 text-sm text-gray-400 leading-relaxed">{item.a}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
