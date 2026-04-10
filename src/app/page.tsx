@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
 import { LANGUAGES } from '@/lib/translations';
-import { BarChart3, Coins, Gem, Map, FolderOpen, TrendingUp, Star, Download, DollarSign, Heart, Crown, Settings, Info, Scale, Mail, BookOpen, Bitcoin, Menu, X, ChevronLeft, ChevronRight, Lock, User, ExternalLink, AlertTriangle, Check, Sparkles, FileText, Calculator, ArrowUpRight, Zap } from 'lucide-react';
+import { BarChart3, Coins, Gem, Map, FolderOpen, TrendingUp, Star, Download, DollarSign, Heart, Crown, Settings, Info, Scale, Mail, BookOpen, Bitcoin, Menu, X, ChevronLeft, ChevronRight, Lock, User, ExternalLink, AlertTriangle, Check, Sparkles, FileText, Calculator, ArrowUpRight, Zap, MessageCircle } from 'lucide-react';
 import CoreOrb from '@/components/OrbLightning';
 
 const MapView = dynamic(() => import('@/components/MapView'), { ssr: false });
@@ -928,6 +928,15 @@ export default function Explorer() {
 
                     {/* TOOLS */}
                     <SectionHeader label="TOOLS" />
+                    <a href="/chat" className="flex items-center gap-3 w-full transition-all min-h-[40px] px-3 relative group" style={{ color: '#cccccc', background: 'transparent', borderLeft: '3px solid transparent', cursor: 'pointer', textDecoration: 'none' }} onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#ffffff08'; }} onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}>
+                      <span className="flex-shrink-0 w-5 text-center leading-none"><MessageCircle size={16} /></span>
+                      {(!sidebarCollapsed || mobileSidebarOpen) && (
+                        <span className="text-[12px] font-medium tracking-wide whitespace-nowrap overflow-hidden flex-1 text-left flex items-center gap-1.5">
+                          <span className="flex-1" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Oracle</span>
+                          <span className="text-[8px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: 'rgba(0,185,255,0.1)', border: '1px solid rgba(0,185,255,0.3)', color: '#00b9ff', WebkitTextFillColor: '#00b9ff' }}>AI</span>
+                        </span>
+                      )}
+                    </a>
                     <NavItem icon={<Download size={16} />} label="Export CSV" onClick={() => { exportCSV(); onClose?.(); }} />
                     <NavItem icon={<DollarSign size={16} />} label="Currency Settings" onClick={() => { setShowCurrencyPanel(v => !v); }} />
                     <NavItem icon={<Heart size={16} />} label="Favorites" onClick={() => { setQuickFilter(q => q === 'favs' ? '' : 'favs'); go('deals'); }} />

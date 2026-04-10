@@ -131,6 +131,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${base}/price-history/${t.slug}`, lastModified: now, changeFrequency: 'daily', priority: 0.6 });
   }
 
+  // Chat / Oracle
+  entries.push({ url: `${base}/chat`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
+
   // Data index + embed
   entries.push({ url: `${base}/data/spain-property-index`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
   entries.push({ url: `${base}/embed`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 });
