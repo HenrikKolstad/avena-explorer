@@ -2003,6 +2003,7 @@ export default function Explorer() {
                 'Cash-on-cash return & mortgage calculator',
                 'Luxury €1M+ segment analysis',
                 'Daily updates — new listings every morning',
+                'Web3 integration coming soon',
               ].map((text) => (
                 <li key={text} className="flex items-center gap-2.5 text-sm text-gray-300">
                   <Check size={14} style={{ color: '#00b9ff', flexShrink: 0 }} /> {text}
