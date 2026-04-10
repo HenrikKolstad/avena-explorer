@@ -901,7 +901,6 @@ export default function Explorer() {
                     <SectionHeader label="INVEST" />
                     <NavItem icon={<BarChart3 size={16} />} label="Deal Rankings" isActive={tab === 'deals'} onClick={() => go('deals')} />
                     <NavItem icon={<Coins size={16} />} label="Rental Yield" isActive={tab === 'yield'} onClick={() => go('yield')} badge="2 free" />
-                    <NavItem icon={<Search size={16} />} label="Property Analyzer" isActive={tab === 'analyzer'} onClick={() => go('analyzer')} badge="NEW" />
                     <NavItem icon={<Gem size={16} />} label="Luxury 1M+" isActive={tab === 'luxury'} onClick={() => go('luxury')} badge="PRO" />
                     <NavItem icon={<Map size={16} />} label="Map" isActive={tab === 'map'} onClick={() => go('map')} badge="PRO" />
                     <NavItem icon={<FolderOpen size={16} />} label="Portfolio" isActive={tab === 'portfolio'} onClick={() => go('portfolio')} badge="PRO" />
@@ -1466,7 +1465,6 @@ export default function Explorer() {
           )}
 
           {tab === 'yield' && <YieldTab properties={filtered} isPaid={isPaid} onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} onCurrencyChange={setYieldCurrency} />}
-          {tab === 'analyzer' && <AnalyzerTab isPaid={isPaid} onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} />}
           {tab === 'portfolio' && !isPaid && <ProGate feature="Portfolio Simulator" onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} />}
           {tab === 'portfolio' && isPaid && <PortfolioTab properties={properties} portfolio={portfolio} onToggle={togglePortfolio} />}
           {tab === 'map' && !isPaid && <ProGate feature="Interactive Map" onUpgrade={() => user ? setShowPaywall(true) : setShowAuthModal(true)} />}
