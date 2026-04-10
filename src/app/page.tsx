@@ -4190,14 +4190,105 @@ function CryptoTab({ properties }: { properties: Property[] }) {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [walletModal, setWalletModal] = useState(false);
   const [openModal, setOpenModal] = useState<string | null>(null);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [riskAccepted, setRiskAccepted] = useState(false);
+  const [showRiskModal, setShowRiskModal] = useState(false);
+  const [riskChecked, setRiskChecked] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [chainOk, setChainOk] = useState(false);
+  const [usdtBalance, setUsdtBalance] = useState<string | null>(null);
+  const [contributionAmount, setContributionAmount] = useState('2500');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [connectError, setConnectError] = useState('');
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpenModal(null); };
     if (openModal) { window.addEventListener('keydown', handleEsc); return () => window.removeEventListener('keydown', handleEsc); }
   }, [openModal]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (localStorage.getItem('avena_risk_accepted') === 'true') setRiskAccepted(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      (window as any).ethereum.on?.('accountsChanged', (accounts: string[]) => {
+        if (accounts.length === 0) { setWalletAddress(null); setUsdtBalance(null); }
+        else { setWalletAddress(accounts[0]); checkChainAndBalance(accounts[0]); }
+      });
+      (window as any).ethereum.on?.('chainChanged', () => window.location.reload());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const USDT_BSC = '0x55d398326f99059fF775485246999027B3197955';
+  const VAULT_ADDRESS = '0x86D14d0d4a8B5934CC432689fB1415100d5021Cd';
+
+  const checkChainAndBalance = async (addr: string) => {
+    try {
+      const eth = (window as any).ethereum;
+      const chainId = await eth.request({ method: 'eth_chainId' });
+      const onBsc = chainId === '0x38';
+      setChainOk(onBsc);
+      if (onBsc) {
+        const data = '0x70a08231' + addr.slice(2).padStart(64, '0');
+        const result = await eth.request({ method: 'eth_call', params: [{ to: USDT_BSC, data }, 'latest'] });
+        const balance = parseInt(result, 16) / 1e18;
+        setUsdtBalance(balance.toFixed(2));
+      }
+    } catch { /* silent */ }
+  };
+
+  const connectWallet = async () => {
+    setConnectError('');
+    const eth = (window as any).ethereum;
+    if (!eth) { setConnectError('no-wallet'); return; }
+    try {
+      const accounts = await eth.request({ method: 'eth_requestAccounts' });
+      const addr = accounts[0];
+      setWalletAddress(addr);
+      await checkChainAndBalance(addr);
+    } catch (err: any) {
+      setConnectError(err.message || 'Connection rejected');
+    }
+  };
+
+  const switchToBsc = async () => {
+    const eth = (window as any).ethereum;
+    try {
+      await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
+    } catch (err: any) {
+      if (err.code === 4902) {
+        await eth.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x38',
+            chainName: 'Binance Smart Chain',
+            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+            rpcUrls: ['https://bsc-dataseed.binance.org/'],
+            blockExplorerUrls: ['https://bscscan.com/']
+          }]
+        });
+      }
+    }
+    if (walletAddress) await checkChainAndBalance(walletAddress);
+  };
+
+  const reserveSlot = async () => {
+    const amount = parseInt(contributionAmount);
+    if (amount < 2500) return;
+    try {
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet: walletAddress, amount, type: 'crypto_contribution' }),
+      });
+    } catch { /* silent */ }
+    setShowConfirmModal(true);
+  };
 
   const handleSubmit = async () => {
     if (!email.includes('@') || submitting) return;
@@ -4241,15 +4332,65 @@ function CryptoTab({ properties }: { properties: Property[] }) {
             <div className="h-full rounded-full" style={{ width: `${fillPct}%`, background: '#10B981' }} />
           </div>
 
-          <button
-            onClick={() => setWalletModal(true)}
-            className="px-8 py-3 rounded-lg text-sm font-bold border transition-all tracking-[0.1em]"
-            style={{ borderColor: '#10B981', color: '#10B981', background: 'transparent' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.color = '#0d1117'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#10B981'; }}
-          >
-            Connect Wallet
-          </button>
+          {/* Wallet Connection */}
+          {!riskAccepted ? (
+            <button onClick={() => setShowRiskModal(true)}
+              className="px-8 py-3 rounded-lg text-sm font-bold border transition-all tracking-[0.1em]"
+              style={{ borderColor: '#10B981', color: '#10B981', background: 'transparent' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.color = '#0d1117'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#10B981'; }}>
+              Connect Wallet
+            </button>
+          ) : !walletAddress ? (
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex gap-3">
+                <button onClick={connectWallet} className="px-5 py-2.5 rounded-lg text-xs font-bold border transition-all" style={{ borderColor: '#F6851B', color: '#F6851B' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#F6851B'; e.currentTarget.style.color = '#0d1117'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#F6851B'; }}>
+                  Connect MetaMask
+                </button>
+                <button onClick={connectWallet} className="px-5 py-2.5 rounded-lg text-xs font-bold border transition-all" style={{ borderColor: '#3375BB', color: '#3375BB' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#3375BB'; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#3375BB'; }}>
+                  Connect Trust Wallet
+                </button>
+              </div>
+              {connectError === 'no-wallet' && (
+                <div className="text-xs text-gray-400 text-center">
+                  No wallet detected. <a href="https://metamask.io" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">Install MetaMask</a> or open in <a href="https://trustwallet.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">Trust Wallet Browser</a>
+                </div>
+              )}
+              {connectError && connectError !== 'no-wallet' && <p className="text-xs text-red-400">{connectError}</p>}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="text-emerald-400 font-mono text-xs">Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+              </div>
+              {!chainOk && (
+                <div className="text-center">
+                  <p className="text-xs text-yellow-400 mb-2">Wrong network. Switch to Binance Smart Chain.</p>
+                  <button onClick={switchToBsc} className="px-4 py-2 rounded-lg text-xs font-bold" style={{ background: '#F59E0B', color: '#0d1117' }}>Switch to BSC</button>
+                </div>
+              )}
+              {chainOk && usdtBalance !== null && (
+                <div className="text-center">
+                  <p className="text-xs text-gray-400">USDT Balance: <span className="text-white font-bold">{usdtBalance} USDT</span></p>
+                  <div className="mt-4 flex flex-col items-center gap-2">
+                    <input type="number" min="2500" value={contributionAmount} onChange={e => setContributionAmount(e.target.value)}
+                      className="w-48 px-4 py-2 rounded-lg text-sm text-white text-center outline-none" style={{ background: '#0d1117', border: '1px solid #1c2333' }} />
+                    <p className="text-[10px] text-gray-500">{contributionAmount} USDT = {(parseInt(contributionAmount || '0') / 2500).toFixed(1)}/180 slots</p>
+                    <p className="text-[10px] text-gray-600">Minimum: 2,500 USDT</p>
+                    <button onClick={reserveSlot} disabled={parseInt(contributionAmount) < 2500}
+                      className="px-6 py-2.5 rounded-lg text-sm font-bold transition-all disabled:opacity-30" style={{ background: '#10B981', color: '#0d1117' }}>
+                      RESERVE MY SLOT →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -4665,25 +4806,44 @@ function CryptoTab({ properties }: { properties: Property[] }) {
         )}
       </div>
 
-      {/* ── WALLET MODAL ── */}
-      {walletModal && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setWalletModal(false)}>
-          <div className="relative rounded-2xl p-6 md:p-8 w-full max-w-sm mx-4" style={{ background: '#0d1117', border: '1px solid #1a2332' }} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setWalletModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white text-lg">×</button>
-            <h3 className="text-white font-bold text-lg mb-6 text-center">Connect Wallet</h3>
-            <div className="space-y-3">
-              {[
-                { name: 'MetaMask', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21.3 2L13 8.2l1.5-3.6L21.3 2z" fill="#E17726"/><path d="M2.7 2l8.2 6.3-1.4-3.7L2.7 2z" fill="#E27625"/><path d="M18.3 16.8l-2.2 3.4 4.7 1.3 1.3-4.6-3.8-.1z" fill="#E27625"/><path d="M1.9 16.9l1.3 4.6 4.7-1.3-2.2-3.4-3.8.1z" fill="#E27625"/></svg> },
-                { name: 'Trust Wallet', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 3c1.7 0 3.2.7 4.3 1.8L12 10.6 7.7 6.8C8.8 5.7 10.3 5 12 5z" fill="#3375BB"/></svg> },
-                { name: 'WalletConnect', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6.1 8.8c3.3-3.2 8.5-3.2 11.8 0l.4.4c.2.2.2.4 0 .5l-1.3 1.2c-.1.1-.2.1-.3 0l-.5-.5c-2.3-2.2-5.9-2.2-8.2 0l-.6.5c-.1.1-.2.1-.3 0L5.8 9.7c-.2-.1-.2-.4 0-.5l.3-.4z" fill="#3B99FC"/><path d="M19.8 11.2l1.1 1.1c.2.2.2.4 0 .5l-5.1 5c-.2.2-.4.2-.6 0l-3.6-3.5c0-.1-.1-.1-.1 0l-3.6 3.5c-.2.2-.4.2-.6 0l-5.1-5c-.2-.1-.2-.4 0-.5l1.1-1.1c.2-.2.4-.2.6 0l3.6 3.5c0 .1.1.1.1 0l3.6-3.5c.2-.2.4-.2.6 0l3.6 3.5c0 .1.1.1.1 0l3.6-3.5c.2-.2.5-.2.7 0z" fill="#3B99FC"/></svg> },
-              ].map((wallet) => (
-                <button key={wallet.name} className="w-full flex items-center gap-3 p-3 rounded-lg border transition-all hover:border-[#10B981]/40" style={{ background: '#090d12', borderColor: '#1a2332' }}>
-                  <span className="flex-shrink-0">{wallet.icon}</span>
-                  <span className="text-white text-sm font-medium flex-1 text-left">{wallet.name}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ color: '#10B981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>Coming Soon</span>
-                </button>
-              ))}
+      {/* ── RISK MODAL ── */}
+      {showRiskModal && (
+        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowRiskModal(false)}>
+          <div className="relative rounded-2xl p-6 md:p-8 w-full max-w-md mx-4" style={{ background: '#0d1117', border: '1px solid #1c2333' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowRiskModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white">&times;</button>
+            <h3 className="text-lg font-bold mb-4" style={{ color: '#F59E0B' }}>RISK DISCLAIMER</h3>
+            <ul className="space-y-2 mb-6 text-sm text-gray-300">
+              <li className="flex gap-2"><span className="text-yellow-500 flex-shrink-0">&bull;</span> Capital at risk — contributions may not be returned if property acquisition fails</li>
+              <li className="flex gap-2"><span className="text-yellow-500 flex-shrink-0">&bull;</span> 12-month lock-up — funds cannot be withdrawn during acquisition period</li>
+              <li className="flex gap-2"><span className="text-yellow-500 flex-shrink-0">&bull;</span> No guaranteed returns — yield estimates are projections only</li>
+              <li className="flex gap-2"><span className="text-yellow-500 flex-shrink-0">&bull;</span> Not financial advice — this is not a regulated investment product</li>
+              <li className="flex gap-2"><span className="text-yellow-500 flex-shrink-0">&bull;</span> Network risk — BSC transactions are irreversible</li>
+            </ul>
+            <label className="flex items-center gap-2 mb-4 cursor-pointer text-sm text-gray-400">
+              <input type="checkbox" checked={riskChecked} onChange={e => setRiskChecked(e.target.checked)} className="accent-emerald-500" />
+              I have read and understood the risks
+            </label>
+            <button onClick={() => { setRiskAccepted(true); setShowRiskModal(false); localStorage.setItem('avena_risk_accepted', 'true'); }}
+              disabled={!riskChecked} className="w-full py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-30" style={{ background: '#10B981', color: '#0d1117' }}>
+              I Understand, Continue &rarr;
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── CONFIRMATION MODAL ── */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowConfirmModal(false)}>
+          <div className="relative rounded-2xl p-6 md:p-8 w-full max-w-md mx-4" style={{ background: '#0d1117', border: '1px solid #1c2333' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowConfirmModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white">&times;</button>
+            <h3 className="text-lg font-bold text-emerald-400 mb-3">SLOT RESERVED</h3>
+            <p className="text-sm text-gray-300 mb-4">Your wallet address has been recorded. Send exactly <span className="text-white font-bold">{contributionAmount} USDT</span> to The Vault address below within 24 hours to secure your position.</p>
+            <div className="flex items-center gap-2 mb-4 p-3 rounded-lg" style={{ background: '#090d12', border: '1px solid #1c2333' }}>
+              <code className="text-xs text-white break-all flex-1 font-mono">{VAULT_ADDRESS}</code>
+              <button onClick={() => navigator.clipboard.writeText(VAULT_ADDRESS)} className="text-gray-500 hover:text-white flex-shrink-0 text-xs">Copy</button>
             </div>
+            <p className="text-xs text-gray-500 mb-4">We will confirm your contribution via email within 24 hours.</p>
+            <button onClick={() => setShowConfirmModal(false)} className="w-full py-2.5 rounded-lg text-sm font-bold" style={{ background: '#10B981', color: '#0d1117' }}>Close</button>
           </div>
         </div>
       )}
