@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function checkSubscription(email: string) {
     // Admin accounts always have full access
-    const ADMIN_EMAILS = ['henrik@xaviaestate.com', 'Henrik@xaviaestate.com'];
+    const ADMIN_EMAILS = ['henrik@xaviaestate.com', 'Henrik@xaviaestate.com', 'henrik@betongsproyting.no', 'jesper.troan@gmail.com'];
     if (ADMIN_EMAILS.some(e => e.toLowerCase() === email.toLowerCase())) {
       setIsPaid(true);
       return;
