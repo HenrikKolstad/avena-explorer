@@ -91,6 +91,50 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${base}/area/${a}`, lastModified: now, changeFrequency: 'daily', priority: 0.6 });
   }
 
+  // Search query pages
+  const searchPatterns = ['3-bed-villa-', '2-bed-apartment-', 'cheap-new-builds-', 'investment-property-', 'apartment-under-200k-', 'villa-with-pool-'];
+  for (const t of getUniqueTowns().slice(0, 20)) {
+    for (const pattern of searchPatterns) {
+      entries.push({ url: `${base}/search/${pattern}${t.slug}`, lastModified: now, changeFrequency: 'daily', priority: 0.5 });
+    }
+  }
+
+  // Province pages
+  const provinces = [...new Set(getAllProperties().map(p => { const parts = p.l?.split(', '); return parts?.[1]; }).filter(Boolean))];
+  for (const prov of provinces) {
+    entries.push({ url: `${base}/local/${slugify(prov!)}`, lastModified: now, changeFrequency: 'daily', priority: 0.6 });
+  }
+
+  // About + Press
+  entries.push({ url: `${base}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 });
+  entries.push({ url: `${base}/about/press`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 });
+
+  // Calculator
+  entries.push({ url: `${base}/calculator`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 });
+
+  // Glossary
+  entries.push({ url: `${base}/glossary`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 });
+  for (const term of ['ibi-tax','nie-number','nota-simple','off-plan','key-ready','community-fees','plusvalia-tax','escritura','registro-propiedad','notario','gestor','poder-notarial','impuesto-transmisiones','iva-new-build','cedula-habitabilidad','licencia-primera-ocupacion','catastro','referencia-catastral','hipoteca','tasacion','arras-contract','contrato-compraventa','gastos-notariales','impuesto-actos-juridicos','residencia-fiscal','golden-visa-spain','autonomo-spain','sociedad-limitada','declaracion-renta','modelo-210']) {
+    entries.push({ url: `${base}/glossary/${term}`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 });
+  }
+
+  // Reports
+  for (const year of ['2025', '2026']) {
+    entries.push({ url: `${base}/reports/${year}`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 });
+  }
+
+  // Developer ratings
+  entries.push({ url: `${base}/developers/ratings`, lastModified: now, changeFrequency: 'daily', priority: 0.6 });
+
+  // Price history (top 30 towns)
+  for (const t of getUniqueTowns().slice(0, 30)) {
+    entries.push({ url: `${base}/price-history/${t.slug}`, lastModified: now, changeFrequency: 'daily', priority: 0.6 });
+  }
+
+  // Data index + embed
+  entries.push({ url: `${base}/data/spain-property-index`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
+  entries.push({ url: `${base}/embed`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 });
+
   // Property pages
   for (const p of getAllProperties()) {
     if (p.ref) {
