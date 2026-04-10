@@ -2,20 +2,37 @@ import { getAllProperties } from '@/lib/properties';
 
 export async function GET() {
   const base = 'https://avenaterminal.com';
-  const properties = getAllProperties().slice(0, 1000);
+  const properties = getAllProperties();
 
   const urls = properties
     .filter(p => p.ref && p.imgs && p.imgs.length > 0)
     .map(p => {
       const pageUrl = `${base}/property/${encodeURIComponent(p.ref!)}`;
+      const town = p.l?.split(',')[0]?.trim() || '';
+      const region = p.costa || p.r || '';
+      const propertyType = p.t ? p.t.charAt(0).toUpperCase() + p.t.slice(1) : 'Property';
+
       const images = p.imgs!
         .slice(0, 5)
         .map(
-          img =>
-            `      <image:image>
+          (img, idx) => {
+            let title: string;
+            if (idx === 0) {
+              title = `${propertyType} in ${town}${region ? `, ${region}` : ''} — ${p.bd} bed, ${p.ba} bath`;
+            } else if (idx === 1) {
+              title = `Interior view of ${p.bd}-bedroom ${propertyType.toLowerCase()} in ${town}`;
+            } else if (idx === 2) {
+              title = `${propertyType} layout and living space in ${town}${region ? `, ${region}` : ''}`;
+            } else if (idx === 3) {
+              title = p.pool ? `Pool area — ${propertyType.toLowerCase()} in ${town}` : `Exterior view — ${propertyType.toLowerCase()} in ${town}`;
+            } else {
+              title = `${propertyType} in ${town} — additional view`;
+            }
+            return `      <image:image>
         <image:loc>${escapeXml(img)}</image:loc>
-        <image:title>${escapeXml(p.p ? `${p.p} in ${p.l}` : p.l || 'Property')}</image:title>
-      </image:image>`
+        <image:title>${escapeXml(title)}</image:title>
+      </image:image>`;
+          }
         )
         .join('\n');
       return `  <url>

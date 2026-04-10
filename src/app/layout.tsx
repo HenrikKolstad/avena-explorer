@@ -36,6 +36,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="alternate" hrefLang="en" href="https://avenaterminal.com" />
+        <link rel="alternate" hrefLang="es" href="https://avenaterminal.com/es" />
+        <link rel="alternate" hrefLang="x-default" href="https://avenaterminal.com" />
         <link rel="preconnect" href="https://apinmo.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://apinmo.com" />
         <script

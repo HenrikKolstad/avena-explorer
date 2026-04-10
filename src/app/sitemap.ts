@@ -14,6 +14,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/developer`, lastModified: now, changeFrequency: 'daily', priority: 0.3 },
   ];
 
+  // Stats page
+  entries.push({ url: `${base}/stats`, lastModified: now, changeFrequency: 'daily', priority: 1 });
+
+  // Spanish pages
+  entries.push({ url: `${base}/es`, lastModified: now, changeFrequency: 'daily', priority: 1 });
+  for (const t of getUniqueTowns()) {
+    entries.push({ url: `${base}/es/${t.slug}`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
+  }
+
   // Blog posts
   if (supabase) {
     const { data: posts } = await supabase.from('blogs').select('slug, published_at').eq('published', true);
@@ -109,9 +118,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   entries.push({ url: `${base}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 });
   entries.push({ url: `${base}/about/press`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 });
 
-  // Dataset, Press, Data Partners
+  // Dataset, Press, Media, Data Partners
   entries.push({ url: `${base}/dataset`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
   entries.push({ url: `${base}/press`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
+  entries.push({ url: `${base}/media`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
   entries.push({ url: `${base}/data-partners`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
 
   // Calculator
