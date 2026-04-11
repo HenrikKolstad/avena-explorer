@@ -13,11 +13,19 @@
       "schedule": "0 7 * * *"
     },
     {
-      "path": "/api/auto-post",
-      "schedule": "0 9,13,18 * * *"
+      "path": "/api/cron/auto-post",
+      "schedule": "0 9 * * *"
     },
     {
-      "path": "/api/deal-alerts/check",
+      "path": "/api/cron/auto-post",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/auto-post",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/deal-alerts",
       "schedule": "0 8 * * *"
     }
   ]
