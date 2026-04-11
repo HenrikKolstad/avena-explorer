@@ -120,7 +120,32 @@ export default function Explorer() {
   const [authError, setAuthError] = useState('');
   const [authLoading2, setAuthLoading2] = useState(false);
   const [showWelcomePro, setShowWelcomePro] = useState(false);
+  const [showWelcomeUser, setShowWelcomeUser] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
+
+  // Detect ?subscribed=true from Stripe redirect
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('subscribed') === 'true') {
+        setShowWelcomePro(true);
+        window.history.replaceState({}, '', '/');
+        setTimeout(() => setShowWelcomePro(false), 8000);
+      }
+    }
+  }, []);
+
+  // Welcome message on first sign-in
+  useEffect(() => {
+    if (user && !authLoading && typeof window !== 'undefined') {
+      const welcomed = sessionStorage.getItem('avena_welcomed');
+      if (!welcomed) {
+        setShowWelcomeUser(true);
+        sessionStorage.setItem('avena_welcomed', '1');
+        setTimeout(() => setShowWelcomeUser(false), 5000);
+      }
+    }
+  }, [user, authLoading]);
   const [paywallEmail, setPaywallEmail] = useState('');
   const [paywallLoading, setPaywallLoading] = useState(false);
   // Yield tab currency state (lifted for tab label indicator)
@@ -1900,14 +1925,27 @@ export default function Explorer() {
       {/* WELCOME PRO TOAST */}
       {showWelcomePro && (
         <div className="fixed bottom-6 left-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[600] animate-slide-up">
-          <div className="bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500/50 rounded-2xl px-4 md:px-6 py-4 shadow-2xl flex items-center gap-3 md:gap-4 md:min-w-[300px]">
-            <div className="text-3xl">🎉</div>
+          <div className="rounded-2xl px-4 md:px-6 py-4 shadow-2xl flex items-center gap-3 md:gap-4 md:min-w-[300px]" style={{ background: 'linear-gradient(135deg, #064e3b, #0d1117)', border: '1px solid rgba(16,185,129,0.4)' }}>
+            <Sparkles size={24} className="text-emerald-400 flex-shrink-0" />
             <div>
-              <div className="text-emerald-300 font-bold text-sm">Welcome to Avena PRO!</div>
-              <div className="text-emerald-500 text-xs mt-0.5">All 1,000+ properties unlocked.</div>
-              <div className="text-emerald-400 text-xs mt-1 font-medium">Sign in with the same email you used to subscribe to activate your access.</div>
+              <div className="text-white font-bold text-sm">Welcome to Avena PRO</div>
+              <div className="text-emerald-400 text-xs mt-0.5">All 1,881 properties unlocked. Full access activated.</div>
             </div>
-            <button onClick={() => setShowWelcomePro(false)} className="text-emerald-600 hover:text-emerald-300 ml-2 text-lg">×</button>
+            <button onClick={() => setShowWelcomePro(false)} className="text-gray-500 hover:text-white ml-2 text-lg flex-shrink-0">&times;</button>
+          </div>
+        </div>
+      )}
+
+      {/* WELCOME USER TOAST */}
+      {showWelcomeUser && !showWelcomePro && (
+        <div className="fixed bottom-6 left-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[600] animate-slide-up">
+          <div className="rounded-2xl px-4 md:px-6 py-4 shadow-2xl flex items-center gap-3 md:gap-4 md:min-w-[300px]" style={{ background: '#0f1419', border: '1px solid #1c2333' }}>
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0"><Check size={16} className="text-emerald-400" /></div>
+            <div>
+              <div className="text-white font-bold text-sm">Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}</div>
+              <div className="text-gray-400 text-xs mt-0.5">{isPaid ? 'PRO access active' : '5 free deals available'}</div>
+            </div>
+            <button onClick={() => setShowWelcomeUser(false)} className="text-gray-500 hover:text-white ml-2 text-lg flex-shrink-0">&times;</button>
           </div>
         </div>
       )}
