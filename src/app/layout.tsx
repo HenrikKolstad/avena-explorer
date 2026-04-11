@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   description: "Score and rank 1,867 new build properties across Costa Blanca, Costa Cálida and Costa del Sol. Rental yield, price per m², investment score. Spain's first PropTech terminal.",
   metadataBase: new URL("https://avenaterminal.com"),
   alternates: { canonical: 'https://avenaterminal.com' },
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   keywords: ['Spain new builds', 'Costa Blanca property', 'Costa del Sol investment', 'new build Spain 2026', 'Spanish property investment', 'proptech Spain', 'rental yield Spain', 'Marbella new builds', 'Alicante new builds', 'Costa Calida property', 'Spain investment score'],
   openGraph: {
     title: "Avena Terminal — Spain New Build Property Investment Scanner | 1,867 Properties",
