@@ -31,7 +31,7 @@ export default function ContactTab() {
             {/* Name & title */}
             <div className="text-center mb-8">
               <div className="font-serif text-3xl font-bold mb-1" style={{ background: 'linear-gradient(90deg, #10B981, #34d399, #10B981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Henrik K.
+                Henrik
               </div>
               <div className="text-[11px] uppercase tracking-[4px] text-gray-500">Founder · Avena Terminal</div>
               <div className="mt-3 text-xs text-gray-500 leading-relaxed max-w-xs mx-auto">
