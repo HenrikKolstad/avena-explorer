@@ -266,7 +266,7 @@ export default function AnalyzerTab({ isPaid, onUpgrade }: { isPaid: boolean; on
               <div className="rounded-xl p-5" style={{ background: '#0f1419', border: '1px solid #1c2333' }}>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div><span className="text-gray-500 text-xs block">Gross Yield</span><span className="text-white font-bold">{result.analysis.estimatedGrossYield}%</span></div>
-                  <div><span className="text-gray-500 text-xs block">Net Yield</span><span className="text-white font-bold">{result.analysis.estimatedNetYield}%</span></div>
+                  <div><span className="text-gray-500 text-xs block">Deal Tier</span><span className="text-white font-bold">{result.analysis.dealTier}</span></div>
                   <div><span className="text-gray-500 text-xs block">vs. Market</span><span className="text-white font-bold text-xs">{result.analysis.marketComparison}</span></div>
                   <div><span className="text-gray-500 text-xs block">Area Listings</span><span className="text-white font-bold">{result.analysis.townProperties}</span></div>
                 </div>

@@ -136,7 +136,7 @@ export default function MarketIndexTab({ properties }: { properties: Property[] 
         {[
           { label: 'Properties Tracked', value: totalProps.toLocaleString() },
           { label: 'National Avg Discount', value: `${nationalDisc}%` },
-          { label: 'National Avg Yield', value: `${nationalYield}%` },
+          { label: 'National Avg Gross Yield', value: `${nationalYield}%` },
           { label: 'Highest Score', value: `${Math.round(bestProp?._sc ?? 0)} — ${bestProp?.l?.split(',')[0] || ''}` },
         ].map(s => (
           <div key={s.label} className="rounded-lg p-3 md:p-4 border text-center" style={{ background: '#0f1419', borderColor: '#1c2333' }}>
@@ -176,6 +176,7 @@ export default function MarketIndexTab({ properties }: { properties: Property[] 
                 <div className="relative z-10 flex flex-col items-center justify-center h-full p-6 text-center" style={{ minHeight: 200 }}>
                   <div className="text-lg md:text-xl font-extralight tracking-[0.25em] text-white mb-2" style={{ textShadow: `0 0 ${15 + intensity * 25}px ${color}` }}>{r.name.toUpperCase()}</div>
                   <div className="text-3xl md:text-4xl font-bold mb-1" style={{ color, textShadow: `0 0 ${20 + intensity * 40}px ${color}` }}>{r.avgYield}%</div>
+                  <div className="text-[9px] text-gray-600 tracking-wider mb-1">GROSS YIELD</div>
                   <div className="text-[10px] text-gray-500 tracking-wider">{r.count} properties</div>
                   {/* Hover detail */}
                   <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-[10px] space-y-0.5">
@@ -202,7 +203,7 @@ export default function MarketIndexTab({ properties }: { properties: Property[] 
                 <span className="text-gray-500">&middot;</span>
                 <span style={{ color: '#a78bfa' }}>{t.avgDisc}% disc</span>
                 <span className="text-gray-500">&middot;</span>
-                <span className="text-emerald-400">{t.avgYield}% yield</span>
+                <span className="text-emerald-400">{t.avgYield}% gross yield</span>
                 <span className="text-gray-700 mx-2">&middot;&middot;&middot;</span>
               </span>
             ))}
@@ -223,7 +224,7 @@ export default function MarketIndexTab({ properties }: { properties: Property[] 
               <span className="text-gray-400 text-xs">{r.count} props</span>
               <span className="text-emerald-400 text-xs font-semibold hidden md:inline">{r.avgPm2 ? <>&euro;{r.avgPm2.toLocaleString()}/m&sup2;</> : ''}</span>
               <span className="text-emerald-400 text-xs font-semibold">{r.avgDisc}% disc</span>
-              <span className="text-emerald-400 text-xs font-semibold">{r.avgYield}% yield</span>
+              <span className="text-emerald-400 text-xs font-semibold">{r.avgYield}% gross yield</span>
               <span className="text-gray-400 text-xs hidden md:inline">{r.bestTown?.split(',')[0]}</span>
             </button>
             {expandedRegion === r.code && (
@@ -239,7 +240,7 @@ export default function MarketIndexTab({ properties }: { properties: Property[] 
                     <div key={t.town} className="flex items-center gap-3 px-3 py-2 rounded text-xs" style={{ background: '#0d1117', border: '1px solid #1c2333' }}>
                       <span className="text-white flex-1">{t.town}</span>
                       <span className="text-gray-400">{t.count}</span>
-                      <span className="text-emerald-400 font-semibold">{t.avgYield}%</span>
+                      <span className="text-emerald-400 font-semibold">{t.avgYield}% gross</span>
                       <span className="text-white font-bold">{t.avgScore}</span>
                     </div>
                   ));
@@ -272,7 +273,7 @@ export default function MarketIndexTab({ properties }: { properties: Property[] 
                 { key: 'count', label: 'Properties' },
                 { key: 'avgPrice', label: 'Avg Price' },
                 { key: 'avgDisc', label: 'Avg Discount' },
-                { key: 'avgYield', label: 'Avg Yield' },
+                { key: 'avgYield', label: 'Avg Gross Yield' },
                 { key: 'avgScore', label: 'Avg Score' },
               ].map(col => (
                 <th key={col.key} onClick={() => toggleSort(col.key)}

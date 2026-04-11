@@ -43,7 +43,7 @@ export default function CostasPage() {
               </div>
               <div className="flex gap-6 text-sm">
                 <div><span className="text-gray-500">Avg Score </span><span className="text-emerald-400 font-bold">{c.avgScore}</span></div>
-                <div><span className="text-gray-500">Avg Yield </span><span className="text-emerald-400 font-bold">{c.avgYield}%</span></div>
+                <div><span className="text-gray-500">Avg Gross Yield </span><span className="text-emerald-400 font-bold">{c.avgYield}%</span></div>
               </div>
             </Link>
           ))}

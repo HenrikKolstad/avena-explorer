@@ -140,9 +140,9 @@ export default function TaxCalculatorPage() {
 
 function CostRow({ label, value, fmt }: { label: string; value: number; fmt: (n: number) => string }) {
   return (
-    <div className="flex justify-between items-center py-2 border-b border-[#21262d]">
+    <div className="flex justify-between items-center gap-3 py-2 border-b border-[#21262d]">
       <span className="text-sm text-gray-400">{label}</span>
-      <span className="text-sm font-medium text-white">&euro;{fmt(value)}</span>
+      <span className="text-sm font-medium text-white whitespace-nowrap">&euro;{fmt(value)}</span>
     </div>
   );
 }

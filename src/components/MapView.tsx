@@ -152,7 +152,7 @@ export default function MapView({
                       )}
                       {p._yield && (
                         <div>
-                          <div style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Yield</div>
+                          <div style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Gross Yield</div>
                           <div style={{ fontSize: '12px', fontWeight: 600, color: '#34d399' }}>{p._yield.gross}%</div>
                         </div>
                       )}

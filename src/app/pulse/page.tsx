@@ -245,7 +245,7 @@ export default async function PulsePage() {
                   <span className="text-lg font-bold text-white" style={{ fontFamily: 'monospace' }}>
                     EUR {formatPrice(latest.deal_of_day.price)}
                   </span>
-                  <span className="text-xs text-gray-500">{latest.deal_of_day.yield}% yield</span>
+                  <span className="text-xs text-gray-500">{latest.deal_of_day.yield}% gross yield</span>
                 </div>
                 {latest.deal_of_day.ref && (
                   <Link href={`/property/${encodeURIComponent(latest.deal_of_day.ref)}`} className="inline-block mt-3 text-[10px] font-bold tracking-wider uppercase hover:opacity-80 transition-opacity" style={{ color: '#c9a84c' }}>

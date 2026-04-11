@@ -56,10 +56,10 @@ export default async function CostaPage({ params }: { params: Promise<{ costa: s
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">New Builds on {name}</h1>
-        <p className="text-gray-400 text-sm mb-6">{props.length} properties. Avg score {avgScore}/100. Avg yield {avgYield}%.</p>
+        <p className="text-gray-400 text-sm mb-6">{props.length} properties. Avg score {avgScore}/100. Avg gross yield {avgYield}%.</p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[{ label: 'Properties', value: String(props.length) }, { label: 'Avg Score', value: `${avgScore}/100` }, { label: 'Avg Yield', value: `${avgYield}%` }, { label: 'Price Range', value: `\u20AC${Math.min(...props.map(p => p.pf)).toLocaleString()} - \u20AC${Math.max(...props.map(p => p.pf)).toLocaleString()}` }].map(s => (
+          {[{ label: 'Properties', value: String(props.length) }, { label: 'Avg Score', value: `${avgScore}/100` }, { label: 'Avg Gross Yield', value: `${avgYield}%` }, { label: 'Price Range', value: `\u20AC${Math.min(...props.map(p => p.pf)).toLocaleString()} - \u20AC${Math.max(...props.map(p => p.pf)).toLocaleString()}` }].map(s => (
             <div key={s.label} className="rounded-xl p-4 text-center border" style={{ background: '#0f1419', borderColor: '#1c2333' }}>
               <div className="text-white font-bold text-sm md:text-lg">{s.value}</div>
               <div className="text-gray-500 text-[10px] uppercase tracking-wider">{s.label}</div>
@@ -78,7 +78,7 @@ export default async function CostaPage({ params }: { params: Promise<{ costa: s
               </div>
               <div className="text-right flex-shrink-0">
                 <div className="text-emerald-400 font-bold text-sm">{Math.round(p._sc ?? 0)}</div>
-                <div className="text-gray-500 text-[10px]">{p._yield ? `${p._yield.gross.toFixed(1)}%` : ''}</div>
+                <div className="text-gray-500 text-[10px]">{p._yield ? `${p._yield.gross.toFixed(1)}% gross` : ''}</div>
               </div>
             </Link>
           ))}

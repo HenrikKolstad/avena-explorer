@@ -49,7 +49,7 @@ export default function TownsPage() {
               </div>
               <div className="flex gap-4 text-xs">
                 <div><span className="text-gray-500">Score </span><span className="text-emerald-400 font-semibold">{t.avgScore}</span></div>
-                <div><span className="text-gray-500">Yield </span><span className="text-emerald-400 font-semibold">{t.avgYield}%</span></div>
+                <div><span className="text-gray-500">Gross Yield </span><span className="text-emerald-400 font-semibold">{t.avgYield}%</span></div>
                 <div><span className="text-gray-500">Avg </span><span className="text-white font-semibold">&euro;{t.avgPrice.toLocaleString()}</span></div>
               </div>
             </Link>

@@ -510,7 +510,7 @@ export default function Explorer() {
   }, [previewProp?.ref, user?.id]);
 
   const exportCSV = () => {
-    const headers = ['Project','Developer','Location','Region','Type','Price','€/m²','Market €/m²','Discount%','Score','Built m²','Plot m²','Beds','Beach km','Status','Completion','Yield%'];
+    const headers = ['Project','Developer','Location','Region','Type','Price','€/m²','Market €/m²','Discount%','Score','Built m²','Plot m²','Beds','Beach km','Status','Completion','Gross Yield%'];
     const rows = filtered.map(d => [
       d.p, d.d, d.l, regionLabel(d.r), d.t,
       d.pf, d.pm2 || '', d.mm2,
@@ -1752,7 +1752,7 @@ export default function Explorer() {
                 )}
                 {previewProp._yield && (
                   <>
-                    <StatBox label="Rental Yield" value={`${previewProp._yield.gross}%`} />
+                    <StatBox label="Gross Yield" value={`${previewProp._yield.gross}%`} />
                     <StatBox label="Annual Income" value={formatPrice(previewProp._yield.annual)} />
                   </>
                 )}

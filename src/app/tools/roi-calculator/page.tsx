@@ -134,25 +134,25 @@ export default function ROICalculatorPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#30363d] text-gray-400 text-left">
-                  <th className="px-6 py-3 font-medium">Year</th>
-                  <th className="px-6 py-3 font-medium text-right">Property Value</th>
-                  <th className="px-6 py-3 font-medium text-right">Rent Income</th>
-                  <th className="px-6 py-3 font-medium text-right">Expenses</th>
-                  <th className="px-6 py-3 font-medium text-right">Net Cashflow</th>
-                  <th className="px-6 py-3 font-medium text-right">Cumulative Return</th>
-                  <th className="px-6 py-3 font-medium text-right">Total ROI</th>
+                  <th className="px-3 sm:px-6 py-3 font-medium whitespace-nowrap">Year</th>
+                  <th className="px-3 sm:px-6 py-3 font-medium text-right whitespace-nowrap">Property Value</th>
+                  <th className="px-3 sm:px-6 py-3 font-medium text-right whitespace-nowrap">Rent Income</th>
+                  <th className="px-3 sm:px-6 py-3 font-medium text-right whitespace-nowrap">Expenses</th>
+                  <th className="px-3 sm:px-6 py-3 font-medium text-right whitespace-nowrap">Net Cashflow</th>
+                  <th className="px-3 sm:px-6 py-3 font-medium text-right whitespace-nowrap">Cumulative Return</th>
+                  <th className="px-3 sm:px-6 py-3 font-medium text-right whitespace-nowrap">Total ROI</th>
                 </tr>
               </thead>
               <tbody>
                 {results.projection.map(row => (
                   <tr key={row.year} className="border-b border-[#21262d] hover:bg-[#21262d]/50 transition">
-                    <td className="px-6 py-3 font-medium">{row.year}</td>
-                    <td className="px-6 py-3 text-right">&euro;{fmt(row.propertyValue)}</td>
-                    <td className="px-6 py-3 text-right text-green-400">&euro;{fmt(row.rentIncome)}</td>
-                    <td className="px-6 py-3 text-right text-red-400">&euro;{fmt(row.expenses)}</td>
-                    <td className="px-6 py-3 text-right">&euro;{fmt(row.netCashflow)}</td>
-                    <td className="px-6 py-3 text-right">&euro;{fmt(row.cumulativeReturn)}</td>
-                    <td className="px-6 py-3 text-right text-[#10B981] font-medium">{fmtPct(row.totalReturn)}%</td>
+                    <td className="px-3 sm:px-6 py-3 font-medium">{row.year}</td>
+                    <td className="px-3 sm:px-6 py-3 text-right whitespace-nowrap">&euro;{fmt(row.propertyValue)}</td>
+                    <td className="px-3 sm:px-6 py-3 text-right text-green-400 whitespace-nowrap">&euro;{fmt(row.rentIncome)}</td>
+                    <td className="px-3 sm:px-6 py-3 text-right text-red-400 whitespace-nowrap">&euro;{fmt(row.expenses)}</td>
+                    <td className="px-3 sm:px-6 py-3 text-right whitespace-nowrap">&euro;{fmt(row.netCashflow)}</td>
+                    <td className="px-3 sm:px-6 py-3 text-right whitespace-nowrap">&euro;{fmt(row.cumulativeReturn)}</td>
+                    <td className="px-3 sm:px-6 py-3 text-right text-[#10B981] font-medium whitespace-nowrap">{fmtPct(row.totalReturn)}%</td>
                   </tr>
                 ))}
               </tbody>

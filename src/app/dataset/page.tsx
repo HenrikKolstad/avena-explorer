@@ -178,7 +178,7 @@ export default function DatasetPage() {
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Town</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Type</th>
                   <th className="text-right px-4 py-3 text-gray-400 font-medium">Price</th>
-                  <th className="text-right px-4 py-3 text-gray-400 font-medium">Yield %</th>
+                  <th className="text-right px-4 py-3 text-gray-400 font-medium">Gross Yield %</th>
                   <th className="text-right px-4 py-3 text-gray-400 font-medium">Score</th>
                   <th className="text-right px-4 py-3 text-gray-400 font-medium">EUR/m2</th>
                 </tr>

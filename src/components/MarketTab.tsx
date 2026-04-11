@@ -229,7 +229,7 @@ export default function MarketTab({ properties }: { properties: Property[] }) {
                 <th className="text-right pb-3 font-medium">Listings</th>
                 <th className="text-right pb-3 font-medium">Avg Price</th>
                 <th className="text-right pb-3 font-medium">Avg \€/m\²</th>
-                <th className="text-right pb-3 font-medium">Est. Yield</th>
+                <th className="text-right pb-3 font-medium">Est. Gross Yield</th>
               </tr>
             </thead>
             <tbody>

@@ -14,7 +14,7 @@ export default function PortfolioTab({ properties, portfolio, onToggle }: {
 
   const exportPortfolioCSV = () => {
     if (!portfolioProps.length) return;
-    const headers = ['Project','Developer','Location','Price','Yield%','Annual Income','Score'];
+    const headers = ['Project','Developer','Location','Price','Gross Yield%','Annual Income','Score'];
     const rows = portfolioProps.map(d => [d.p, d.d, d.l, d.pf, d._yield?.gross || '', d._yield?.annual || '', d._sc || '']);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -73,7 +73,7 @@ export default function PortfolioTab({ properties, portfolio, onToggle }: {
         {[
           { label: 'Total Investment', value: formatPrice(totalInvestment) },
           { label: 'Gross Rental Income', value: formatPrice(totalAnnualIncome) },
-          { label: 'Blended Yield', value: `${blendedYield}%` },
+          { label: 'Blended Gross Yield', value: `${blendedYield}%` },
           { label: 'Discount Saved', value: totalDiscountSaved > 0 ? formatPrice(totalDiscountSaved) : 'N/A' },
         ].map(s => (
           <div key={s.label} className="bg-[#0f1419] border border-[#1c2333] rounded-lg p-4 text-center">
@@ -145,7 +145,7 @@ export default function PortfolioTab({ properties, portfolio, onToggle }: {
                   <div className="text-sm font-bold text-white">{formatPrice(p.pf)}</div>
                 </div>
                 {p._yield && (
-                  <div className="text-xs text-emerald-400 font-semibold">{p._yield.gross}% yield</div>
+                  <div className="text-xs text-emerald-400 font-semibold">{p._yield.gross}% gross yield</div>
                 )}
                 {p._sc && (
                   <div className="flex items-center gap-1">

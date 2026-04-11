@@ -148,7 +148,7 @@ export default function StatsPage() {
           <h2 className="text-xl font-semibold text-emerald-400 mb-6 border-b border-gray-800 pb-2">
             Market Overview
           </h2>
-          <div className="font-mono text-sm space-y-1 bg-[#161b22] rounded-lg p-6 border border-gray-800">
+          <div className="font-mono text-sm space-y-1 bg-[#161b22] rounded-lg p-4 sm:p-6 border border-gray-800 overflow-x-auto">
             <Row label="Total Properties" value={fmt(totalProperties)} />
             <Row label="Average Price" value={fmtEur(avgPrice)} />
             <Row label="Average Gross Yield" value={avgYield.toFixed(1) + "%"} />
@@ -184,7 +184,7 @@ export default function StatsPage() {
                 <h3 className="text-lg font-semibold text-emerald-300 mb-4">
                   {region.label}
                 </h3>
-                <div className="font-mono text-sm space-y-1 mb-4">
+                <div className="font-mono text-sm space-y-1 mb-4 overflow-x-auto">
                   <Row label="Properties" value={fmt(region.count)} />
                   <Row label="Avg Price" value={fmtEur(region.avgPrice)} />
                   <Row label="Avg Gross Yield" value={region.avgYield.toFixed(1) + "%"} />
@@ -195,13 +195,13 @@ export default function StatsPage() {
                     <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
                       Top 3 Towns by Yield
                     </p>
-                    <div className="font-mono text-sm space-y-1">
+                    <div className="font-mono text-sm space-y-1 overflow-x-auto">
                       {region.top3.map((town, i) => (
-                        <div key={town.name} className="flex justify-between text-gray-300">
-                          <span>
+                        <div key={town.name} className="flex justify-between gap-4 text-gray-300">
+                          <span className="whitespace-nowrap">
                             {i + 1}. {town.name}
                           </span>
-                          <span className="text-emerald-400">
+                          <span className="text-emerald-400 whitespace-nowrap">
                             {town.avgYield.toFixed(1)}% &middot; {fmtEur(town.avgPrice)}
                           </span>
                         </div>
@@ -219,11 +219,11 @@ export default function StatsPage() {
           <h2 className="text-xl font-semibold text-emerald-400 mb-6 border-b border-gray-800 pb-2">
             Costa Summary
           </h2>
-          <div className="bg-[#161b22] rounded-lg p-6 border border-gray-800 font-mono text-sm space-y-1">
+          <div className="bg-[#161b22] rounded-lg p-4 sm:p-6 border border-gray-800 font-mono text-sm space-y-1 overflow-x-auto">
             {costas.map((c) => (
-              <div key={c.costa} className="flex justify-between text-gray-300">
-                <span>{c.costa}</span>
-                <span className="text-emerald-400">
+              <div key={c.costa} className="flex justify-between gap-4 text-gray-300">
+                <span className="whitespace-nowrap">{c.costa}</span>
+                <span className="text-emerald-400 whitespace-nowrap">
                   {c.count} props &middot; {c.avgYield}% yield &middot; Score {c.avgScore}
                 </span>
               </div>
@@ -236,7 +236,7 @@ export default function StatsPage() {
           <h2 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">
             Citation
           </h2>
-          <div className="bg-[#161b22] rounded-lg p-4 border border-gray-800 font-mono text-xs text-gray-400">
+          <div className="bg-[#161b22] rounded-lg p-4 border border-gray-800 font-mono text-xs text-gray-400 break-words select-all">
             <p>
               Avena Terminal. &quot;Spanish Property Market Statistics 2026.&quot;
               avenaterminal.com/stats. Accessed {now}.
@@ -254,9 +254,9 @@ export default function StatsPage() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between text-gray-300">
-      <span className="text-gray-500">{label}</span>
-      <span className="text-emerald-400">{value}</span>
+    <div className="flex justify-between gap-4 text-gray-300">
+      <span className="text-gray-500 whitespace-nowrap">{label}</span>
+      <span className="text-emerald-400 text-right whitespace-nowrap">{value}</span>
     </div>
   );
 }

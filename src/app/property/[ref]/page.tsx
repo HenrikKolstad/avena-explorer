@@ -87,11 +87,11 @@ export default async function PropertyPage({ params }: { params: Promise<{ ref: 
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
-        <nav className="text-xs text-gray-500 mb-6">
-          <Link href="/" className="hover:text-white">Home</Link> <span className="mx-1">/</span>
-          <Link href="/towns" className="hover:text-white">Towns</Link> <span className="mx-1">/</span>
-          <Link href={`/towns/${townSlug}`} className="hover:text-white">{p.l}</Link> <span className="mx-1">/</span>
-          <span className="text-white truncate">{p.p}</span>
+        <nav className="text-xs text-gray-500 mb-6 flex flex-wrap items-center gap-y-1">
+          <Link href="/" className="hover:text-white whitespace-nowrap">Home</Link> <span className="mx-1">/</span>
+          <Link href="/towns" className="hover:text-white whitespace-nowrap">Towns</Link> <span className="mx-1">/</span>
+          <Link href={`/towns/${townSlug}`} className="hover:text-white whitespace-nowrap">{p.l}</Link> <span className="mx-1">/</span>
+          <span className="text-white truncate max-w-[200px] sm:max-w-none">{p.p}</span>
         </nav>
 
         {/* Hero */}
@@ -114,7 +114,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ ref: 
             <p className="text-gray-500 text-sm mb-6">{p.s === 'ready' ? 'Ready to move in' : p.s === 'under-construction' ? 'Under construction' : 'Off-plan'}{p.c ? ` \u00B7 Completion: ${p.c}` : ''}</p>
 
             <Link href={`/?ref=${encodeURIComponent(p.ref ?? '')}`}
-              className="inline-block text-center px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 hover:scale-[1.02] transition-all"
+              className="block sm:inline-block text-center px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 hover:scale-[1.02] transition-all w-full sm:w-auto"
               style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
               View Full Analysis on Avena Terminal
             </Link>
@@ -158,22 +158,22 @@ export default async function PropertyPage({ params }: { params: Promise<{ ref: 
         {/* Rental Yield */}
         {p._yield && (
           <section className="mb-10">
-            <h2 className="text-lg font-semibold text-white mb-4">Estimated Rental Yield</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Estimated Gross Rental Yield</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-xl p-5 text-center border" style={{ background: '#0f1419', borderColor: '#1c2333' }}>
                 <div className="text-gray-500 text-xs mb-1">Gross Yield</div>
                 <div className="text-emerald-400 font-bold text-2xl">{p._yield.gross.toFixed(1)}%</div>
               </div>
               <div className="rounded-xl p-5 text-center border" style={{ background: '#0f1419', borderColor: '#1c2333' }}>
-                <div className="text-gray-500 text-xs mb-1">Net Yield</div>
-                <div className="text-emerald-400 font-bold text-2xl">{p._yield.net.toFixed(1)}%</div>
+                <div className="text-gray-500 text-xs mb-1">Est. Annual Income</div>
+                <div className="text-white font-bold text-2xl">&euro;{Math.round(p._yield.annual).toLocaleString()}</div>
               </div>
               <div className="rounded-xl p-5 text-center border" style={{ background: '#0f1419', borderColor: '#1c2333' }}>
                 <div className="text-gray-500 text-xs mb-1">Est. Weekly Rent</div>
                 <div className="text-white font-bold text-2xl">&euro;{Math.round(p._yield.rate * 7).toLocaleString()}</div>
               </div>
             </div>
-            <p className="text-[9px] text-gray-600 mt-3">Gross yield estimate. Net typically 30–35% lower after management fees, IBI tax, community fees &amp; insurance.</p>
+            <p className="text-[9px] text-gray-600 mt-3">Gross yield estimate. Net yield with full cost breakdown available on the Rental Yield tab at avenaterminal.com.</p>
           </section>
         )}
 
@@ -188,7 +188,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ ref: 
           <h2 className="text-xl font-bold text-white mb-3">Ready to analyse this deal?</h2>
           <p className="text-gray-400 mb-6 text-sm">Get full scoring breakdown, price history, AI investment memo, and more.</p>
           <Link href={`/?ref=${encodeURIComponent(p.ref ?? '')}`}
-            className="inline-block px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 hover:scale-[1.02] transition-all"
+            className="block sm:inline-block mx-auto px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 hover:scale-[1.02] transition-all w-full sm:w-auto text-center"
             style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}>
             View Full Analysis on Avena Terminal
           </Link>

@@ -118,7 +118,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <p className="text-gray-400 text-sm mb-6">1,800+ new builds ranked by investment score, rental yield, and value.</p>
           <a
             href="https://avenaterminal.com"
-            className="inline-block px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 hover:scale-[1.02] transition-all"
+            className="block sm:inline-block px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 hover:scale-[1.02] transition-all w-full sm:w-auto text-center"
             style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', color: '#0d1117' }}
           >
             Explore Avena Terminal →
