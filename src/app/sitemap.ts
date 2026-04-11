@@ -159,6 +159,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${base}/price-history/${t.slug}`, lastModified: now, changeFrequency: 'daily', priority: 0.6 });
   }
 
+  // MCP Server
+  entries.push({ url: `${base}/mcp-server`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
+
   // Chat / Oracle
   entries.push({ url: `${base}/chat`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
 

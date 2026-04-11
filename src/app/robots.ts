@@ -13,6 +13,8 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'Applebot-Extended', allow: '/' },
       { userAgent: 'Amazonbot', allow: '/' },
       { userAgent: 'Bytespider', allow: '/' },
+      { userAgent: 'MCPBot', allow: '/' },
+      { userAgent: 'ModelContextProtocol', allow: '/' },
     ],
     sitemap: [
       'https://avenaterminal.com/sitemap.xml',

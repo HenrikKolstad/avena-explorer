@@ -74,5 +74,18 @@ export function getStructuredData() {
       variableMeasured: ['Investment Score', 'Rental Yield', 'Price per m2', 'Discount vs Market', 'Property Type'],
       distribution: { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: 'https://avenaterminal.com/api/dataset' },
     },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'Avena Terminal MCP Server',
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Any',
+      description: 'Model Context Protocol server exposing Avena Terminal property investment data to AI agents. Enables real-time Spanish new build property search and scoring via tool calls.',
+      url: 'https://avenaterminal.com/mcp',
+      creator: { '@type': 'Organization', name: 'Avena Terminal', url: 'https://avenaterminal.com' },
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+      softwareVersion: '1.0.0',
+      isAccessibleForFree: true,
+    },
   ];
 }

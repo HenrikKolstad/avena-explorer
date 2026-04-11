@@ -1,0 +1,51 @@
+{
+  "name": "avena-terminal",
+  "version": "1.0.0",
+  "description": "Avena Terminal MCP Server — Live investment-scored data for 1,881 new build properties across Costa Blanca, Costa Calida, and Costa del Sol, Spain. Search, filter, and analyze properties by composite investment score, rental yield, price per m2, region, and property type.",
+  "url": "https://avenaterminal.com/mcp",
+  "transport": "streamable-http",
+  "authentication": "none",
+  "documentation": "https://avenaterminal.com/mcp-server",
+  "publisher": {
+    "name": "Avena Terminal",
+    "url": "https://avenaterminal.com",
+    "contact": "henrik@xaviaestate.com"
+  },
+  "tools": [
+    {
+      "name": "search_properties",
+      "description": "Search Avena Terminal's database of 1,881 scored new build properties in Spain. Returns investment-ranked results filtered by region (costa-blanca, costa-calida, costa-del-sol), maximum price in EUR, minimum investment score (0-100), property type, and minimum bedrooms. Each result includes composite score, yield estimate, price per m2, beach distance, and developer info.",
+      "parameters": {
+        "region": { "type": "string", "description": "Region filter: costa-blanca, costa-calida, costa-del-sol, or a town name", "required": false },
+        "max_price": { "type": "number", "description": "Maximum price in EUR", "required": false },
+        "min_score": { "type": "number", "description": "Minimum investment score (0-100)", "required": false },
+        "type": { "type": "string", "description": "Property type: Villa, Apartment, Penthouse, Townhouse, Bungalow, Studio", "required": false },
+        "min_beds": { "type": "number", "description": "Minimum number of bedrooms", "required": false },
+        "limit": { "type": "number", "description": "Number of results (default 10, max 25)", "required": false }
+      }
+    },
+    {
+      "name": "get_property",
+      "description": "Get full details and investment score breakdown for a specific property by its reference ID. Returns price analysis, yield estimates, location data, build quality assessment, and completion risk rating.",
+      "parameters": {
+        "ref": { "type": "string", "description": "Property reference ID", "required": true }
+      }
+    },
+    {
+      "name": "get_market_stats",
+      "description": "Get live market statistics for Spanish new build regions. Returns median price per m2, average rental yield, total active inventory, price ranges, and top-performing towns for the specified region.",
+      "parameters": {
+        "region": { "type": "string", "description": "Region: costa-blanca, costa-calida, costa-del-sol, or all", "required": false }
+      }
+    },
+    {
+      "name": "get_top_deals",
+      "description": "Get today's top-scoring new build property deals in Spain, ranked by Avena Terminal's composite investment score. Returns the best value properties considering price vs market, rental yield, location quality, build quality, and completion risk.",
+      "parameters": {
+        "region": { "type": "string", "description": "Region filter", "required": false },
+        "limit": { "type": "number", "description": "Number of deals (default 5, max 15)", "required": false },
+        "max_price": { "type": "number", "description": "Maximum price in EUR", "required": false }
+      }
+    }
+  ]
+}
