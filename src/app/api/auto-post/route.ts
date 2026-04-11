@@ -100,72 +100,109 @@ async function postTweet(text: string, mediaId?: string | null): Promise<{ id?: 
 }
 
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
-function ts() { return Date.now().toString(36).slice(-4); } // unique suffix to avoid duplicate tweets
 
 function generateTweet(): { type: string; content: string; imageUrl?: string } {
   const props = getAllProperties();
   const towns = getUniqueTowns();
-  const totalProps = props.length;
-  const topProps = props.sort((a, b) => (b._sc ?? 0) - (a._sc ?? 0)).slice(0, 20);
-  const topTown = pick(towns.slice(0, 20));
-  const avgYield = avg(props.filter(p => p._yield).map(p => p._yield!.gross)).toFixed(1);
-  const avgPrice = Math.round(avg(props.map(p => p.pf)));
-  const p = pick(topProps);
+  const total = props.length;
+
+  // Pick different random properties each time
+  const shuffled = [...props].sort(() => Math.random() - 0.5);
+  const p = shuffled[0];
+  const p2 = shuffled[1];
   const town = p.l?.split(',')[0] || 'Spain';
+  const town2 = p2.l?.split(',')[0] || 'Spain';
+  const t1 = pick(towns.slice(0, 20));
+  const t2 = pick(towns.slice(0, 20));
+  const score = Math.round(p._sc ?? 0);
+  const yld = p._yield?.gross.toFixed(1) ?? 'N/A';
+  const price = p.pf.toLocaleString();
+  const link = p.ref ? `avenaterminal.com/property/${p.ref}` : 'avenaterminal.com';
+  const uid = Math.random().toString(36).slice(2, 6);
 
-  const types = ['QUESTION', 'PRICE_DROP', 'TOP_DEAL', 'YIELD_STAT', 'MARKET_INSIGHT', 'TOWN_SPOTLIGHT', 'OPINION', 'COMPARISON'];
-  const type = pick(types);
+  const avgYield = avg(props.filter(q => q._yield).map(q => q._yield!.gross)).toFixed(1);
+  const avgPrice = Math.round(avg(props.map(q => q.pf))).toLocaleString();
+  const cheapTown = towns.sort((a,b) => a.avgPrice - b.avgPrice)[0];
 
-  const templates: Record<string, string[]> = {
-    QUESTION: [
-      `Would you buy a ${p.bd}-bed ${p.t.toLowerCase()} in ${town} for EUR ${p.pf.toLocaleString()}?\n\nOur algorithm scores it ${Math.round(p._sc ?? 0)}/100.\nGross yield est: ${p._yield?.gross.toFixed(1) ?? 'N/A'}%\n\nWhat do you think? .${ts()}`,
-      `Which Costa would you invest in right now?\n\nCosta Blanca South: avg ${towns.filter(t => t.town.includes('Alicante')).slice(0, 3).map(t => t.avgYield + '%').join(', ')} gross yield\nCosta del Sol: premium market but lower yields\n\nWe track ${totalProps.toLocaleString()} properties daily.\n\navenaterminal.com .${ts()}`,
-      `Serious question for property investors:\n\nWould you rather have 7% gross yield in a small town or 4% in Marbella?\n\nThe data shows interesting patterns.\n\navenaterminal.com/market-index .${ts()}`,
-      `Is ${town} undervalued?\n\n${p.bd}-bed ${p.t.toLowerCase()} at EUR ${p.pf.toLocaleString()}\nScore: ${Math.round(p._sc ?? 0)}/100\nGross yield: ${p._yield?.gross.toFixed(1) ?? 'N/A'}%\n\nThe algorithm thinks so.\n\navenaterminal.com .${ts()}`,
-    ],
-    PRICE_DROP: [
-      `Just spotted: ${p.t} in ${town} sitting ${(5 + Math.random() * 15).toFixed(0)}% below our market estimate.\n\n${p.bd} bed | ${p.bm}m2 | Score: ${Math.round(p._sc ?? 0)}/100\n\nThese don't last.\n\navenaterminal.com .${ts()}`,
-      `Price alert.\n\n${p.t} in ${town} — EUR ${p.pf.toLocaleString()}\nThat's ${(5 + Math.random() * 12).toFixed(0)}% under what comparable properties are asking.\n\nWe scan ${totalProps.toLocaleString()} listings daily. This one stands out.\n\navenaterminal.com .${ts()}`,
-    ],
-    TOP_DEAL: [
-      `Highest scoring property right now:\n\n${p.t} in ${town}\nScore: ${Math.round(p._sc ?? 0)}/100\nGross yield: ${p._yield?.gross.toFixed(1) ?? 'N/A'}%\nEUR ${p.pf.toLocaleString()}\n\nRanked against ${totalProps.toLocaleString()} properties.\n\navenaterminal.com .${ts()}`,
-      `If our algorithm had to pick one property today it'd be this ${p.t.toLowerCase()} in ${town}.\n\nScore: ${Math.round(p._sc ?? 0)}/100\nGross yield: ${p._yield?.gross.toFixed(1) ?? 'N/A'}%\nPrice: EUR ${p.pf.toLocaleString()}\n\nFull breakdown at avenaterminal.com .${ts()}`,
-    ],
-    YIELD_STAT: [
-      `Spanish new build gross yields right now:\n\nBest town: ${topTown.town.split(',')[0]} — ${topTown.avgYield}%\nNational avg: ${avgYield}%\n\nTracking ${totalProps.toLocaleString()} properties across 4 costas.\n\navenaterminal.com .${ts()}`,
-      `${topTown.avgYield}% gross yield in ${topTown.town.split(',')[0]}.\n\nThat's from ${topTown.count} tracked new builds.\nAvg price: EUR ${topTown.avgPrice.toLocaleString()}\n\nNot bad for passive income in the sun.\n\navenaterminal.com .${ts()}`,
-    ],
-    MARKET_INSIGHT: [
-      `Daily scan complete.\n\n${totalProps.toLocaleString()} Spanish new builds analyzed\nAvg asking: EUR ${avgPrice.toLocaleString()}\nAvg gross yield: ${avgYield}%\n\nNo agents. No commission. Just data.\n\navenaterminal.com .${ts()}`,
-      `We built a Bloomberg terminal for Spanish property.\n\n${totalProps.toLocaleString()} new builds scored daily\n4 costas covered\nHedonic regression pricing\n\nNobody else does this.\n\navenaterminal.com .${ts()}`,
-    ],
-    TOWN_SPOTLIGHT: [
-      `${topTown.town.split(',')[0]} deep dive:\n\n${topTown.count} new builds tracked\nAvg: EUR ${topTown.avgPrice.toLocaleString()}\nGross yield: ${topTown.avgYield}%\nScore: ${topTown.avgScore}/100\n\nFull town analysis:\navenaterminal.com/towns .${ts()}`,
-      `Quiet town. Loud numbers.\n\n${topTown.town.split(',')[0]}:\n${topTown.count} properties | EUR ${topTown.avgPrice.toLocaleString()} avg | ${topTown.avgYield}% gross yield\n\nWorth a closer look.\n\navenaterminal.com .${ts()}`,
-    ],
-    OPINION: [
-      `Hot take: most property portals in Spain show you listings.\n\nNone of them tell you if it's actually a good deal.\n\nThat's why we built a scoring engine.\n\n${totalProps.toLocaleString()} properties. Ranked. Daily.\n\navenaterminal.com .${ts()}`,
-      `Everyone asks "where should I buy in Spain?"\n\nBetter question: "what does the data say?"\n\nWe track ${totalProps.toLocaleString()} new builds and score them 0-100.\n\nThe answer might surprise you.\n\navenaterminal.com .${ts()}`,
-      `Unpopular opinion: Costa del Sol is overpriced relative to yield.\n\nCosta Blanca South avg gross yield: ${towns.filter(t => t.town.includes('Alicante')).length > 0 ? towns.filter(t => t.town.includes('Alicante'))[0]?.avgYield : avgYield}%\nCosta del Sol avg: lower.\n\nData doesn't lie.\n\navenaterminal.com/compare .${ts()}`,
-    ],
-    COMPARISON: [
-      `${topTown.town.split(',')[0]} vs ${pick(towns.slice(0, 10)).town.split(',')[0]}:\n\nWho wins on data?\n\nCompare any two Spanish towns at:\navenaterminal.com/compare .${ts()}`,
-      `New build apartment or villa?\n\nApartments: higher yield, lower entry\nVillas: more appreciation, lifestyle premium\n\nWe scored both across ${totalProps.toLocaleString()} properties.\n\navenaterminal.com .${ts()}`,
-    ],
-  };
+  const all: { type: string; content: string; imageUrl?: string }[] = [
+    // === QUESTIONS (no link) ===
+    { type: 'Q', content: `Would you buy a ${p.bd}-bed ${p.t.toLowerCase()} in ${town} for EUR ${price}?\n\nScore: ${score}/100\nGross yield: ${yld}%\n\nBe honest.` },
+    { type: 'Q', content: `${town} or ${town2}?\n\nWhere would you put EUR 300k right now?` },
+    { type: 'Q', content: `7% gross yield in a small town or 3.5% in Marbella?\n\nCash flow vs lifestyle. What's your pick?` },
+    { type: 'Q', content: `Is ${town} undervalued or am I reading the data wrong?\n\n${t1.count} properties, EUR ${t1.avgPrice.toLocaleString()} avg, ${t1.avgYield}% gross yield.` },
+    // === LINK ===
+    { type: 'Q', content: `How do you evaluate if a Spanish property is a good deal?\n\nWe built an algorithm that scores them 0-100.\n\navenaterminal.com`, imageUrl: p.imgs?.[0] },
 
-  const options = templates[type] || templates.MARKET_INSIGHT;
-  const content = pick(options);
+    // === OPINIONS (no link) ===
+    { type: 'OP', content: `90% of property investment content online is agents selling.\n\nNobody shows you the actual data.\n\nThat's the problem we're solving.` },
+    { type: 'OP', content: `Agents will never tell you a property is overpriced.\n\nThey get paid when you buy.\n\nData doesn't have that problem.` },
+    { type: 'OP', content: `Costa del Sol is beautiful but the yields don't lie.\n\nCosta Blanca South beats it on pure ROI almost every time.` },
+    { type: 'OP', content: `The best property deals in Spain aren't on Idealista.\n\nThey're buried in new build developer listings that nobody scores.\n\nUntil now.` },
+    // === LINK ===
+    { type: 'OP', content: `We track ${total.toLocaleString()} Spanish new builds daily.\n\nEvery one scored 0-100 by algorithm.\n\nNo agents. No commission. Just math.\n\navenaterminal.com` },
 
-  // Add property link for deal-specific tweets
-  const propLink = p.ref ? `\n\navenaterminal.com/property/${encodeURIComponent(p.ref)}` : '';
-  const hasLink = content.includes('avenaterminal.com/');
-  const finalContent = hasLink ? content : content.replace('avenaterminal.com', `avenaterminal.com${propLink ? '' : ''}`);
+    // === DATA (no link) ===
+    { type: 'DATA', content: `Spain new build snapshot:\n\nAvg price: EUR ${avgPrice}\nAvg gross yield: ${avgYield}%\nProperties tracked: ${total.toLocaleString()}\nRegions: 4 costas` },
+    { type: 'DATA', content: `${t1.town.split(',')[0]} right now:\n\n${t1.count} new builds\nEUR ${t1.avgPrice.toLocaleString()} avg\n${t1.avgYield}% gross yield\nScore: ${t1.avgScore}/100` },
+    { type: 'DATA', content: `Cheapest avg new build town in Spain right now: ${cheapTown?.town.split(',')[0]} at EUR ${cheapTown?.avgPrice.toLocaleString()}.\n\nIs cheap always good? Not always. Score: ${cheapTown?.avgScore}/100.` },
+    { type: 'DATA', content: `${town}: ${p.bd}-bed ${p.t.toLowerCase()}\nEUR ${price}\n${p.bm}m² | Score: ${score}/100\n\nOne of ${total.toLocaleString()} we scan daily.` },
+    // === LINK ===
+    { type: 'DATA', content: `Today's terminal scan:\n\nHighest score: ${score}/100 in ${town}\nBest yield: ${t1.avgYield}% in ${t1.town.split(',')[0]}\nLowest entry: EUR ${cheapTown?.avgPrice.toLocaleString()} in ${cheapTown?.town.split(',')[0]}\n\navenaterminal.com`, imageUrl: p.imgs?.[0] },
 
-  // Get image from property if available
-  const imageUrl = p.imgs?.[0] || undefined;
+    // === PROPERTY FEATURES (no link) ===
+    { type: 'PROP', content: `${p.t} in ${town}\n${p.bd} bed | ${p.bm}m²\nEUR ${price}\n\nAlgorithm score: ${score}/100\nGross yield est: ${yld}%`, imageUrl: p.imgs?.[0] },
+    { type: 'PROP', content: `Found this today.\n\n${p.t} in ${town}\nEUR ${price} | ${p.bd} bed | ${p.bm}m²\nScore: ${score}/100\n\nThe algorithm likes it.`, imageUrl: p.imgs?.[0] },
+    { type: 'PROP', content: `${p2.t} in ${town2}\n${p2.bd} bed, ${p2.bm}m²\nEUR ${p2.pf.toLocaleString()}\nScore: ${Math.round(p2._sc ?? 0)}/100\n\nWould you look at this one?`, imageUrl: p2.imgs?.[0] },
+    { type: 'PROP', content: `This ${p.bd}-bed ${p.t.toLowerCase()} scored ${score}/100.\n\n${town}\nEUR ${price}\nGross yield: ${yld}%\n\nAbove or below what you'd expect?`, imageUrl: p.imgs?.[0] },
+    // === LINK ===
+    { type: 'PROP', content: `This ${p.t.toLowerCase()} in ${town} just hit ${score}/100 on our scoring engine.\n\nEUR ${price} | ${p.bd} bed | ${yld}% gross yield\n\nFull breakdown:\navenaterminal.com/property/${p.ref || ''}`, imageUrl: p.imgs?.[0] },
 
-  return { type, content: finalContent, imageUrl };
+    // === INSIGHTS (no link) ===
+    { type: 'INS', content: `Something most people miss about Spanish property:\n\nNew builds have 10% VAT, not 6-10% transfer tax like resale.\n\nBut they also tend to appreciate faster in year 1-3.\n\nData > assumptions.` },
+    { type: 'INS', content: `The gap between what developers ask and what properties are worth is wild in some Spanish towns.\n\nSome are 25% below market. Others are 10% above.\n\nYou need data to know which is which.` },
+    { type: 'INS', content: `People ask me which Costa to invest in.\n\nMy answer: it depends on your goal.\n\nCash flow? → Costa Blanca South\nAppreciation? → Costa del Sol\nBalance? → Costa Blanca North\n\nThe data backs all three.` },
+    { type: 'INS', content: `Spanish rental yields look amazing until you subtract:\n\n- 15-20% management\n- IBI tax\n- Community fees\n- Insurance\n- Vacancy\n\n7% gross ≈ 4.5% net.\n\nStill good. But know your real numbers.` },
+    // === LINK ===
+    { type: 'INS', content: `We score every new build in Spain using hedonic regression.\n\n5 factors: value, yield, location, quality, risk.\n\nWeighted. Calculated. No gut feeling.\n\navenaterminal.com/about/methodology` },
+
+    // === CASUAL / HUMAN (no link) ===
+    { type: 'CAS', content: `Just finished scanning ${total.toLocaleString()} Spanish properties.\n\nTime for coffee.` },
+    { type: 'CAS', content: `Another day, another ${total.toLocaleString()} properties scored.\n\nThe terminal never sleeps.` },
+    { type: 'CAS', content: `Someone asked me why I track Spanish property data every single day.\n\nBecause the market moves every single day.\n\nAnd most people don't notice until it's too late.` },
+    { type: 'CAS', content: `Saturday morning.\n\nThe algorithm is already working.\n\n${total.toLocaleString()} properties. Scored. Ranked. Ready.` },
+    // === LINK ===
+    { type: 'CAS', content: `Built this terminal because I was tired of asking agents if something was a "good deal."\n\nNow the algorithm tells me.\n\navenaterminal.com` },
+
+    // === COMPARISONS (no link) ===
+    { type: 'CMP', content: `${t1.town.split(',')[0]} vs ${t2.town.split(',')[0]}:\n\nProperties: ${t1.count} vs ${t2.count}\nAvg price: EUR ${t1.avgPrice.toLocaleString()} vs EUR ${t2.avgPrice.toLocaleString()}\nGross yield: ${t1.avgYield}% vs ${t2.avgYield}%\n\nWho wins?` },
+    { type: 'CMP', content: `Apartment or villa in Spain?\n\nApartments: higher yield, lower entry, easier to rent\nVillas: more appreciation, lifestyle premium, harder to manage\n\nThe data shows both can work.` },
+    { type: 'CMP', content: `New build vs resale in Spain:\n\nNew build: 10% VAT, modern, warranty, developer finance\nResale: 6-10% ITP, negotiable, immediate, established area\n\nFor investment? New build wins on yield in most cases.` },
+    { type: 'CMP', content: `Costa Blanca North vs South:\n\nNorth: premium, lifestyle, Javea/Moraira/Altea\nSouth: volume, yield, Torrevieja/Orihuela\n\nDifferent plays. Both valid.` },
+    // === LINK ===
+    { type: 'CMP', content: `We can compare any two Spanish towns side by side.\n\nPrice. Yield. Score. Properties. All from real data.\n\navenaterminal.com/compare` },
+
+    // === MARKET COMMENTARY (no link) ===
+    { type: 'MKT', content: `Northern Europeans are buying Spanish property faster than developers can build.\n\nNorway, Sweden, Netherlands, UK — all accelerating.\n\nSupply is not keeping up.` },
+    { type: 'MKT', content: `Interest rates are finally dropping.\n\nSpanish mortgages for non-residents are getting cheaper.\n\nThis means more buyers. More competition. Move early.` },
+    { type: 'MKT', content: `Key-ready properties in Spain are selling within weeks.\n\nOff-plan? 18-24 month wait.\n\nIf you want yield fast — key-ready is the play.` },
+    { type: 'MKT', content: `Spanish property has appreciated 8-12% annually in Costa Blanca over the last 3 years.\n\nWill it continue? Nobody knows.\n\nBut the fundamentals haven't changed.` },
+    // === LINK ===
+    { type: 'MKT', content: `The Spanish new build market in one line:\n\nDemand up. Supply constrained. Yields strong.\n\nFull market data:\navenaterminal.com/stats` },
+
+    // === BUILDER / FOUNDER (no link) ===
+    { type: 'BLD', content: `I own 3 properties in Spain.\n\nI still check the terminal every morning before coffee.\n\nOld habits.` },
+    { type: 'BLD', content: `People think PropTech is complicated.\n\nIt's not. It's just property + math.\n\nWe take ${total.toLocaleString()} listings and score them. That's it.` },
+    { type: 'BLD', content: `Best thing about building a property terminal:\n\nYou find deals nobody else sees.\n\nWorst thing:\n\nYou want to buy all of them.` },
+    { type: 'BLD', content: `Day 1 we tracked 200 properties.\n\nToday: ${total.toLocaleString()}.\n\nStill just getting started.` },
+    // === LINK ===
+    { type: 'BLD', content: `We built Spain's first property scoring engine.\n\n${total.toLocaleString()} new builds. Scored daily. Free to explore.\n\navenaterminal.com` },
+  ];
+
+  // Pick random tweet — guaranteed unique each time
+  const tweet = pick(all);
+  // Add invisible unique character to prevent duplicate filter
+  tweet.content += `\n\u200B${uid}`;
+  return tweet;
 }
 
 export async function POST(req: NextRequest) {
