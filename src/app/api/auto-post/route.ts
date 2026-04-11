@@ -14,17 +14,12 @@ function oauthSign(method: string, url: string, params: Record<string, string>, 
   return createHmac('sha1', signingKey).update(baseString).digest('base64');
 }
 
-async function postTweet(text: string): Promise<{ id?: string; error?: string }> {
-  const apiKey = process.env.X_API_KEY;
-  const apiSecret = process.env.X_API_SECRET;
-  const accessToken = process.env.X_ACCESS_TOKEN;
-  const accessTokenSecret = process.env.X_ACCESS_TOKEN_SECRET;
+function buildOAuth(method: string, url: string, extraParams?: Record<string, string>): string {
+  const apiKey = process.env.X_API_KEY!;
+  const apiSecret = process.env.X_API_SECRET!;
+  const accessToken = process.env.X_ACCESS_TOKEN!;
+  const accessTokenSecret = process.env.X_ACCESS_TOKEN_SECRET!;
 
-  if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret) {
-    return { error: 'Missing X API credentials' };
-  }
-
-  const url = 'https://api.twitter.com/2/tweets';
   const oauthParams: Record<string, string> = {
     oauth_consumer_key: apiKey,
     oauth_nonce: randomBytes(16).toString('hex'),
@@ -32,13 +27,59 @@ async function postTweet(text: string): Promise<{ id?: string; error?: string }>
     oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
     oauth_token: accessToken,
     oauth_version: '1.0',
+    ...extraParams,
   };
 
-  oauthParams.oauth_signature = oauthSign('POST', url, oauthParams, apiSecret, accessTokenSecret);
+  oauthParams.oauth_signature = oauthSign(method, url, oauthParams, apiSecret, accessTokenSecret);
 
-  const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(k =>
+  return 'OAuth ' + Object.keys(oauthParams).sort().map(k =>
     `${encodeURIComponent(k)}="${encodeURIComponent(oauthParams[k])}"`
   ).join(', ');
+}
+
+async function uploadImage(imageUrl: string): Promise<string | null> {
+  try {
+    // Download image
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) return null;
+    const imgBuffer = await imgRes.arrayBuffer();
+    const base64 = Buffer.from(imgBuffer).toString('base64');
+
+    // Upload to Twitter media endpoint (v1.1)
+    const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
+    const params: Record<string, string> = { media_data: base64 };
+
+    const authHeader = buildOAuth('POST', uploadUrl, {});
+
+    const formBody = new URLSearchParams(params).toString();
+    const res = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formBody,
+    });
+
+    const data = await res.json();
+    return data.media_id_string || null;
+  } catch {
+    return null;
+  }
+}
+
+async function postTweet(text: string, mediaId?: string | null): Promise<{ id?: string; error?: string }> {
+  if (!process.env.X_API_KEY || !process.env.X_API_SECRET || !process.env.X_ACCESS_TOKEN || !process.env.X_ACCESS_TOKEN_SECRET) {
+    return { error: 'Missing X API credentials' };
+  }
+
+  const url = 'https://api.twitter.com/2/tweets';
+  const authHeader = buildOAuth('POST', url);
+
+  const body: any = { text };
+  if (mediaId) {
+    body.media = { media_ids: [mediaId] };
+  }
 
   try {
     const res = await fetch(url, {
@@ -47,7 +88,7 @@ async function postTweet(text: string): Promise<{ id?: string; error?: string }>
         'Authorization': authHeader,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(body),
     });
 
     const data = await res.json();
@@ -61,7 +102,7 @@ async function postTweet(text: string): Promise<{ id?: string; error?: string }>
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 function ts() { return Date.now().toString(36).slice(-4); } // unique suffix to avoid duplicate tweets
 
-function generateTweet(): { type: string; content: string } {
+function generateTweet(): { type: string; content: string; imageUrl?: string } {
   const props = getAllProperties();
   const towns = getUniqueTowns();
   const totalProps = props.length;
@@ -114,7 +155,17 @@ function generateTweet(): { type: string; content: string } {
   };
 
   const options = templates[type] || templates.MARKET_INSIGHT;
-  return { type, content: pick(options) };
+  const content = pick(options);
+
+  // Add property link for deal-specific tweets
+  const propLink = p.ref ? `\n\navenaterminal.com/property/${encodeURIComponent(p.ref)}` : '';
+  const hasLink = content.includes('avenaterminal.com/');
+  const finalContent = hasLink ? content : content.replace('avenaterminal.com', `avenaterminal.com${propLink ? '' : ''}`);
+
+  // Get image from property if available
+  const imageUrl = p.imgs?.[0] || undefined;
+
+  return { type, content: finalContent, imageUrl };
 }
 
 export async function POST(req: NextRequest) {
@@ -125,7 +176,14 @@ export async function POST(req: NextRequest) {
   }
 
   const tweet = generateTweet();
-  const result = await postTweet(tweet.content);
+
+  // Try to upload property image if available
+  let mediaId: string | null = null;
+  if (tweet.imageUrl) {
+    mediaId = await uploadImage(tweet.imageUrl);
+  }
+
+  const result = await postTweet(tweet.content, mediaId);
 
   // Log to Supabase
   if (supabase) {
