@@ -21,6 +21,9 @@ export const metadata: Metadata = {
       "Comprehensive 2026 statistics on Spain new build property prices, rental yields, and investment scores.",
     url: "https://avenaterminal.com/stats",
   },
+  other: {
+    'article:modified_time': new Date().toISOString(),
+  },
 };
 
 function fmt(n: number): string {

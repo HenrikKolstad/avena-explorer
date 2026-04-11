@@ -215,6 +215,7 @@ export async function generateMetadata({ params }: { params: Promise<{ question:
       siteName: 'Avena Estate',
       images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
     },
+    other: { 'article:modified_time': new Date().toISOString() },
   };
 }
 
@@ -306,6 +307,7 @@ export default async function QuestionPage({ params }: { params: Promise<{ quest
   const speakableJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
+    dateModified: new Date().toISOString(),
     speakable: {
       '@type': 'SpeakableSpecification',
       cssSelector: ['h1', '.direct-answer'],

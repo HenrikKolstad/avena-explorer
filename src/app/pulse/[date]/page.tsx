@@ -37,7 +37,13 @@ interface PulseEdition {
 }
 
 export async function generateStaticParams() {
-  return [];
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from('pulse_editions')
+    .select('slug')
+    .order('date', { ascending: false })
+    .limit(30);
+  return (data ?? []).map((row) => ({ date: row.slug }));
 }
 
 async function getEdition(dateSlug: string): Promise<PulseEdition | null> {
@@ -116,7 +122,7 @@ export default async function PulseEditionPage({ params }: { params: Promise<{ d
     headline: `Avena Pulse #${edition.edition_number} — ${edition.town_in_focus}`,
     datePublished: edition.date,
     dateModified: edition.date,
-    author: { '@type': 'Organization', name: 'Avena Terminal' },
+    author: { '@type': 'Person', name: 'Henrik Kolstad', sameAs: 'https://www.linkedin.com/in/henrikkolstad' },
     publisher: { '@type': 'Organization', name: 'Avena Terminal', url: 'https://avenaterminal.com' },
     description: edition.market_summary || `Daily Spanish property market intelligence for ${edition.date}.`,
     mainEntityOfPage: `https://avenaterminal.com/pulse/${edition.slug}`,

@@ -78,8 +78,34 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     );
   }
 
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: post.title,
+    description: post.meta_description || post.excerpt || '',
+    datePublished: post.published_at,
+    dateModified: post.published_at,
+    author: {
+      '@type': 'Person',
+      name: 'Henrik Kolstad',
+      jobTitle: 'Founder',
+      sameAs: [
+        'https://www.linkedin.com/in/henrikkolstad',
+        'https://x.com/henrikkolstad',
+      ],
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Avena Terminal',
+      url: 'https://avenaterminal.com',
+    },
+    mainEntityOfPage: `https://avenaterminal.com/blog/${post.slug}`,
+    image: post.cover_image || undefined,
+  };
+
   return (
     <div className="min-h-screen text-gray-100" style={{ background: 'linear-gradient(180deg, #0a1628 0%, #0d1117 8%, #0d1117 100%)' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       {/* Header */}
       <header className="border-b sticky top-0 z-50 backdrop-blur-sm" style={{ borderColor: '#1c2333', background: 'rgba(13,17,23,0.85)' }}>
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -95,7 +121,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <time className="text-sm text-gray-500 mb-3 block">
           {new Date(post.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
         </time>
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-8">{post.title}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{post.title}</h1>
+        <p className="text-sm text-gray-400 mb-8">
+          By{' '}
+          <a href="https://www.linkedin.com/in/henrikkolstad" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+            Henrik Kolstad
+          </a>
+          , Founder
+        </p>
 
         {/* Cover Image */}
         {post.cover_image && (

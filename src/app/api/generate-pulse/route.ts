@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { supabase } from '@/lib/supabase';
 import { getAllProperties, getUniqueTowns, avg } from '@/lib/properties';
+import { pingIndexNow } from '@/lib/indexnow';
 
 export const maxDuration = 60;
 
@@ -114,6 +115,7 @@ Generate EXACTLY this JSON structure (no markdown, just raw JSON):
     });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await pingIndexNow([`https://avenaterminal.com/pulse/${dateStr}`]);
     return NextResponse.json({ success: true, edition: editionNumber, date: dateStr });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Generation failed';

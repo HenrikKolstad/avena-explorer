@@ -57,7 +57,22 @@ export function getStructuredData() {
         'https://www.linkedin.com/company/avena-terminal',
         'https://x.com/avenaterminal',
         'https://www.instagram.com/avenaterminal',
+        'https://www.wikidata.org/wiki/Q131247292',
       ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: 'Spain New Build Property Investment Database 2026',
+      description: 'Scored dataset of 1,881 new build properties across Costa Blanca, Costa Calida and Costa del Sol.',
+      url: 'https://avenaterminal.com/dataset',
+      creator: { '@type': 'Organization', name: 'Avena Terminal', url: 'https://avenaterminal.com' },
+      dateModified: new Date().toISOString().split('T')[0],
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      spatialCoverage: 'Spain',
+      temporalCoverage: '2026',
+      variableMeasured: ['Investment Score', 'Rental Yield', 'Price per m2', 'Discount vs Market', 'Property Type'],
+      distribution: { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: 'https://avenaterminal.com/api/dataset' },
     },
   ];
 }

@@ -135,6 +135,7 @@ export async function generateMetadata({ params }: { params: Promise<{ topic: st
       images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
     },
     twitter: { card: 'summary_large_image', title, description },
+    other: { 'article:modified_time': new Date().toISOString() },
   };
 }
 
