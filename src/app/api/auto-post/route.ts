@@ -125,11 +125,11 @@ function generateTweet(): { type: string; content: string; imageUrl?: string } {
   const cheapTown = towns.sort((a,b) => a.avgPrice - b.avgPrice)[0];
 
   const all: { type: string; content: string; imageUrl?: string }[] = [
-    // === QUESTIONS (no link) ===
-    { type: 'Q', content: `Would you buy a ${p.bd}-bed ${p.t.toLowerCase()} in ${town} for EUR ${price}?\n\nScore: ${score}/100\nGross yield: ${yld}%\n\nBe honest.` },
+    // === QUESTIONS ===
+    { type: 'Q', content: `Would you buy a ${p.bd}-bed ${p.t.toLowerCase()} in ${town} for EUR ${price}?\n\nScore: ${score}/100\nGross yield: ${yld}%\n\nBe honest.\n\n${link}`, imageUrl: p.imgs?.[0] },
     { type: 'Q', content: `${town} or ${town2}?\n\nWhere would you put EUR 300k right now?` },
     { type: 'Q', content: `7% gross yield in a small town or 3.5% in Marbella?\n\nCash flow vs lifestyle. What's your pick?` },
-    { type: 'Q', content: `Is ${town} undervalued or am I reading the data wrong?\n\n${t1.count} properties, EUR ${t1.avgPrice.toLocaleString()} avg, ${t1.avgYield}% gross yield.` },
+    { type: 'Q', content: `Is ${town} undervalued or am I reading the data wrong?\n\n${t1.count} properties, EUR ${t1.avgPrice.toLocaleString()} avg, ${t1.avgYield}% gross yield.\n\n${link}`, imageUrl: p.imgs?.[0] },
     // === LINK ===
     { type: 'Q', content: `How do you evaluate if a Spanish property is a good deal?\n\nWe built an algorithm that scores them 0-100.\n\navenaterminal.com`, imageUrl: p.imgs?.[0] },
 
@@ -149,11 +149,11 @@ function generateTweet(): { type: string; content: string; imageUrl?: string } {
     // === LINK ===
     { type: 'DATA', content: `Today's terminal scan:\n\nHighest score: ${score}/100 in ${town}\nBest yield: ${t1.avgYield}% in ${t1.town.split(',')[0]}\nLowest entry: EUR ${cheapTown?.avgPrice.toLocaleString()} in ${cheapTown?.town.split(',')[0]}\n\navenaterminal.com`, imageUrl: p.imgs?.[0] },
 
-    // === PROPERTY FEATURES (no link) ===
-    { type: 'PROP', content: `${p.t} in ${town}\n${p.bd} bed | ${p.bm}m²\nEUR ${price}\n\nAlgorithm score: ${score}/100\nGross yield est: ${yld}%`, imageUrl: p.imgs?.[0] },
-    { type: 'PROP', content: `Found this today.\n\n${p.t} in ${town}\nEUR ${price} | ${p.bd} bed | ${p.bm}m²\nScore: ${score}/100\n\nThe algorithm likes it.`, imageUrl: p.imgs?.[0] },
-    { type: 'PROP', content: `${p2.t} in ${town2}\n${p2.bd} bed, ${p2.bm}m²\nEUR ${p2.pf.toLocaleString()}\nScore: ${Math.round(p2._sc ?? 0)}/100\n\nWould you look at this one?`, imageUrl: p2.imgs?.[0] },
-    { type: 'PROP', content: `This ${p.bd}-bed ${p.t.toLowerCase()} scored ${score}/100.\n\n${town}\nEUR ${price}\nGross yield: ${yld}%\n\nAbove or below what you'd expect?`, imageUrl: p.imgs?.[0] },
+    // === PROPERTY FEATURES ===
+    { type: 'PROP', content: `${p.t} in ${town}\n${p.bd} bed | ${p.bm}m²\nEUR ${price}\n\nAlgorithm score: ${score}/100\nGross yield est: ${yld}%\n\n${link}`, imageUrl: p.imgs?.[0] },
+    { type: 'PROP', content: `Found this today.\n\n${p.t} in ${town}\nEUR ${price} | ${p.bd} bed | ${p.bm}m²\nScore: ${score}/100\n\nThe algorithm likes it.\n\n${link}`, imageUrl: p.imgs?.[0] },
+    { type: 'PROP', content: `${p2.t} in ${town2}\n${p2.bd} bed, ${p2.bm}m²\nEUR ${p2.pf.toLocaleString()}\nScore: ${Math.round(p2._sc ?? 0)}/100\n\nWould you look at this one?\n\n${p2.ref ? `avenaterminal.com/property/${p2.ref}` : 'avenaterminal.com'}`, imageUrl: p2.imgs?.[0] },
+    { type: 'PROP', content: `This ${p.bd}-bed ${p.t.toLowerCase()} scored ${score}/100.\n\n${town}\nEUR ${price}\nGross yield: ${yld}%\n\nAbove or below what you'd expect?\n\n${link}`, imageUrl: p.imgs?.[0] },
     // === LINK ===
     { type: 'PROP', content: `This ${p.t.toLowerCase()} in ${town} just hit ${score}/100 on our scoring engine.\n\nEUR ${price} | ${p.bd} bed | ${yld}% gross yield\n\nFull breakdown:\navenaterminal.com/property/${p.ref || ''}`, imageUrl: p.imgs?.[0] },
 
