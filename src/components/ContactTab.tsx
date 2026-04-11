@@ -31,7 +31,7 @@ export default function ContactTab() {
             {/* Name & title */}
             <div className="text-center mb-8">
               <div className="font-serif text-3xl font-bold mb-1" style={{ background: 'linear-gradient(90deg, #10B981, #34d399, #10B981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Henrik Kolstad
+                Henrik K.
               </div>
               <div className="text-[11px] uppercase tracking-[4px] text-gray-500">Founder · Avena Terminal</div>
               <div className="mt-3 text-xs text-gray-500 leading-relaxed max-w-xs mx-auto">
@@ -71,6 +71,21 @@ export default function ContactTab() {
                 <div className="flex-1 min-w-0">
                   <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-0.5">Partner Agency</div>
                   <div className="text-sm font-semibold truncate group-hover:text-white transition-colors" style={{ color: '#34d399' }}>www.xaviaestate.com</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 group-hover:opacity-80 transition-opacity flex-shrink-0">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+              <a href="https://x.com/0xw3btamer" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-4 rounded-2xl p-4 border border-[#10B981]/20 hover:border-[#10B981]/60 transition-all group"
+                style={{ background: 'rgba(16,185,129,0.05)' }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg"
+                  style={{ background: 'linear-gradient(135deg, #10B98122, #10B98144)', border: '1px solid rgba(16,185,129,0.4)' }}>
+                  <span className="text-lg font-bold" style={{ color: '#10B981' }}>&Xopf;</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-0.5">Follow on X</div>
+                  <div className="text-sm font-semibold truncate group-hover:text-white transition-colors" style={{ color: '#34d399' }}>@0xw3btamer</div>
                 </div>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-40 group-hover:opacity-80 transition-opacity flex-shrink-0">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
