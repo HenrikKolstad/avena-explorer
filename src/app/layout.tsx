@@ -30,6 +30,19 @@ export const metadata: Metadata = {
     title: "Avena Terminal — Spain New Build Property Investment Scanner",
     description: "Score and rank 1,881 new build properties. Rental yield, investment score, price analysis.",
     images: ["/opengraph-image"],
+    site: "@avenaterminal",
+    creator: "@henrikkolstad",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
@@ -41,6 +54,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="robots" content="max-image-preview:large" />
+        <meta name="theme-color" content="#0d0d14" />
         <link rel="alternate" hrefLang="en" href="https://avenaterminal.com" />
         <link rel="alternate" hrefLang="es" href="https://avenaterminal.com/es" />
         <link rel="alternate" hrefLang="x-default" href="https://avenaterminal.com" />
