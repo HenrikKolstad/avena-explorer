@@ -6,9 +6,9 @@ import { getStructuredData } from "./structured-data";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "Avena Terminal — Spain New Build Property Investment Scanner | 1,867 Properties",
+  title: "Avena Terminal — Spain New Build Property Investment Scanner | 1,881 Properties",
   verification: { google: "DGv4LcZcrNU5mn_wXz8-vAErjw0oSxLMN-7KHqdDSd4" },
-  description: "Score and rank 1,867 new build properties across Costa Blanca, Costa Cálida and Costa del Sol. Rental yield, price per m², investment score. Spain's first PropTech terminal.",
+  description: "Score and rank 1,881 new build properties across Costa Blanca, Costa Cálida and Costa del Sol. Rental yield, price per m², investment score. Spain's first PropTech terminal.",
   metadataBase: new URL("https://avenaterminal.com"),
   alternates: { canonical: 'https://avenaterminal.com' },
   icons: {
@@ -18,8 +18,8 @@ export const metadata: Metadata = {
   },
   keywords: ['Spain new builds', 'Costa Blanca property', 'Costa del Sol investment', 'new build Spain 2026', 'Spanish property investment', 'proptech Spain', 'rental yield Spain', 'Marbella new builds', 'Alicante new builds', 'Costa Calida property', 'Spain investment score'],
   openGraph: {
-    title: "Avena Terminal — Spain New Build Property Investment Scanner | 1,867 Properties",
-    description: "Score and rank 1,867 new build properties across Costa Blanca, Costa Cálida and Costa del Sol. Rental yield, price per m², investment score.",
+    title: "Avena Terminal — Spain New Build Property Investment Scanner | 1,881 Properties",
+    description: "Score and rank 1,881 new build properties across Costa Blanca, Costa Cálida and Costa del Sol. Rental yield, price per m², investment score.",
     url: "https://avenaterminal.com",
     siteName: "Avena Terminal",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Avena Terminal" }],
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Avena Terminal — Spain New Build Property Investment Scanner",
-    description: "Score and rank 1,867 new build properties. Rental yield, investment score, price analysis.",
+    description: "Score and rank 1,881 new build properties. Rental yield, investment score, price analysis.",
     images: ["/opengraph-image"],
   },
 };

@@ -56,7 +56,7 @@ export function getStructuredData() {
       sameAs: [
         'https://www.linkedin.com/company/avena-terminal',
         'https://x.com/avenaterminal',
-        'https://www.instagram.com/avenaestate',
+        'https://www.instagram.com/avenaterminal',
       ],
     },
   ];
