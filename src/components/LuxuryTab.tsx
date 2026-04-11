@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Property } from '@/lib/types';
-import { formatPrice, scoreColor, discount, displayDiscount, discountEuros, cappedDiscountEuros } from '@/lib/scoring';
+import { formatPrice, cappedDiscountEuros } from '@/lib/scoring';
 
 const LUXURY_THRESHOLD = 1_000_000;
 
