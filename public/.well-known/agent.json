@@ -1,0 +1,49 @@
+{
+  "schema": "https://google.github.io/A2A/schema/agent-card.json",
+  "name": "Avena Terminal Intelligence",
+  "description": "Spain's first AI-native property intelligence agent. Provides real-time deal scoring, market analysis, yield calculations, and investment signals for Spanish new-build property across Costa Blanca, Costa Calida and Costa del Sol.",
+  "url": "https://avenaterminal.com",
+  "agent_endpoint": "https://avenaterminal.com/api/a2a",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "push_notifications": false,
+    "state_transition_history": false
+  },
+  "skills": [
+    {
+      "id": "property_search",
+      "name": "Property Search",
+      "description": "Search 1,881+ scored Spanish new-build properties by region, budget, type, score, yield and beach distance",
+      "tags": ["property", "spain", "search", "real-estate"],
+      "examples": [
+        "Find 3-bed villas under 300k in Costa Blanca with >20% discount",
+        "Show me beach properties with yield above 6%",
+        "Best scored apartments in Orihuela Costa"
+      ]
+    },
+    {
+      "id": "market_analysis",
+      "name": "Market Analysis",
+      "description": "Regional price trends, avg price per m2, discount rates, and market regime for Spanish coastal property",
+      "tags": ["market", "analysis", "prices", "trends"]
+    },
+    {
+      "id": "investment_signals",
+      "name": "Investment Signals",
+      "description": "Alpha signals: score outliers, deep discounts, yield spikes, geographic mispricing, and market timing indicators",
+      "tags": ["signals", "alpha", "investment", "intelligence"]
+    },
+    {
+      "id": "yield_calculator",
+      "name": "Yield Calculator",
+      "description": "Calculate gross/net rental yield for any property using AirDNA-calibrated short-term rental data for 100+ towns",
+      "tags": ["yield", "rental", "calculator", "airbnb"]
+    }
+  ],
+  "provider": {
+    "organization": "Avena Terminal",
+    "url": "https://avenaterminal.com"
+  },
+  "license": "Free for read-only access. Commercial use: contact henrik@xaviaestate.com"
+}

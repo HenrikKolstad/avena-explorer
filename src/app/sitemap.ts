@@ -213,6 +213,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // AI Citations Dashboard
   entries.push({ url: `${base}/ai-citations`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
 
+  // Avena Index
+  entries.push({ url: `${base}/avena-index`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 });
+
+  // A2A Protocol
+  entries.push({ url: `${base}/a2a`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 });
+
+  // Semantic Search
+  entries.push({ url: `${base}/search`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
+
+  // Buyer Personas
+  entries.push({ url: `${base}/personas`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
+
   // Intelligence Agent Pages
   entries.push({ url: `${base}/intelligence/history`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
   entries.push({ url: `${base}/intelligence/briefs`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
