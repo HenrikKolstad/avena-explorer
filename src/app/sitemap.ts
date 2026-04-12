@@ -192,6 +192,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // LangChain Tool
   entries.push({ url: `${base}/langchain-tool`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 });
 
+  // Intelligence Feed
+  entries.push({ url: `${base}/feed/intelligence`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
+
   // Development pages
   const devNames = [...new Set(getAllProperties().map(p => p.p).filter(Boolean))];
   for (const name of devNames) {

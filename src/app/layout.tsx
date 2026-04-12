@@ -61,6 +61,7 @@ export default function RootLayout({
         <link rel="alternate" hrefLang="de" href="https://avenaterminal.com/de" />
         <link rel="alternate" hrefLang="nl" href="https://avenaterminal.com/nl" />
         <link rel="alternate" hrefLang="x-default" href="https://avenaterminal.com" />
+        <link rel="alternate" type="application/rss+xml" title="Avena Terminal Intelligence Feed" href="https://avenaterminal.com/feed/intelligence.rss" />
         <link rel="preconnect" href="https://apinmo.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://apinmo.com" />
         <script
