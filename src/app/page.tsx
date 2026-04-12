@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
 import { LANGUAGES } from '@/lib/translations';
 import { BarChart3, Coins, Gem, Map, FolderOpen, TrendingUp, Star, Download, DollarSign, Heart, Crown, Settings, Info, Scale, Mail, BookOpen, Bitcoin, Menu, X, ChevronLeft, ChevronRight, Lock, User, ExternalLink, AlertTriangle, Check, Sparkles, FileText, Calculator, ArrowUpRight, Zap, MessageCircle, Search } from 'lucide-react';
+import DnaHelix from '@/components/DnaHelix';
 import CoreOrb from '@/components/OrbLightning';
 import CryptoTab from '@/components/CryptoTab';
 import YieldTab from '@/components/YieldTab';
@@ -636,7 +637,10 @@ export default function Explorer() {
               <Menu size={20} />
             </button>
             <a href="/" className="flex-shrink-0">
-              <h1 className="text-2xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-600 bg-clip-text text-transparent animate-logo-pulse">AVENA</h1>
+              <div className="flex items-center gap-2">
+                <DnaHelix size={28} />
+                <h1 className="text-2xl font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-600 bg-clip-text text-transparent animate-logo-pulse">AVENA</h1>
+              </div>
               <p className="text-[8px] tracking-[5px] uppercase text-emerald-400/60 font-light">Terminal</p>
             </a>
             {/* Auth — right side, full space */}
@@ -728,7 +732,10 @@ export default function Explorer() {
           {/* LEFT — logo */}
           <div className="flex-shrink-0">
             <a href="/" className="block cursor-pointer">
-              <h1 className={`font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity animate-logo-pulse ${sidebarCollapsed ? 'text-4xl' : 'text-2xl'}`}>AVENA</h1>
+              <div className="flex items-center gap-2">
+                <DnaHelix size={sidebarCollapsed ? 36 : 28} />
+                <h1 className={`font-bold font-serif tracking-[0.2em] bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity animate-logo-pulse ${sidebarCollapsed ? 'text-4xl' : 'text-2xl'}`}>AVENA</h1>
+              </div>
               <p className="text-[9px] tracking-[6px] uppercase text-emerald-400/60 mt-0.5 font-light">Terminal</p>
             </a>
             {sidebarCollapsed && (
@@ -964,7 +971,10 @@ export default function Explorer() {
                 <>
                   {/* Logo */}
                   <div className="px-4 pt-4 pb-2 flex-shrink-0 border-b border-[#1c2333]">
-                    <div className="text-xs font-bold tracking-[4px] uppercase" style={{ background: 'linear-gradient(90deg, #10B981, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AVENA</div>
+                    <div className="flex items-center gap-1.5">
+                      <DnaHelix size={18} />
+                      <div className="text-xs font-bold tracking-[4px] uppercase" style={{ background: 'linear-gradient(90deg, #10B981, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AVENA</div>
+                    </div>
                     <div className="text-[8px] tracking-[3px] uppercase text-emerald-400/40 mt-0.5">TERMINAL</div>
                   </div>
 
