@@ -42,6 +42,18 @@
     {
       "path": "/api/weekly-alpha",
       "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/snapshot-archive",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/generate-briefs",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/weekly-science",
+      "schedule": "0 7 * * 5"
     }
   ]
 }
