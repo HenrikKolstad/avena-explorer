@@ -213,6 +213,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // AI Citations Dashboard
   entries.push({ url: `${base}/ai-citations`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
 
+  // Deal Alerts
+  entries.push({ url: `${base}/alerts`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 });
+
+  // Portugal
+  entries.push({ url: `${base}/portugal`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 });
+
+  // Comparisons
+  entries.push({ url: `${base}/compare`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 });
+  for (const slug of ['es-vs-cy', 'es-vs-it', 'es-vs-fr', 'cb-vs-cds', 'cb-vs-algarve']) {
+    entries.push({ url: `${base}/compare/${slug}`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 });
+  }
+
+  // Verified Developer
+  entries.push({ url: `${base}/verified`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 });
+
+  // Data Room
+  entries.push({ url: `${base}/data-room`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 });
+
+  // Training Data Marketplace
+  entries.push({ url: `${base}/training-data`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 });
+
   // Avena Index
   entries.push({ url: `${base}/avena-index`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 });
 

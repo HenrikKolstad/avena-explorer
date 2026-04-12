@@ -1,0 +1,258 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Avena Terminal API",
+    "version": "1.0.0",
+    "description": "Spain's first AI-native property intelligence API. 1,881+ scored new-build properties across Costa Blanca, Costa Calida and Costa del Sol. Includes deal scoring, yield analysis, market data, investment signals, buyer personas and semantic search.",
+    "contact": {
+      "name": "Avena Terminal",
+      "url": "https://avenaterminal.com",
+      "email": "henrik@xaviaestate.com"
+    },
+    "license": {
+      "name": "Commercial + CC BY 4.0 (open datasets)",
+      "url": "https://avenaterminal.com/ai-compliance"
+    },
+    "x-logo": {
+      "url": "https://avenaterminal.com/favicon.svg"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://avenaterminal.com/api",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/knowledge": {
+      "get": {
+        "summary": "Knowledge API",
+        "description": "Ask any question about Spanish property in natural language. Returns structured answer with confidence score and DOI citation.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "average price costa blanca"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Structured answer",
+            "content": {
+              "application/json": {
+                "example": {
+                  "query": "average price costa blanca",
+                  "answer": "The average asking price for new builds in Costa Blanca is €350,000.",
+                  "confidence": 0.95,
+                  "data_points": 1200,
+                  "source": "Avena Terminal",
+                  "doi": "10.5281/zenodo.19520064"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/index-data": {
+      "get": {
+        "summary": "Avena Property Index",
+        "description": "Composite property price index for Spanish coastal markets. Base 100 = Q1 2024.",
+        "responses": {
+          "200": {
+            "description": "Index series data",
+            "content": {
+              "application/json": {
+                "example": {
+                  "index_name": "Avena Costa Blanca Property Index",
+                  "series": { "AVENA-CB": [{ "quarter": "Q1 2024", "value": 100 }] }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/personas": {
+      "get": {
+        "summary": "Buyer Personas",
+        "description": "5 European investor archetypes auto-matched to top deals.",
+        "responses": { "200": { "description": "Persona matches" } }
+      }
+    },
+    "/corpus": {
+      "get": {
+        "summary": "Pre-Training Corpus",
+        "description": "250+ Q&A pairs for LLM training. CC BY 4.0.",
+        "responses": { "200": { "description": "Training corpus" } }
+      }
+    },
+    "/synthetic": {
+      "get": {
+        "summary": "Synthetic Dataset",
+        "description": "Generate up to 50k synthetic properties from real distributions.",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 1000, "maximum": 50000 } }
+        ],
+        "responses": { "200": { "description": "Synthetic dataset" } }
+      }
+    },
+    "/propertyeval": {
+      "get": {
+        "summary": "PropertyEval Benchmark",
+        "description": "100 scenarios for evaluating AI property investment advice.",
+        "responses": { "200": { "description": "Benchmark scenarios" } }
+      }
+    },
+    "/history": {
+      "get": {
+        "summary": "Price History",
+        "description": "Historical price tracking. Market-level or per-property.",
+        "parameters": [
+          { "name": "ref", "in": "query", "schema": { "type": "string" }, "description": "Property ref for individual history" }
+        ],
+        "responses": { "200": { "description": "Price history data" } }
+      }
+    },
+    "/cited": {
+      "get": {
+        "summary": "AI Citation Counter",
+        "description": "Live count of MCP tool calls and AI citations.",
+        "responses": { "200": { "description": "Citation stats" } }
+      }
+    },
+    "/agents/register": {
+      "post": {
+        "summary": "Register AI Agent",
+        "description": "Register your AI agent with the Avena Terminal Agent Registry.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["agent_name", "developer_name", "developer_email"],
+                "properties": {
+                  "agent_name": { "type": "string" },
+                  "developer_name": { "type": "string" },
+                  "developer_email": { "type": "string", "format": "email" },
+                  "use_case": { "type": "string" },
+                  "website": { "type": "string", "format": "uri" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Agent registered with credentials" } }
+      }
+    },
+    "/agents/stats": {
+      "get": {
+        "summary": "Agent Registry Stats",
+        "description": "Statistics on registered AI agents.",
+        "responses": { "200": { "description": "Registry stats" } }
+      }
+    },
+    "/search/semantic": {
+      "post": {
+        "summary": "Semantic Property Search",
+        "description": "Natural language property search. AI parses your query into filters.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["query"],
+                "properties": {
+                  "query": { "type": "string", "example": "3-bed villa near beach under 350k with sea views" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Matched properties" } }
+      }
+    },
+    "/chat": {
+      "post": {
+        "summary": "The Oracle AI Chat",
+        "description": "AI property advisor with live data context.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": { "type": "string" },
+                  "history": { "type": "array", "items": { "type": "object" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "AI response" } }
+      }
+    },
+    "/a2a": {
+      "post": {
+        "summary": "A2A Agent Communication",
+        "description": "Google A2A protocol endpoint for agent-to-agent communication.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "jsonrpc": { "type": "string", "const": "2.0" },
+                  "method": { "type": "string" },
+                  "params": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "A2A task result" } }
+      },
+      "get": {
+        "summary": "A2A Agent Card",
+        "description": "Returns the A2A agent card with capabilities and skills.",
+        "responses": { "200": { "description": "Agent card JSON" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Property": {
+        "type": "object",
+        "properties": {
+          "ref": { "type": "string" },
+          "project": { "type": "string" },
+          "developer": { "type": "string" },
+          "location": { "type": "string" },
+          "region": { "type": "string" },
+          "type": { "type": "string", "enum": ["Villa", "Apartment", "Penthouse", "Townhouse", "Bungalow"] },
+          "price": { "type": "number" },
+          "pricePerM2": { "type": "number" },
+          "builtM2": { "type": "number" },
+          "bedrooms": { "type": "integer" },
+          "bathrooms": { "type": "integer" },
+          "beachKm": { "type": "number" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "grossYield": { "type": "number" },
+          "netYield": { "type": "number" },
+          "status": { "type": "string", "enum": ["off-plan", "under-construction", "key-ready"] }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Full documentation",
+    "url": "https://avenaterminal.com/mcp-server"
+  }
+}
