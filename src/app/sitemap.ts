@@ -198,6 +198,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Alpha Signals
   entries.push({ url: `${base}/intelligence/signals`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
 
+  // Entity Profile
+  entries.push({ url: `${base}/about/entity`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 });
+
+  // Integration Guide
+  entries.push({ url: `${base}/integrate`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 });
+
+  // Reasoning Chains
+  entries.push({ url: `${base}/data/reasoning`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
+
   // Development pages
   const devNames = [...new Set(getAllProperties().map(p => p.p).filter(Boolean))];
   for (const name of devNames) {
