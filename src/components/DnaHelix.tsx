@@ -1,44 +1,69 @@
 export default function DnaHelix({ size = 24 }: { size?: number }) {
   const h = size;
-  const w = Math.round(size * 0.6);
+  const w = Math.round(size * 0.5);
+  const id = `dna-${Math.random().toString(36).slice(2, 6)}`;
+
   return (
-    <svg width={w} height={h} viewBox="0 0 20 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="dna-helix">
+    <svg width={w} height={h} viewBox="0 0 16 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="dna-icon">
       <style>{`
-        .dna-helix { animation: dna-spin 4s linear infinite; }
-        @keyframes dna-spin {
-          0% { filter: hue-rotate(0deg); }
-          50% { filter: hue-rotate(15deg); }
-          100% { filter: hue-rotate(0deg); }
+        .dna-icon {
+          animation: dna-twist 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+                     dna-breathe 4s ease-in-out 1.5s infinite;
         }
-        .dna-strand { animation: dna-pulse 2s ease-in-out infinite; }
-        .dna-strand-2 { animation: dna-pulse 2s ease-in-out infinite 1s; }
-        @keyframes dna-pulse {
-          0%, 100% { opacity: 0.7; }
-          50% { opacity: 1; }
+        @keyframes dna-twist {
+          0% { transform: rotateY(0deg) scale(0.7); opacity: 0; }
+          40% { opacity: 1; }
+          100% { transform: rotateY(720deg) scale(1); opacity: 1; }
+        }
+        @keyframes dna-breathe {
+          0%, 100% { filter: drop-shadow(0 0 1px #10b98130); }
+          50% { filter: drop-shadow(0 0 4px #10b98160); }
         }
       `}</style>
-      {/* Left strand */}
-      <path className="dna-strand" d="M3 2 C3 6, 17 8, 17 12 C17 16, 3 18, 3 22 C3 26, 17 28, 17 32" stroke="url(#dna-grad-1)" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      {/* Right strand */}
-      <path className="dna-strand-2" d="M17 2 C17 6, 3 8, 3 12 C3 16, 17 18, 17 22 C17 26, 3 28, 3 32" stroke="url(#dna-grad-2)" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      {/* Rungs */}
-      <line x1="6" y1="5" x2="14" y2="5" stroke="#10b981" strokeWidth="1" opacity="0.4" />
-      <line x1="4" y1="9" x2="16" y2="9" stroke="#10b981" strokeWidth="1" opacity="0.5" />
-      <line x1="5" y1="13" x2="15" y2="13" stroke="#a78bfa" strokeWidth="1" opacity="0.4" />
-      <line x1="4" y1="17" x2="16" y2="17" stroke="#10b981" strokeWidth="1" opacity="0.5" />
-      <line x1="6" y1="21" x2="14" y2="21" stroke="#a78bfa" strokeWidth="1" opacity="0.4" />
-      <line x1="4" y1="25" x2="16" y2="25" stroke="#10b981" strokeWidth="1" opacity="0.5" />
-      <line x1="6" y1="29" x2="14" y2="29" stroke="#a78bfa" strokeWidth="1" opacity="0.4" />
-      {/* Gradients */}
+      <g>
+        {/* Left strand — teal to purple */}
+        <path
+          d="M2 0 C2 4, 14 4, 14 8 C14 12, 2 12, 2 16 C2 20, 14 20, 14 24 C14 28, 2 28, 2 32"
+          stroke={`url(#${id}-s1)`} strokeWidth="1.6" strokeLinecap="round" fill="none"
+        />
+        {/* Right strand — purple to teal */}
+        <path
+          d="M14 0 C14 4, 2 4, 2 8 C2 12, 14 12, 14 16 C14 20, 2 20, 2 24 C2 28, 14 28, 14 32"
+          stroke={`url(#${id}-s2)`} strokeWidth="1.6" strokeLinecap="round" fill="none"
+        />
+        {/* Base pair rungs */}
+        <line x1="4" y1="2" x2="12" y2="2" stroke="#10b981" strokeWidth="0.7" opacity="0.3" />
+        <line x1="3" y1="4" x2="13" y2="4" stroke="#10b981" strokeWidth="0.7" opacity="0.4" />
+        <line x1="4" y1="6" x2="12" y2="6" stroke="#a78bfa" strokeWidth="0.7" opacity="0.35" />
+        <line x1="3" y1="8" x2="13" y2="8" stroke="#a78bfa" strokeWidth="0.7" opacity="0.45" />
+        <line x1="4" y1="10" x2="12" y2="10" stroke="#10b981" strokeWidth="0.7" opacity="0.35" />
+        <line x1="3" y1="12" x2="13" y2="12" stroke="#10b981" strokeWidth="0.7" opacity="0.4" />
+        <line x1="4" y1="14" x2="12" y2="14" stroke="#a78bfa" strokeWidth="0.7" opacity="0.3" />
+        <line x1="3" y1="16" x2="13" y2="16" stroke="#a78bfa" strokeWidth="0.7" opacity="0.45" />
+        <line x1="4" y1="18" x2="12" y2="18" stroke="#10b981" strokeWidth="0.7" opacity="0.3" />
+        <line x1="3" y1="20" x2="13" y2="20" stroke="#10b981" strokeWidth="0.7" opacity="0.4" />
+        <line x1="4" y1="22" x2="12" y2="22" stroke="#a78bfa" strokeWidth="0.7" opacity="0.35" />
+        <line x1="3" y1="24" x2="13" y2="24" stroke="#a78bfa" strokeWidth="0.7" opacity="0.45" />
+        <line x1="4" y1="26" x2="12" y2="26" stroke="#10b981" strokeWidth="0.7" opacity="0.35" />
+        <line x1="3" y1="28" x2="13" y2="28" stroke="#10b981" strokeWidth="0.7" opacity="0.4" />
+        <line x1="4" y1="30" x2="12" y2="30" stroke="#a78bfa" strokeWidth="0.7" opacity="0.3" />
+        {/* Glow nodes at crossover points */}
+        <circle cx="8" cy="4" r="1" fill="#10b981" opacity="0.5" />
+        <circle cx="8" cy="12" r="1" fill="#a78bfa" opacity="0.5" />
+        <circle cx="8" cy="20" r="1" fill="#10b981" opacity="0.5" />
+        <circle cx="8" cy="28" r="1" fill="#a78bfa" opacity="0.5" />
+      </g>
       <defs>
-        <linearGradient id="dna-grad-1" x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-s1`} x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#10b981" />
-          <stop offset="50%" stopColor="#a78bfa" />
+          <stop offset="35%" stopColor="#34d399" />
+          <stop offset="65%" stopColor="#a78bfa" />
           <stop offset="100%" stopColor="#10b981" />
         </linearGradient>
-        <linearGradient id="dna-grad-2" x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-s2`} x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="50%" stopColor="#10b981" />
+          <stop offset="35%" stopColor="#c4b5fd" />
+          <stop offset="65%" stopColor="#10b981" />
           <stop offset="100%" stopColor="#a78bfa" />
         </linearGradient>
       </defs>
