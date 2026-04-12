@@ -207,6 +207,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Reasoning Chains
   entries.push({ url: `${base}/data/reasoning`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
 
+  // Annual Report
+  entries.push({ url: `${base}/reports/annual-2026`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 });
+
+  // Location pages
+  for (const t of getUniqueTowns()) {
+    entries.push({ url: `${base}/locations/${t.slug}`, lastModified: now, changeFrequency: 'daily', priority: 0.7 });
+  }
+
+  // Developer profile pages
+  const devSlugs = [...new Set(getAllProperties().map(p => p.d).filter(Boolean).map(d => slugify(d!)))].filter(s => s !== 'ratings');
+  for (const d of devSlugs) {
+    entries.push({ url: `${base}/developers/${d}`, lastModified: now, changeFrequency: 'daily', priority: 0.6 });
+  }
+
   // Development pages
   const devNames = [...new Set(getAllProperties().map(p => p.p).filter(Boolean))];
   for (const name of devNames) {
