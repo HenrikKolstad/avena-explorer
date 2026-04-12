@@ -210,6 +210,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Annual Report
   entries.push({ url: `${base}/reports/annual-2026`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 });
 
+  // AI Citations Dashboard
+  entries.push({ url: `${base}/ai-citations`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
+
+  // Common Crawl Submission
+  entries.push({ url: `${base}/cc-submit`, lastModified: now, changeFrequency: 'daily', priority: 0.7 });
+
   // Agent Registry
   entries.push({ url: `${base}/agents/registry`, lastModified: now, changeFrequency: 'daily', priority: 0.9 });
   entries.push({ url: `${base}/agents/directory`, lastModified: now, changeFrequency: 'daily', priority: 0.8 });
