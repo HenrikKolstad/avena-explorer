@@ -598,8 +598,11 @@ export default function Explorer() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0d1117' }}>
         <div className="text-center">
-          <div className="text-5xl font-bold font-serif tracking-[0.3em] mb-3" style={{ background: 'linear-gradient(90deg, #10B981, #34d399, #10B981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AVENA</div>
-          <div className="text-[10px] tracking-[6px] uppercase text-emerald-400/40 mb-8">ESTATE</div>
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <DnaHelix size={40} />
+            <div className="text-5xl font-bold font-serif tracking-[0.3em]" style={{ background: 'linear-gradient(90deg, #10B981, #34d399, #10B981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AVENA</div>
+          </div>
+          <div className="text-[10px] tracking-[6px] uppercase text-emerald-400/40 mb-8">TERMINAL</div>
           <div className="text-xs text-gray-600 tracking-widest">Loading properties...</div>
         </div>
       </div>
