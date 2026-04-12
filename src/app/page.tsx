@@ -689,12 +689,6 @@ export default function Explorer() {
             <div className="text-[9px] text-gray-400 leading-relaxed">
               <div>{t.hero_scanner}</div>
               <div className="text-[10px] italic tracking-wide mt-0.5 font-semibold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Bloomberg of European property investment</div>
-              {punchline.avgDisc > 0 && (
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" /></span>
-                  <span className="text-[9px] text-gray-500">LIVE — Top 100 deals averaging <span className="text-white font-semibold">{punchline.avgDisc}%</span> below market · median saving <span className="text-white font-semibold">&euro;{punchline.medianSaving.toLocaleString()}</span></span>
-                </div>
-              )}
               <div className="flex flex-wrap gap-1 mt-1">
                 {([['Costa Blanca North','cb-north'],['Costa Blanca South','cb-south'],['Costa Cálida','costa-calida'],['Costa del Sol','costa-del-sol']] as [string,string][]).map(([r, code]) => (
                   <button key={r} onClick={() => { setFilters(f => ({...f, region: code})); setTab('deals'); }} className={`px-1.5 py-0.5 rounded text-[9px] font-medium bg-[#1c2333] text-emerald-400 border transition-colors cursor-pointer hover:bg-[#10B981]/10 hover:border-[#10B981]/50 ${filters.region === code ? 'border-[#10B981]/70' : 'border-[#10B981]/20'}`}>{r}</button>
@@ -719,6 +713,11 @@ export default function Explorer() {
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
                 </svg>
               </a>
+              {punchline.avgDisc > 0 && (<>
+                <span className="text-gray-700 ml-2 mr-2">|</span>
+                <span className="relative flex h-1.5 w-1.5 mt-px"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" /></span>
+                <span className="text-gray-500 ml-1">Top 100 deals avg <span className="text-gray-300 font-semibold">{punchline.avgDisc}%</span> below market · saving <span className="text-gray-300 font-semibold">&euro;{punchline.medianSaving.toLocaleString()}</span></span>
+              </>)}
             </p>
           </div>
         </div>
@@ -762,9 +761,9 @@ export default function Explorer() {
             <div className="hidden lg:flex flex-col gap-1 flex-1 max-w-md mx-auto text-center">
               <p className="text-[11px] italic tracking-wide font-semibold" style={{ background: 'linear-gradient(135deg, #00b9ff, #9fe870)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Bloomberg of European property investment</p>
               {punchline.avgDisc > 0 && (
-                <div className="flex items-center justify-center gap-1.5 mt-1">
-                  <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" /></span>
-                  <span className="text-[10px] text-gray-500">LIVE — Top 100 deals averaging <span className="text-white font-semibold">{punchline.avgDisc}%</span> below market · median saving <span className="text-white font-semibold">&euro;{punchline.medianSaving.toLocaleString()}</span></span>
+                <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                  <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" /></span>
+                  <span className="text-[9px] text-gray-500">Top 100 deals avg <span className="text-gray-300 font-semibold">{punchline.avgDisc}%</span> below market · saving <span className="text-gray-300 font-semibold">&euro;{punchline.medianSaving.toLocaleString()}</span></span>
                 </div>
               )}
             </div>
