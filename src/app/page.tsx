@@ -2215,8 +2215,14 @@ export default function Explorer() {
                 {/* Header */}
                 <div className="text-center mb-6">
                   <div className="mb-2"><BarChart3 size={24} className="mx-auto text-emerald-400" /></div>
-                  <h2 className="text-xl font-bold text-white font-serif mb-1">Top 5 Deals This Week</h2>
-                  <p className="text-gray-400 text-sm">Free every Monday. The best-scored new builds on the Costa Blanca &amp; Calida — straight to your inbox.</p>
+                  <h2 className="text-xl font-bold text-white font-serif mb-1">
+                    {viewCount > 3 ? `You\u2019ve viewed ${viewCount} deals` : tab === 'yield' ? 'Yield Alert System' : 'Top 5 Deals This Week'}
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    {viewCount > 3 ? 'Get alerts when properties matching your interest drop in price or hit new score highs.' :
+                     tab === 'yield' ? 'Get the highest-yielding new builds delivered weekly. Data-driven. Free.' :
+                     'Free every Monday. The best-scored new builds on the Costa Blanca & Calida \u2014 straight to your inbox.'}
+                  </p>
                 </div>
 
                 {/* Stats proof */}
@@ -2277,13 +2283,20 @@ export default function Explorer() {
               <>
                 <div className="text-center mb-5">
                   <h2 className="text-xl font-bold text-white font-serif mb-2">Before you go</h2>
-                  <p className="text-gray-400 text-sm">Get the top 10 scored new builds in Spain delivered to your inbox. Free.</p>
+                  <p className="text-gray-400 text-sm">
+                    {tab === 'yield' ? 'Get weekly yield alerts — top rental performers delivered free.' :
+                     tab === 'live' ? 'Get daily market intelligence from our autonomous AI agents.' :
+                     tab === 'market' || tab === 'marketindex' ? 'Get the weekly market report — AI-generated, data-driven.' :
+                     tab === 'crypto' ? 'Stay updated on the Avena Experiment — token + property data.' :
+                     viewCount > 3 ? `You viewed ${viewCount} properties. Get alerts when similar deals appear.` :
+                     'Get the top 10 scored new builds in Spain delivered to your inbox. Free.'}
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <input type="email" value={exitEmail} onChange={e => setExitEmail(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && exitEmail.includes('@') && (async () => {
                       setExitLoading(true);
-                      try { await fetch('/api/email-capture', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: exitEmail, source: 'exit-intent' }) }); } catch {}
+                      try { await fetch('/api/email-capture', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: exitEmail, source: `exit-intent-${tab}`, context: tab, properties_viewed: viewCount }) }); } catch {}
                       setExitSubmitted(true); setExitLoading(false);
                     })()}
                     placeholder="your@email.com"
@@ -2291,11 +2304,11 @@ export default function Explorer() {
                   <button onClick={async () => {
                     if (!exitEmail.includes('@')) return;
                     setExitLoading(true);
-                    try { await fetch('/api/email-capture', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: exitEmail, source: 'exit-intent' }) }); } catch {}
+                    try { await fetch('/api/email-capture', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: exitEmail, source: `exit-intent-${tab}`, context: tab, properties_viewed: viewCount }) }); } catch {}
                     setExitSubmitted(true); setExitLoading(false);
                   }} disabled={exitLoading || !exitEmail.includes('@')}
                     className="px-5 py-3 rounded-lg font-bold text-sm text-black disabled:opacity-50 transition-all flex-shrink-0" style={{ background: '#10B981' }}>
-                    {exitLoading ? '...' : 'Send me the list'}
+                    {exitLoading ? '...' : viewCount > 3 ? 'Set alerts' : tab === 'yield' ? 'Get yields' : 'Send it'}
                   </button>
                 </div>
                 <p className="text-center text-[10px] text-gray-700 mt-3">No spam. Unsubscribe anytime.</p>
